@@ -151,6 +151,14 @@ export default function ManagerMeals() {
   });
 
   const todayStr = now.toISOString().slice(0, 10);
+  const calendarRef = useRef(null);
+
+  // auto-scroll calendar to today on load
+  useEffect(() => {
+    if (!calendarRef.current) return;
+    const todayBtn = calendarRef.current.querySelector('[data-today="true"]');
+    if (todayBtn) todayBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [members]);
   const lunchCount  = members.filter(m => mealData[`${m._id}_${selectedDate}`]?.lunch).length;
   const dinnerCount = members.filter(m => mealData[`${m._id}_${selectedDate}`]?.dinner).length;
   const offCount    = members.filter(m => mealData[`${m._id}_${selectedDate}`]?.isOff).length;
@@ -190,7 +198,7 @@ export default function ManagerMeals() {
       {/* ── Calendar Date Strip ── */}
       <div className="rounded-2xl p-3" style={calGlass}>
         {/* Day headers */}
-        <div className="flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }} ref={calendarRef}>
           {days.map(({ num, dateStr, dayIdx }) => {
             const isSel   = dateStr === selectedDate;
             const isToday = dateStr === todayStr;
@@ -202,6 +210,7 @@ export default function ManagerMeals() {
             return (
               <button
                 key={num}
+                data-today={isToday ? 'true' : undefined}
                 onTouchEnd={touch(() => setSelectedDate(dateStr))}
                 onClick={click(() => setSelectedDate(dateStr))}
                 className="flex flex-col items-center flex-shrink-0 rounded-xl"
@@ -334,7 +343,7 @@ export default function ManagerMeals() {
                     onTouchEnd={touch(() => toggleMeal(m._id, 'lunch'))}
                     onClick={click(() => toggleMeal(m._id, 'lunch'))}
                     disabled={isOff || !isLiveMonth}
-                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm disabled:cursor-not-allowed active:scale-95"
+                    className="flex items-center justify-center py-2.5 rounded-xl font-semibold text-sm disabled:cursor-not-allowed active:scale-95"
                     style={{
                       background: hasLunch ? 'linear-gradient(135deg,#10b981,#059669)' : 'rgba(255,255,255,0.05)',
                       border: hasLunch ? '1px solid rgba(16,185,129,0.5)' : '1px solid rgba(255,255,255,0.08)',
@@ -344,13 +353,13 @@ export default function ManagerMeals() {
                       WebkitTapHighlightColor: 'transparent',
                     }}
                   >
-                    <span style={{ fontSize: '14px' }}>☀️</span> Lunch
+                    Lunch
                   </button>
                   <button
                     onTouchEnd={touch(() => toggleMeal(m._id, 'dinner'))}
                     onClick={click(() => toggleMeal(m._id, 'dinner'))}
                     disabled={isOff || !isLiveMonth}
-                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm disabled:cursor-not-allowed active:scale-95"
+                    className="flex items-center justify-center py-2.5 rounded-xl font-semibold text-sm disabled:cursor-not-allowed active:scale-95"
                     style={{
                       background: hasDinner ? 'linear-gradient(135deg,#3b82f6,#2563eb)' : 'rgba(255,255,255,0.05)',
                       border: hasDinner ? '1px solid rgba(59,130,246,0.5)' : '1px solid rgba(255,255,255,0.08)',
@@ -360,7 +369,7 @@ export default function ManagerMeals() {
                       WebkitTapHighlightColor: 'transparent',
                     }}
                   >
-                    <span style={{ fontSize: '14px' }}>🌙</span> Dinner
+                    Dinner
                   </button>
                 </div>
 

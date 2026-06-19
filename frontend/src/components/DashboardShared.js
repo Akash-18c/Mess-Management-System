@@ -496,17 +496,6 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
         <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Gas Cylinder" emoji="🔥" onStatusChange={refreshSummary} />
         <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Rice Bag"     emoji="🌾" onStatusChange={refreshSummary} />
       </div>
-
-      {/* ── Individual Cost Table ── */}
-      <IndividualCostTable
-        individualCosts={individualCosts}
-        mealRate={liveSummary?.mealRate || mealRate}
-        summary={liveSummary}
-        totalCollected={totalCollected}
-        month={month}
-        year={year}
-        onRefresh={refreshSummary}
-      />
     </div>
   );
 }
