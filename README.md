@@ -1,5 +1,7 @@
 # MessKit — Mess Meal Management System
 
+🚀 **Live Demo:** [https://mess-management-system-fwy8.onrender.com](https://mess-management-system-fwy8.onrender.com)
+
 ## Tech Stack
 - **Frontend:** React.js + Tailwind CSS + Recharts
 - **Backend:** Node.js + Express.js
@@ -34,12 +36,6 @@ npm install
 npm start
 ```
 Frontend runs on `http://localhost:3000`
-
-## Default Login
-```
-Email:    admin@mess.com
-Password: admin123
-```
 
 ## First-Time Setup
 1. Start MongoDB
