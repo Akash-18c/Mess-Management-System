@@ -229,10 +229,7 @@ export default function ManagerDashboard() {
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                       {o.isCurrent && <span style={{ fontSize: '8px', background: 'rgba(245,158,11,0.25)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.40)', padding: '2px 5px', borderRadius: '999px', fontWeight: 700 }}>LIVE</span>}
-                      {o.hasData && (o.isClosed
-                        ? <span style={{ fontSize: '8px', background: 'rgba(248,113,113,0.12)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)', padding: '2px 5px', borderRadius: '999px' }}>Closed</span>
-                        : (!o.isCurrent && <span style={{ fontSize: '8px', background: 'rgba(52,211,153,0.12)', color: '#6ee7b7', border: '1px solid rgba(52,211,153,0.25)', padding: '2px 5px', borderRadius: '999px' }}>Open</span>)
-                      )}
+                      {o.hasData && o.isClosed && <span style={{ fontSize: '8px', background: 'rgba(248,113,113,0.12)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)', padding: '2px 5px', borderRadius: '999px' }}>Closed</span>}
                     </div>
                   </button>
                 );
