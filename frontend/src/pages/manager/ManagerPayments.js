@@ -48,6 +48,12 @@ export default function ManagerPayments() {
 
   useEffect(() => { load(); }, [load]);
 
+  // auto-refresh every 30s
+  useEffect(() => {
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, [load]);
+
   const openAdd = () => { setEditId(null); setForm(EMPTY); setModal(true); };
 
   const openEdit = (p) => {

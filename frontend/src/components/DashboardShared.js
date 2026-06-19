@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Banknote, IndianRupee, Scale, UtensilsCrossed, TrendingUp, Download, ChefHat } from 'lucide-react';
+import { Banknote, IndianRupee, Scale, UtensilsCrossed, TrendingUp, Download, ChefHat, RefreshCw } from 'lucide-react';
 import api from '../api';
 import useAuthStore from '../store/authStore';
 
@@ -292,7 +292,7 @@ function ExpenseTypeCard({ month, year, canEdit, categoryName, emoji, onStatusCh
 }
 
 // ─── Individual Cost Table ────────────────────────────────────────────────────
-function IndividualCostTable({ individualCosts, mealRate, summary, totalCollected: tcProp, month, year }) {
+function IndividualCostTable({ individualCosts, mealRate, summary, totalCollected: tcProp, month, year, onRefresh }) {
   if (!individualCosts?.length) return null;
 
   const grandTotal     = summary?.grandTotal || 0;
@@ -318,6 +318,13 @@ function IndividualCostTable({ individualCosts, mealRate, summary, totalCollecte
             className="flex items-center gap-1.5 text-xs font-semibold bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-xl transition-all active:scale-95 flex-shrink-0">
             <Download size={13} /> PDF
           </button>
+          {onRefresh && (
+            <button onClick={onRefresh}
+              className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95 flex-shrink-0"
+              style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.25)', WebkitTapHighlightColor: 'transparent' }}>
+              <RefreshCw size={13} /> Refresh
+            </button>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-1.5">
           {[
@@ -498,6 +505,7 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
         totalCollected={totalCollected}
         month={month}
         year={year}
+        onRefresh={refreshSummary}
       />
     </div>
   );
