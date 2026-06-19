@@ -94,7 +94,8 @@ export default function MemberDashboard() {
   allSummaries.forEach(s => { summaryMap[`${s.year}-${s.month}`] = s; });
   const monthOptions = buildMonthRange().map(({ month, year }) => {
     const s = summaryMap[`${year}-${month}`];
-    return { month, year, isClosed: s?.isClosed ?? false, isCurrent: month === curMonth && year === curYear, hasData: !!s };
+    const isCurrent = month === curMonth && year === curYear;
+    return { month, year, isClosed: s?.isClosed ?? false, isCurrent, hasData: !!s || isCurrent };
   });
 
   return (
@@ -116,6 +117,7 @@ export default function MemberDashboard() {
 
         <div className="relative" ref={dropRef}>
           <button
+            onTouchEnd={(e) => { e.preventDefault(); setDropdownOpen(o => !o); }}
             onClick={() => setDropdownOpen(o => !o)}
             className="flex items-center gap-2.5 text-sm font-semibold text-white"
             style={{
@@ -154,6 +156,7 @@ export default function MemberDashboard() {
                   return (
                     <button
                       key={`${o.month}-${o.year}`}
+                      onTouchEnd={(e) => { e.preventDefault(); setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
                       onClick={() => { setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
                       className="w-full text-left flex items-center justify-between transition-all duration-150"
                       style={{
@@ -172,10 +175,7 @@ export default function MemberDashboard() {
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
                         {o.isCurrent && <span style={{ fontSize: '9px', background: 'rgba(34,197,94,0.22)', color: '#86efac', border: '1px solid rgba(34,197,94,0.40)', padding: '2px 6px', borderRadius: '999px', fontWeight: 700 }}>LIVE</span>}
-                        {o.hasData && (o.isClosed
-                          ? <span style={{ fontSize: '9px', background: 'rgba(248,113,113,0.12)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)', padding: '2px 6px', borderRadius: '999px' }}>Closed</span>
-                          : <span style={{ fontSize: '9px', background: 'rgba(52,211,153,0.12)', color: '#6ee7b7', border: '1px solid rgba(52,211,153,0.25)', padding: '2px 6px', borderRadius: '999px' }}>Open</span>
-                        )}
+                        {o.hasData && o.isClosed && <span style={{ fontSize: '9px', background: 'rgba(248,113,113,0.12)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)', padding: '2px 6px', borderRadius: '999px' }}>Closed</span>}
                       </div>
                     </button>
                   );

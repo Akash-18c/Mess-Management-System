@@ -8,6 +8,13 @@ router.use(auth);
 router.get('/list', async (req, res) => {
   try {
     const summaries = await MonthlySummary.find().sort({ year: -1, month: -1 });
+    const now = new Date();
+    const curMonth = now.getMonth() + 1;
+    const curYear  = now.getFullYear();
+    const hasCurrent = summaries.some(s => s.month === curMonth && s.year === curYear);
+    if (!hasCurrent) {
+      summaries.unshift({ month: curMonth, year: curYear, isClosed: false, mealRate: 0, grandTotal: 0, totalMeals: 0 });
+    }
     res.json(summaries);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
