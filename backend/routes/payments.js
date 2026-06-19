@@ -23,6 +23,14 @@ router.post('/', async (req, res) => {
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
 
+router.put('/:id', async (req, res) => {
+  try {
+    const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (payment) await recalcSummary(payment.month, payment.year);
+    res.json(payment);
+  } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
 router.delete('/:id', async (req, res) => {
   try {
     const payment = await Payment.findByIdAndDelete(req.params.id);
