@@ -13,7 +13,7 @@ const OTHER_CATS = [
   { id: 'Other',        emoji: '📦', label: 'Other'        },
 ];
 
-const EMPTY_G = { item:'', quantity:'', unitPrice:'', buyerName:'', date: now.toISOString().slice(0,10) };
+const EMPTY_G = { item:'', unitPrice:'', buyerName:'', date: now.toISOString().slice(0,10) };
 const EMPTY_O = { categoryName:'Gas Cylinder', description:'', amount:'', paidBy:'', date: now.toISOString().slice(0,10), note:'', status:'Due' };
 
 const glass = {
@@ -83,11 +83,11 @@ export default function ManagerExpenses() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    // close modal instantly for fast feel
+    setModal(false);
     try {
       if (tab === 'grocery') {
-        const payload = { item: form.item, unitPrice: +form.unitPrice, buyerName: form.buyerName, date: form.date, month: MONTH, year: YEAR };
-        if (form.quantity) payload.quantity = +form.quantity;
-        await api.post('/expenses/grocery', payload);
+        await api.post('/expenses/grocery', { item: form.item, unitPrice: +form.unitPrice, buyerName: form.buyerName, date: form.date, month: MONTH, year: YEAR });
         toast.success('Grocery added');
       } else if (editId) {
         await api.put(`/expenses/other/${editId}`, { ...form, amount: +form.amount });
@@ -96,10 +96,10 @@ export default function ManagerExpenses() {
         await api.post('/expenses/other', { ...form, month: MONTH, year: YEAR, amount: +form.amount });
         toast.success('Expense added');
       }
-      setModal(false);
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error');
+      setModal(true); // reopen on error
     } finally {
       setLoading(false);
     }
@@ -259,23 +259,17 @@ export default function ManagerExpenses() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="label text-xs">Quantity <span className="text-slate-600">(optional)</span></label>
-                      <input className="input" type="number" step="0.01" min="0" placeholder="e.g. 2" value={form.quantity} onChange={e => f({ quantity: e.target.value })} />
-                    </div>
-                    <div>
                       <label className="label text-xs">Total Price (₹)</label>
                       <input className="input" type="number" step="0.01" min="0" placeholder="0.00" value={form.unitPrice} onChange={e => f({ unitPrice: e.target.value })} required />
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="label text-xs">Date</label>
                       <input className="input" type="date" value={form.date} onChange={e => f({ date: e.target.value })} required />
                     </div>
-                    <div>
-                      <label className="label text-xs">Buyer <span className="text-slate-600">(optional)</span></label>
-                      <input className="input" placeholder="Who bought?" value={form.buyerName} onChange={e => f({ buyerName: e.target.value })} />
-                    </div>
+                  </div>
+                  <div>
+                    <label className="label text-xs">Buyer <span className="text-slate-600">(optional)</span></label>
+                    <input className="input" placeholder="Who bought?" value={form.buyerName} onChange={e => f({ buyerName: e.target.value })} />
                   </div>
                 </>
               ) : (

@@ -162,7 +162,8 @@ export default function ManagerDashboard() {
     <div className="space-y-4">
 
       {/* ── Header + Dropdown ── */}
-      <div className="flex items-start justify-between gap-3 rounded-2xl p-3 px-4" style={glass}>
+      <div className="relative">
+        <div className="flex items-start justify-between gap-3 rounded-2xl p-3 px-4" style={glass}>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <Sparkles size={15} className="text-amber-400 flex-shrink-0" />
@@ -197,54 +198,55 @@ export default function ManagerDashboard() {
             <ChevronDown size={12} className={`text-slate-400 transition-transform duration-200 ml-1 ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          {dropdownOpen && (
-            <div className="absolute right-0 top-full mt-2 z-[200] rounded-2xl overflow-hidden" style={{
-              minWidth: '220px',
-              background: 'rgba(8,14,28,0.97)',
-              backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(245,158,11,0.20)',
-              boxShadow: '0 24px 60px rgba(0,0,0,0.8)',
-            }}>
-              <div className="px-3 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(245,158,11,0.08)' }}>
-                <Calendar size={12} className="text-amber-400" />
-                <p className="text-[10px] font-bold text-amber-300 uppercase tracking-widest">Select Month</p>
-              </div>
-              <div className="max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-                {monthOptions.map(o => {
-                  const isSel = o.month === selectedMonth && o.year === selectedYear;
-                  return (
-                    <button
-                      key={`${o.month}-${o.year}`}
-                      onTouchEnd={(e) => { e.preventDefault(); setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
-                      onClick={() => { setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
-                      className="w-full text-left flex items-center justify-between"
-                      style={{
-                        padding: '9px 14px',
-                        background: isSel ? 'rgba(245,158,11,0.15)' : 'transparent',
-                        borderLeft: isSel ? '2px solid #f59e0b' : '2px solid transparent',
-                        WebkitTapHighlightColor: 'transparent',
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: o.hasData ? (o.isClosed ? '#f87171' : '#34d399') : '#334155' }} />
-                        <span className="text-xs font-medium" style={{ color: isSel ? '#fcd34d' : '#e2e8f0' }}>
-                          {MONTHS_FULL[o.month - 1]} {o.year}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                        {o.isCurrent && <span style={{ fontSize: '8px', background: 'rgba(245,158,11,0.25)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.40)', padding: '2px 5px', borderRadius: '999px', fontWeight: 700 }}>LIVE</span>}
-                        {o.hasData && (o.isClosed
-                          ? <span style={{ fontSize: '8px', background: 'rgba(248,113,113,0.12)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)', padding: '2px 5px', borderRadius: '999px' }}>Closed</span>
-                          : <span style={{ fontSize: '8px', background: 'rgba(52,211,153,0.12)', color: '#6ee7b7', border: '1px solid rgba(52,211,153,0.25)', padding: '2px 5px', borderRadius: '999px' }}>Open</span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
+
+        {dropdownOpen && (
+          <div className="absolute right-0 top-full mt-2 z-[200] rounded-2xl overflow-hidden" style={{
+            minWidth: '220px',
+            background: 'rgba(8,14,28,0.97)',
+            backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
+            border: '1px solid rgba(245,158,11,0.20)',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.8)',
+          }}>
+            <div className="px-3 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(245,158,11,0.08)' }}>
+              <Calendar size={12} className="text-amber-400" />
+              <p className="text-[10px] font-bold text-amber-300 uppercase tracking-widest">Select Month</p>
+            </div>
+            <div className="max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+              {monthOptions.map(o => {
+                const isSel = o.month === selectedMonth && o.year === selectedYear;
+                return (
+                  <button
+                    key={`${o.month}-${o.year}`}
+                    onTouchEnd={(e) => { e.preventDefault(); setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
+                    onClick={() => { setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
+                    className="w-full text-left flex items-center justify-between"
+                    style={{
+                      padding: '9px 14px',
+                      background: isSel ? 'rgba(245,158,11,0.15)' : 'transparent',
+                      borderLeft: isSel ? '2px solid #f59e0b' : '2px solid transparent',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: o.hasData ? (o.isClosed ? '#f87171' : '#34d399') : '#334155' }} />
+                      <span className="text-xs font-medium" style={{ color: isSel ? '#fcd34d' : '#e2e8f0' }}>
+                        {MONTHS_FULL[o.month - 1]} {o.year}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                      {o.isCurrent && <span style={{ fontSize: '8px', background: 'rgba(245,158,11,0.25)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.40)', padding: '2px 5px', borderRadius: '999px', fontWeight: 700 }}>LIVE</span>}
+                      {o.hasData && (o.isClosed
+                        ? <span style={{ fontSize: '8px', background: 'rgba(248,113,113,0.12)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)', padding: '2px 5px', borderRadius: '999px' }}>Closed</span>
+                        : <span style={{ fontSize: '8px', background: 'rgba(52,211,153,0.12)', color: '#6ee7b7', border: '1px solid rgba(52,211,153,0.25)', padding: '2px 5px', borderRadius: '999px' }}>Open</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Shared Dashboard ── */}
