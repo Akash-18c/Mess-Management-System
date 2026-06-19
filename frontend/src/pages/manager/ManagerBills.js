@@ -1,32 +1,38 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { RefreshCw, FileText } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import api from '../../api';
 
 const now = new Date();
-const realName = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : name; };
+const MONTH = now.getMonth() + 1;
+const YEAR  = now.getFullYear();
+const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || '—'); };
+
+const glass = {
+  background: 'rgba(255,255,255,0.04)',
+  backdropFilter: 'blur(40px)',
+  WebkitBackdropFilter: 'blur(40px)',
+  border: '1px solid rgba(255,255,255,0.10)',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)',
+};
 
 export default function ManagerBills() {
-  const month = now.getMonth() + 1;
-  const year = now.getFullYear();
-  const [bills, setBills] = useState([]);
-  const [summary, setSummary] = useState(null);
+  const [bills,      setBills]      = useState([]);
+  const [summary,    setSummary]    = useState(null);
   const [generating, setGenerating] = useState(false);
 
   const load = useCallback(() => {
-    Promise.all([
-      api.get(`/bills/${month}/${year}`).then(r => setBills(r.data)),
-      api.get(`/summary/${month}/${year}`).then(r => setSummary(r.data)),
-    ]);
-  }, [month, year]);
+    api.get(`/bills/${MONTH}/${YEAR}`).then(r => setBills(r.data)).catch(() => {});
+    api.get(`/summary/${MONTH}/${YEAR}`).then(r => setSummary(r.data)).catch(() => {});
+  }, []);
 
   useEffect(() => { load(); }, [load]);
 
   const generateBills = async () => {
     setGenerating(true);
     try {
-      await api.post(`/bills/generate/${month}/${year}`);
-      toast.success('Bills generated successfully');
+      await api.post(`/bills/generate/${MONTH}/${YEAR}`);
+      toast.success('Bills generated');
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error generating bills');
@@ -35,75 +41,110 @@ export default function ManagerBills() {
     }
   };
 
+  const mealRate = summary?.mealRate || 0;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4">
+
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between gap-3 rounded-2xl p-3 px-4" style={glass}>
         <div>
-          <h1 className="text-2xl font-bold text-white">Bills</h1>
-          <p className="text-slate-400 text-sm">Generate and view member bills</p>
+          <h1 className="text-base font-bold text-white leading-tight">Bills</h1>
+          <p className="text-[10px] text-slate-500 mt-0.5">Generate &amp; view member bills</p>
         </div>
-        <button onClick={generateBills} disabled={generating} className="btn-primary flex items-center gap-2">
-          <RefreshCw size={16} className={generating ? 'animate-spin' : ''} />
-          {generating ? 'Generating...' : 'Generate Bills'}
+        <button
+          onClick={generateBills}
+          disabled={generating}
+          className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95 disabled:opacity-60"
+          style={{ background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s' }}
+        >
+          <RefreshCw size={13} className={generating ? 'animate-spin' : ''} />
+          {generating ? 'Generating…' : 'Generate'}
         </button>
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* ── Summary Cards ── */}
+      <div className="grid grid-cols-2 gap-2">
         {[
-          { label: 'Meal Rate', value: `₹${summary?.mealRate?.toFixed(2) || '0.00'}`, color: 'text-green-400' },
-          { label: 'Total Meals', value: summary?.totalMeals || 0, color: 'text-blue-400' },
-          { label: 'Grand Total', value: `₹${summary?.grandTotal?.toFixed(2) || '0.00'}`, color: 'text-amber-400' },
-          { label: 'Bills Generated', value: bills.length, color: 'text-purple-400' },
+          { label: 'Meal Rate',    value: `₹${mealRate.toFixed(2)}`,                    color: '#34d399' },
+          { label: 'Total Meals',  value: summary?.totalMeals || 0,                     color: '#60a5fa' },
+          { label: 'Grand Total',  value: `₹${(summary?.grandTotal || 0).toFixed(2)}`,  color: '#fbbf24' },
+          { label: 'Bills',        value: bills.length,                                 color: '#a78bfa' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="card">
-            <p className="text-slate-400 text-xs mb-1">{label}</p>
-            <p className={`text-xl font-bold ${color}`}>{value}</p>
+          <div key={label} className="rounded-2xl p-3" style={glass}>
+            <p className="text-[10px] text-slate-500 mb-1">{label}</p>
+            <p className="text-base font-bold" style={{ color }}>{value}</p>
           </div>
         ))}
       </div>
 
-      <div className="card overflow-x-auto">
-        <h3 className="font-semibold text-white mb-4 flex items-center gap-2"><FileText size={18} />Member Bills</h3>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-700">
-              <th className="text-left py-2 px-3 text-slate-400 font-medium">Member</th>
-              <th className="text-right py-2 px-3 text-slate-400 font-medium hidden sm:table-cell">B</th>
-              <th className="text-right py-2 px-3 text-slate-400 font-medium hidden sm:table-cell">L</th>
-              <th className="text-right py-2 px-3 text-slate-400 font-medium hidden sm:table-cell">D</th>
-              <th className="text-right py-2 px-3 text-slate-400 font-medium">Total Meals</th>
-              <th className="text-right py-2 px-3 text-slate-400 font-medium">Bill</th>
-              <th className="text-right py-2 px-3 text-slate-400 font-medium">Advance</th>
-              <th className="text-right py-2 px-3 text-slate-400 font-medium">Due</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bills.map(b => (
-              <tr key={b._id} className="border-b border-slate-700/50 hover:bg-slate-700/30">
-                <td className="py-2.5 px-3">
-                  <div>
-                    <p className="text-white font-medium">{realName(b.memberId?.name)}</p>
-                    <p className="text-slate-500 text-xs">Room {b.memberId?.room}</p>
+      {/* ── Bill Cards ── */}
+      {bills.length === 0 ? (
+        <div className="rounded-2xl py-14 flex flex-col items-center gap-3" style={glass}>
+          <span className="text-4xl">🧾</span>
+          <p className="text-slate-500 text-sm">No bills yet</p>
+          <p className="text-slate-600 text-xs">Tap "Generate" to calculate bills</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {bills.map(b => {
+            const due = b.dueAmount ?? 0;
+            const isDue = due > 0;
+            const masiSalary = b.masiSalary || 0;
+            const name = rn(b.memberId?.name);
+            return (
+              <div key={b._id} className="rounded-2xl overflow-hidden" style={glass}>
+                {/* Member header row */}
+                <div className="flex items-center justify-between px-4 py-3"
+                  style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                      style={{ background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.25)' }}>
+                      {name?.[0]?.toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm leading-tight">{name}</p>
+                      {b.memberId?.room && <p className="text-[10px] text-slate-500">Room {b.memberId.room}</p>}
+                    </div>
                   </div>
-                </td>
-                <td className="py-2.5 px-3 text-right text-slate-400 hidden sm:table-cell">{b.breakfastCount}</td>
-                <td className="py-2.5 px-3 text-right text-slate-400 hidden sm:table-cell">{b.lunchCount}</td>
-                <td className="py-2.5 px-3 text-right text-slate-400 hidden sm:table-cell">{b.dinnerCount}</td>
-                <td className="py-2.5 px-3 text-right text-white">{b.mealCount}</td>
-                <td className="py-2.5 px-3 text-right text-white font-medium">₹{b.totalBill?.toFixed(2)}</td>
-                <td className="py-2.5 px-3 text-right text-green-400">₹{b.advance?.toFixed(2)}</td>
-                <td className={`py-2.5 px-3 text-right font-semibold ${b.dueAmount > 0 ? 'text-red-400' : 'text-green-400'}`}>
-                  {b.dueAmount > 0 ? `₹${b.dueAmount.toFixed(2)}` : `Refund ₹${Math.abs(b.dueAmount).toFixed(2)}`}
-                </td>
-              </tr>
-            ))}
-            {bills.length === 0 && (
-              <tr><td colSpan={8} className="py-8 text-center text-slate-500">No bills yet. Click "Generate Bills" to calculate.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                  {/* Due / Refund badge */}
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0"
+                    style={{
+                      background: isDue ? 'rgba(248,113,113,0.12)' : 'rgba(52,211,153,0.12)',
+                      color: isDue ? '#f87171' : '#34d399',
+                      border: isDue ? '1px solid rgba(248,113,113,0.25)' : '1px solid rgba(52,211,153,0.25)',
+                    }}>
+                    {isDue ? `Due ₹${due.toFixed(2)}` : `Refund ₹${Math.abs(due).toFixed(2)}`}
+                  </span>
+                </div>
+
+                {/* Bill breakdown */}
+                <div className="px-4 py-3 grid grid-cols-2 gap-x-4 gap-y-2">
+                  <Row label="Total Meals"   value={b.mealCount}                      color="#e2e8f0" />
+                  <Row label="Per Meal Rate" value={`₹${mealRate.toFixed(2)}`}        color="#fbbf24" />
+                  <Row label="Meal Cost"     value={`₹${(b.totalBill || 0).toFixed(2)}`}  color="#e2e8f0" />
+                  <Row label="Masi Salary"   value={`₹${masiSalary.toFixed(2)}`}      color="#e2e8f0" />
+                  <Row label="Advance Paid"  value={`₹${(b.advance || 0).toFixed(2)}`} color="#34d399" />
+                  <Row label="Total Due"
+                    value={isDue ? `₹${due.toFixed(2)}` : `−₹${Math.abs(due).toFixed(2)}`}
+                    color={isDue ? '#f87171' : '#34d399'}
+                    bold
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Row({ label, value, color, bold }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[10px] text-slate-500">{label}</span>
+      <span className="text-xs font-semibold" style={{ color, fontWeight: bold ? 700 : 600 }}>{value}</span>
     </div>
   );
 }
