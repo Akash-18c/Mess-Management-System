@@ -84,9 +84,15 @@ export default function ManagerDashboard() {
   }, [isCurrentMonth]);
 
   useEffect(() => {
-    const handler = (e) => { if (dropRef.current && !dropRef.current.contains(e.target)) setDropdownOpen(false); };
+    const handler = (e) => {
+      if (dropRef.current && !dropRef.current.contains(e.target)) setDropdownOpen(false);
+    };
     document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('touchend', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchend', handler);
+    };
   }, []);
 
   useEffect(() => {
@@ -172,7 +178,7 @@ export default function ManagerDashboard() {
 
         <div className="relative flex-shrink-0" ref={dropRef}>
           <button
-            onTouchStart={() => setDropdownOpen(o => !o)}
+            onTouchEnd={(e) => { e.preventDefault(); setDropdownOpen(o => !o); }}
             onClick={() => setDropdownOpen(o => !o)}
             className="flex items-center gap-2 text-xs font-semibold text-white"
             style={{
@@ -209,7 +215,7 @@ export default function ManagerDashboard() {
                   return (
                     <button
                       key={`${o.month}-${o.year}`}
-                      onTouchStart={() => { setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
+                      onTouchEnd={(e) => { e.preventDefault(); setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
                       onClick={() => { setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
                       className="w-full text-left flex items-center justify-between"
                       style={{
@@ -322,7 +328,7 @@ export default function ManagerDashboard() {
           ].map(({ label, path, emoji, color, border, text }) => (
             <button
               key={label}
-              onTouchStart={() => navigate(path)}
+              onTouchEnd={(e) => { e.preventDefault(); navigate(path); }}
               onClick={() => navigate(path)}
               className="flex items-center gap-3 rounded-xl p-3 text-left active:scale-95"
               style={{
