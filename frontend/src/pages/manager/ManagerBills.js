@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { RefreshCw, Download } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import api from '../../api';
-import { downloadBillsPdf } from '../../utils/downloadBillsPdf';
 
 const now = new Date();
 const MONTH = now.getMonth() + 1;
@@ -21,7 +20,6 @@ export default function ManagerBills() {
   const [bills,      setBills]      = useState([]);
   const [summary,    setSummary]    = useState(null);
   const [generating, setGenerating] = useState(false);
-  const [pdfLoading, setPdfLoading] = useState(false);
 
   const load = useCallback(() => {
     api.get(`/bills/${MONTH}/${YEAR}`).then(r => setBills(r.data)).catch(() => {});
@@ -35,14 +33,6 @@ export default function ManagerBills() {
     const t = setInterval(load, 30000);
     return () => clearInterval(t);
   }, [load]);
-
-  const handleDownloadPdf = async () => {
-    if (!bills.length) return toast.error('No bills to download');
-    setPdfLoading(true);
-    try { await downloadBillsPdf({ bills, summary, month: MONTH, year: YEAR }); }
-    catch { toast.error('PDF generation failed'); }
-    finally { setPdfLoading(false); }
-  };
 
   const generateBills = async () => {
     setGenerating(true);
@@ -68,26 +58,15 @@ export default function ManagerBills() {
           <h1 className="text-base font-bold text-white leading-tight">Bills</h1>
           <p className="text-[10px] text-slate-500 mt-0.5">Generate &amp; view member bills</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleDownloadPdf}
-            disabled={pdfLoading || !bills.length}
-            className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95 disabled:opacity-60"
-            style={{ background: 'linear-gradient(135deg,#059669,#047857)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s' }}
-          >
-            <Download size={13} className={pdfLoading ? 'animate-bounce' : ''} />
-            {pdfLoading ? 'PDF…' : 'PDF'}
-          </button>
-          <button
-            onClick={generateBills}
-            disabled={generating}
-            className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95 disabled:opacity-60"
-            style={{ background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s' }}
-          >
-            <RefreshCw size={13} className={generating ? 'animate-spin' : ''} />
-            {generating ? 'Generating…' : 'Generate'}
-          </button>
-        </div>
+        <button
+          onClick={generateBills}
+          disabled={generating}
+          className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95 disabled:opacity-60"
+          style={{ background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s' }}
+        >
+          <RefreshCw size={13} className={generating ? 'animate-spin' : ''} />
+          {generating ? 'Generating…' : 'Generate'}
+        </button>
       </div>
 
       {/* ── Summary Cards ── */}
