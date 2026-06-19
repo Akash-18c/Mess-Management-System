@@ -108,20 +108,21 @@ export default function ManagerDashboard() {
     <div className="space-y-6">
 
       {/* ── Header + Dropdown ── */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <Sparkles size={18} className="text-amber-400" />
+            <Sparkles size={16} className="text-amber-400 flex-shrink-0" />
             <h1 style={{
-              fontFamily: "'Dancing Script', cursive", fontSize: '2rem', fontWeight: 700,
+              fontFamily: "'Dancing Script', cursive", fontSize: 'clamp(1.4rem, 5vw, 2rem)', fontWeight: 700,
               background: 'linear-gradient(135deg,#ffffff 0%,#fef3c7 40%,#fbbf24 75%,#d97706 100%)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              lineHeight: 1.2,
             }}>Manager Dashboard</h1>
           </div>
           <p className="text-slate-500 text-xs mt-0.5 pl-6">Viewing · {selectedLabel}</p>
         </div>
 
-        <div className="relative" ref={dropRef}>
+        <div className="relative flex-shrink-0" ref={dropRef}>
           <button
             onClick={() => setDropdownOpen(o => !o)}
             className="flex items-center gap-2.5 text-sm font-semibold text-white"
@@ -129,7 +130,7 @@ export default function ManagerDashboard() {
               background: 'rgba(245,158,11,0.10)',
               backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
               border: '1px solid rgba(245,158,11,0.30)',
-              borderRadius: '14px', padding: '10px 16px', minWidth: '215px',
+              borderRadius: '14px', padding: '10px 12px', minWidth: 'clamp(140px, 40vw, 215px)',
               justifyContent: 'space-between',
               boxShadow: '0 4px 20px rgba(245,158,11,0.12)',
             }}
@@ -210,46 +211,66 @@ export default function ManagerDashboard() {
       />
 
       {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Today's Meals", value: isCurrentMonth ? todayTotal : '—', icon: null },
-          { label: 'Total Expense', value: `₹${summary?.grandTotal?.toFixed(2) || '0.00'}`, icon: null },
-          { label: 'Active Members', value: members.length, icon: null },
+          { label: "Today's Meals", value: isCurrentMonth ? todayTotal : '—' },
+          { label: 'Total Expense', value: `₹${summary?.grandTotal?.toFixed(2) || '0.00'}` },
+          { label: 'Active Members', value: members.length },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-2xl p-5" style={glass}>
-            <p className="text-2xl font-bold text-white mb-1">{value}</p>
-            <p className="text-xs text-slate-500 font-medium">{label}</p>
+          <div key={label} className="rounded-2xl p-3 sm:p-5" style={glass}>
+            <p className="text-lg sm:text-2xl font-bold text-white mb-0.5 truncate">{value}</p>
+            <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-tight">{label}</p>
           </div>
         ))}
       </div>
 
       {/* ── Bar Chart ── */}
       {memberMealCounts.some(m => m.meals > 0) && (
-        <div className="rounded-2xl p-5" style={glass}>
-          <h3 className="font-semibold text-white mb-1">Member Meal Count</h3>
-          <p className="text-slate-500 text-xs mb-4">{selectedLabel}</p>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={memberMealCounts}>
-              <XAxis dataKey="name" tick={{ fill: '#475569', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#475569', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: 'rgba(8,14,28,0.97)', border: '1px solid rgba(245,158,11,0.20)', borderRadius: '12px', color: '#fff' }} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-              <Bar dataKey="meals" fill="#f59e0b" radius={[5,5,0,0]} name="Total Meals" />
+        <div className="rounded-2xl p-4 sm:p-5" style={glass}>
+          <h3 className="font-semibold text-white mb-0.5 text-sm sm:text-base">Member Meal Count</h3>
+          <p className="text-slate-500 text-xs mb-3">{selectedLabel}</p>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={memberMealCounts} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+              <XAxis
+                dataKey="name"
+                tick={{ fill: '#64748b', fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                interval={0}
+              />
+              <YAxis
+                tick={{ fill: '#64748b', fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                width={30}
+              />
+              <Tooltip
+                contentStyle={{ background: 'rgba(8,14,28,0.97)', border: '1px solid rgba(245,158,11,0.20)', borderRadius: '12px', color: '#fff', fontSize: '12px' }}
+                cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+              />
+              <Bar dataKey="meals" fill="#f59e0b" radius={[4,4,0,0]} name="Total Meals" maxBarSize={36} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       )}
 
       {/* ── Quick Actions ── */}
-      <div className="rounded-2xl p-5" style={glass}>
-        <h3 className="font-semibold text-white mb-3">Quick Actions</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="rounded-2xl p-4 sm:p-5" style={glass}>
+        <h3 className="font-semibold text-white mb-3 text-sm sm:text-base">Quick Actions</h3>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
           {[
             { label: 'Mark Meals', path: '/manager/meals', cls: 'btn-primary' },
             { label: 'Add Expense', path: '/manager/expenses', cls: 'btn-amber' },
             { label: 'Record Payment', path: '/manager/payments', cls: 'btn-secondary' },
             { label: 'Generate Bills', path: '/manager/bills', cls: 'btn-secondary' },
           ].map(({ label, path, cls }) => (
-            <button key={label} onClick={() => navigate(path)} className={`${cls} text-sm`}>{label}</button>
+            <button
+              key={label}
+              onClick={() => navigate(path)}
+              className={`${cls} text-xs sm:text-sm w-full py-2.5 sm:py-2`}
+            >
+              {label}
+            </button>
           ))}
         </div>
       </div>
