@@ -22,11 +22,10 @@ function formatDisplayName(name, role) {
   return match ? match[1] : name;
 }
 
-function getRoleLabel(role, name) {
-  const realName = formatDisplayName(name, role);
-  if (role === 'admin')   return `Admin (${realName})`;
-  if (role === 'manager') return `Manager (${realName})`;
-  return realName;
+function getRoleLabel(role) {
+  if (role === 'admin')   return 'Admin';
+  if (role === 'manager') return 'Manager';
+  return 'Member';
 }
 
 // ─── PDF ──────────────────────────────────────────────────────────────────────
@@ -417,7 +416,7 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
 
   const displayName    = user?.name || '';
   const realName       = formatDisplayName(displayName, role);
-  const roleBadgeLabel = getRoleLabel(role, displayName);
+  const roleBadgeLabel = getRoleLabel(role);
 
   const summaryCards = [
     { label: 'Total Collected', value: `₹${(totalCollected||0).toFixed(2)}`, icon: Banknote,       iconColor: '#60a5fa', sub: "Advance payments" },
@@ -436,7 +435,7 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
     <div className="space-y-5">
 
       {/* ── Welcome Banner ── */}
-      <div className="rounded-2xl p-5" style={{ ...glass, border: `1px solid rgba(255,255,255,0.10)` }}>
+      <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.10)' }}>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold text-white"
