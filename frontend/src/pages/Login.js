@@ -88,26 +88,26 @@ export default function Login() {
       {navigating && <LoadingOverlay />}
 
       {/* ── Full-screen wrapper ───────────────────────────────────────── */}
-      <div className="min-h-screen relative flex flex-col items-center justify-center px-4 py-10 overflow-hidden">
+      <div className="fixed inset-0 flex flex-col items-center justify-center px-4 overflow-y-auto overflow-x-hidden">
 
         {/* Background image */}
-        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        <div className="fixed inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=2560&q=95')`, transform: 'scale(1.06)', filter: 'brightness(0.45) saturate(1.2)' }} />
-        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat -z-10"
+        <div className="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
           style={{ backgroundImage: `url('https://images.unsplash.com/photo-1567337710282-00832b415979?auto=format&fit=crop&w=2560&q=95')`, filter: 'brightness(0.35) saturate(1.35)' }} />
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0"
+        <div className="fixed inset-0"
           style={{ background: 'linear-gradient(160deg,rgba(1,6,15,0.78) 0%,rgba(3,16,9,0.55) 45%,rgba(10,28,18,0.62) 75%,rgba(1,6,15,0.78) 100%)' }} />
 
         {/* Ambient glows */}
-        <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none"
+        <div className="fixed -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle,rgba(16,185,129,0.12) 0%,transparent 65%)' }} />
-        <div className="absolute -bottom-32 -right-32 w-[600px] h-[600px] rounded-full pointer-events-none"
+        <div className="fixed -bottom-32 -right-32 w-[600px] h-[600px] rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle,rgba(245,158,11,0.08) 0%,transparent 65%)' }} />
 
         {/* ── Content ──────────────────────────────────────────────────── */}
-        <div className="relative z-10 w-full max-w-[400px] flex flex-col">
+        <div className="relative z-10 w-full max-w-[400px] flex flex-col my-auto py-8">
 
           {/* ── Brand block ────────────────────────────────────────────── */}
           <div className="flex flex-col items-center text-center mb-6">
