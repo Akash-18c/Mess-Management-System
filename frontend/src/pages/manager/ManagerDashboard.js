@@ -198,7 +198,7 @@ export default function ManagerDashboard() {
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden" style={{
+            <div className="absolute right-0 top-full mt-2 z-[200] rounded-2xl overflow-hidden" style={{
               minWidth: '220px',
               background: 'rgba(8,14,28,0.97)',
               backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
