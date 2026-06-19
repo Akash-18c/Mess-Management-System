@@ -162,42 +162,35 @@ export default function ManagerDashboard() {
     <div className="space-y-4">
 
       {/* ── Header + Dropdown ── */}
-      <div className="relative">
+      <div className="relative" ref={dropRef}>
         <div className="flex items-start justify-between gap-3 rounded-2xl p-3 px-4" style={glass}>
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <Sparkles size={15} className="text-amber-400 flex-shrink-0" />
-            <h1 style={{
-              fontFamily: "'Dancing Script', cursive", fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', fontWeight: 700,
-              background: 'linear-gradient(135deg,#ffffff 0%,#fef3c7 40%,#fbbf24 75%,#d97706 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              lineHeight: 1.2,
-            }}>Manager Dashboard</h1>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <Sparkles size={15} className="text-amber-400 flex-shrink-0" />
+              <h1 style={{
+                fontFamily: "'Dancing Script', cursive", fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', fontWeight: 700,
+                background: 'linear-gradient(135deg,#ffffff 0%,#fef3c7 40%,#fbbf24 75%,#d97706 100%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                lineHeight: 1.2,
+              }}>Manager Dashboard</h1>
+            </div>
+            <p className="text-slate-500 text-[10px] mt-0.5 pl-5">Viewing · {selectedLabel}</p>
           </div>
-          <p className="text-slate-500 text-[10px] mt-0.5 pl-5">Viewing · {selectedLabel}</p>
-        </div>
-
-        <div className="relative flex-shrink-0" ref={dropRef}>
           <button
             onTouchEnd={(e) => { e.preventDefault(); setDropdownOpen(o => !o); }}
             onClick={() => setDropdownOpen(o => !o)}
-            className="flex items-center gap-2 text-xs font-semibold text-white"
+            className="flex items-center gap-2 text-xs font-semibold text-white flex-shrink-0"
             style={{
               background: 'rgba(245,158,11,0.12)',
-              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
               border: '1px solid rgba(245,158,11,0.30)',
               borderRadius: '12px', padding: '8px 10px',
-              justifyContent: 'space-between',
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            <div className="flex items-center gap-1.5">
-              <Calendar size={13} className="text-amber-400" />
-              <span>{selectedLabel}</span>
-            </div>
-            <ChevronDown size={12} className={`text-slate-400 transition-transform duration-200 ml-1 ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <Calendar size={13} className="text-amber-400" />
+            <span>{selectedLabel}</span>
+            <ChevronDown size={12} className={`text-slate-400 ml-1 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
-
         </div>
 
         {dropdownOpen && (
