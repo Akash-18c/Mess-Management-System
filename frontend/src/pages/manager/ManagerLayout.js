@@ -76,7 +76,7 @@ export default function ManagerLayout() {
         </div>
       )}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+        <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-white/10" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)' }}>
           <button onClick={() => setOpen(true)} className="text-slate-400 hover:text-white"><Menu size={22} /></button>
           <div className="flex items-center gap-2">
             <img src="/messy-logo.png" alt="logo" className="w-7 h-7 object-contain" />
