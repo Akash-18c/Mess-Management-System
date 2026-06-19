@@ -340,59 +340,6 @@ function IndividualCostTable({ individualCosts, mealRate, summary, totalCollecte
           ))}
         </div>
       </div>
-
-      <div className="p-3">
-        <div className="overflow-x-auto">
-          <table className="w-full" style={{ minWidth: '320px', fontSize: '12px' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                {[
-                  { h: 'Name',     cls: 'text-left'  },
-                  { h: 'Meals',    cls: 'text-right' },
-                  { h: 'Per Meal', cls: 'text-right hidden sm:table-cell' },
-                  { h: 'Cost',     cls: 'text-right' },
-                  { h: 'Masi',     cls: 'text-right hidden sm:table-cell' },
-                  { h: 'Paid',     cls: 'text-right hidden sm:table-cell' },
-                  { h: 'Balance',  cls: 'text-right' },
-                ].map(({ h, cls }) => (
-                  <th key={h} className={`py-2 px-1.5 text-slate-500 font-semibold text-[10px] uppercase tracking-wide ${cls}`}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {individualCosts.map((m, i) => (
-                <tr key={m._id}
-                  style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 !== 0 ? 'rgba(255,255,255,0.02)' : 'transparent' }}
-                >
-                  <td className="py-2 px-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                        style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                        {formatDisplayName(m.name, m.role)?.[0]?.toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <span className="text-white font-medium block truncate" style={{ maxWidth: '70px' }}>{formatDisplayName(m.name, m.role)}</span>
-                        {m.role === 'manager' && <span className="badge-manager text-[9px] px-1 py-0">Mgr</span>}
-                        {m.role === 'admin'   && <span className="badge-admin   text-[9px] px-1 py-0">Admin</span>}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-2 px-1.5 text-right text-white font-semibold">{m.totalMeals}</td>
-                  <td className="py-2 px-1.5 text-right text-slate-400 hidden sm:table-cell">₹{(mealRate||0).toFixed(2)}</td>
-                  <td className="py-2 px-1.5 text-right text-slate-200">₹{m.totalMealCost.toFixed(2)}</td>
-                  <td className="py-2 px-1.5 text-right text-slate-400 hidden sm:table-cell">₹{(m.masiSalary||0).toFixed(2)}</td>
-                  <td className="py-2 px-1.5 text-right text-slate-200 hidden sm:table-cell">₹{m.moneyGiven.toFixed(2)}</td>
-                  <td className="py-2 px-1.5 text-right">
-                    <span className={`font-bold px-1.5 py-0.5 rounded-lg ${m.due >= 0 ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'}`}>
-                      {m.due >= 0 ? '+' : ''}₹{Math.abs(m.due).toFixed(2)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   );
 }
@@ -496,6 +443,17 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
         <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Gas Cylinder" emoji="🔥" onStatusChange={refreshSummary} />
         <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Rice Bag"     emoji="🌾" onStatusChange={refreshSummary} />
       </div>
+
+      {/* ── PDF + Stats card ── */}
+      <IndividualCostTable
+        individualCosts={individualCosts}
+        mealRate={liveSummary?.mealRate || mealRate}
+        summary={liveSummary}
+        totalCollected={totalCollected}
+        month={month}
+        year={year}
+        onRefresh={refreshSummary}
+      />
     </div>
   );
 }

@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Calendar, ChevronDown, Sparkles } from 'lucide-react';
+import { Calendar, ChevronDown, Sparkles, Download } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
+import { downloadBillsPdf } from '../../utils/downloadBillsPdf';
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
@@ -55,6 +57,8 @@ export default function ManagerDashboard() {
   const [members, setMembers] = useState([]);
   const [totalCollected, setTotalCollected] = useState(0);
   const [individualCosts, setIndividualCosts] = useState([]);
+  const [bills, setBills] = useState([]);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const dropRef = useRef(null);
   const navigate = useNavigate();
 
@@ -112,6 +116,11 @@ export default function ManagerDashboard() {
     const sk = `summary-${selectedMonth}-${selectedYear}`;
     const mk = `meals-${selectedMonth}-${selectedYear}`;
     const dk = isCurrentMonth ? 'dashboard' : `monthdata-${selectedMonth}-${selectedYear}`;
+
+    const bk = `bills-${selectedMonth}-${selectedYear}`;
+    const cb = getCache(bk);
+    if (cb) setBills(cb); else
+      api.get(`/bills/${selectedMonth}/${selectedYear}`).then(r => { setBills(r.data); setCache(bk, r.data); }).catch(() => setBills([]));
 
     const cs = getCache(sk);
     if (cs) setSummary(cs); else
@@ -306,6 +315,24 @@ export default function ManagerDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Download Bills PDF ── */}
+      {bills.length > 0 && (
+        <button
+          onClick={async () => {
+            setPdfLoading(true);
+            try { await downloadBillsPdf({ bills, summary, month: selectedMonth, year: selectedYear }); }
+            catch { toast.error('PDF generation failed'); }
+            finally { setPdfLoading(false); }
+          }}
+          disabled={pdfLoading}
+          className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white py-3 rounded-2xl active:scale-95 disabled:opacity-60"
+          style={{ background: 'linear-gradient(135deg,#059669,#047857)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s' }}
+        >
+          <Download size={16} className={pdfLoading ? 'animate-bounce' : ''} />
+          {pdfLoading ? 'Generating PDF…' : `Download Bills PDF — ${selectedLabel}`}
+        </button>
       )}
 
       {/* ── Quick Actions ── */}
