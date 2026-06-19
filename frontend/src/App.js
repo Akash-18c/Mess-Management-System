@@ -41,9 +41,13 @@ export default function App() {
     <BrowserRouter>
       <Toaster
         position="top-center"
-        containerStyle={{ top: 16, left: '50%', transform: 'translateX(-50%)', width: 'max-content', maxWidth: 'calc(100vw - 32px)' }}
+        containerStyle={{ top: 16 }}
         toastOptions={{
-          style: { background: '#1E293B', color: '#fff', border: '1px solid #334155', textAlign: 'center', whiteSpace: 'nowrap' },
+          style: {
+            background: '#1E293B', color: '#fff', border: '1px solid #334155',
+            whiteSpace: 'nowrap', maxWidth: '90vw', padding: '10px 16px',
+            fontSize: '13px', lineHeight: '1',
+          },
           duration: 3000,
         }}
       />

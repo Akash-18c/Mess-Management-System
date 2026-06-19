@@ -28,11 +28,11 @@ function buildMonthRange() {
 }
 
 const glass = {
-  background: 'rgba(255,255,255,0.03)',
-  backdropFilter: 'blur(24px)',
-  WebkitBackdropFilter: 'blur(24px)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+  background: 'rgba(255,255,255,0.04)',
+  backdropFilter: 'blur(32px)',
+  WebkitBackdropFilter: 'blur(32px)',
+  border: '1px solid rgba(255,255,255,0.10)',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)',
 };
 
 export default function ManagerDashboard() {
@@ -211,65 +211,85 @@ export default function ManagerDashboard() {
       />
 
       {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2.5">
         {[
-          { label: "Today's Meals", value: isCurrentMonth ? todayTotal : '—' },
-          { label: 'Total Expense', value: `₹${summary?.grandTotal?.toFixed(2) || '0.00'}` },
-          { label: 'Active Members', value: members.length },
-        ].map(({ label, value }) => (
-          <div key={label} className="rounded-2xl p-3 sm:p-5" style={glass}>
-            <p className="text-lg sm:text-2xl font-bold text-white mb-0.5 truncate">{value}</p>
-            <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-tight">{label}</p>
+          { label: "Today's Meals", value: isCurrentMonth ? todayTotal : '—', emoji: '🍽' },
+          { label: 'Total Expense', value: `₹${summary?.grandTotal?.toFixed(0) || '0'}`, emoji: '💸' },
+          { label: 'Members', value: members.length, emoji: '👥' },
+        ].map(({ label, value, emoji }) => (
+          <div key={label} className="rounded-2xl p-3" style={glass}>
+            <div className="text-lg mb-1">{emoji}</div>
+            <p className="text-base font-bold text-white leading-none truncate">{value}</p>
+            <p className="text-[10px] text-slate-500 mt-1 leading-tight">{label}</p>
           </div>
         ))}
       </div>
 
       {/* ── Bar Chart ── */}
       {memberMealCounts.some(m => m.meals > 0) && (
-        <div className="rounded-2xl p-4 sm:p-5" style={glass}>
-          <h3 className="font-semibold text-white mb-0.5 text-sm sm:text-base">Member Meal Count</h3>
+        <div className="rounded-2xl p-3" style={glass}>
+          <h3 className="font-semibold text-white text-sm mb-0.5">Member Meal Count</h3>
           <p className="text-slate-500 text-xs mb-3">{selectedLabel}</p>
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={memberMealCounts} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-              <XAxis
-                dataKey="name"
-                tick={{ fill: '#64748b', fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-                interval={0}
-              />
-              <YAxis
-                tick={{ fill: '#64748b', fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-                width={30}
-              />
-              <Tooltip
-                contentStyle={{ background: 'rgba(8,14,28,0.97)', border: '1px solid rgba(245,158,11,0.20)', borderRadius: '12px', color: '#fff', fontSize: '12px' }}
-                cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-              />
-              <Bar dataKey="meals" fill="#f59e0b" radius={[4,4,0,0]} name="Total Meals" maxBarSize={36} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+            <div style={{ minWidth: Math.max(memberMealCounts.length * 36, 300) + 'px', height: '200px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={memberMealCounts}
+                  margin={{ top: 4, right: 8, left: -18, bottom: 48 }}
+                  barCategoryGap="20%"
+                >
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: '#64748b', fontSize: 9 }}
+                    axisLine={false}
+                    tickLine={false}
+                    interval={0}
+                    angle={-40}
+                    textAnchor="end"
+                    height={52}
+                  />
+                  <YAxis
+                    tick={{ fill: '#64748b', fontSize: 9 }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={28}
+                  />
+                  <Tooltip
+                    contentStyle={{ background: 'rgba(8,14,28,0.97)', border: '1px solid rgba(245,158,11,0.20)', borderRadius: '10px', color: '#fff', fontSize: '11px' }}
+                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                  />
+                  <Bar dataKey="meals" fill="#f59e0b" radius={[4,4,0,0]} name="Meals" maxBarSize={28} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       )}
 
       {/* ── Quick Actions ── */}
-      <div className="rounded-2xl p-4 sm:p-5" style={glass}>
-        <h3 className="font-semibold text-white mb-3 text-sm sm:text-base">Quick Actions</h3>
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+      <div className="rounded-2xl p-4" style={glass}>
+        <h3 className="font-semibold text-white mb-3 text-sm">Quick Actions</h3>
+        <div className="grid grid-cols-2 gap-2">
           {[
-            { label: 'Mark Meals', path: '/manager/meals', cls: 'btn-primary' },
-            { label: 'Add Expense', path: '/manager/expenses', cls: 'btn-amber' },
-            { label: 'Record Payment', path: '/manager/payments', cls: 'btn-secondary' },
-            { label: 'Generate Bills', path: '/manager/bills', cls: 'btn-secondary' },
-          ].map(({ label, path, cls }) => (
+            { label: 'Mark Meals',      path: '/manager/meals',     emoji: '🍽', color: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.30)', text: '#6ee7b7' },
+            { label: 'Add Expense',     path: '/manager/expenses',  emoji: '💰', color: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.30)', text: '#fcd34d' },
+            { label: 'Record Payment',  path: '/manager/payments',  emoji: '💳', color: 'rgba(96,165,250,0.15)',  border: 'rgba(96,165,250,0.30)',  text: '#93c5fd' },
+            { label: 'Generate Bills',  path: '/manager/bills',     emoji: '🧳', color: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.30)', text: '#c4b5fd' },
+          ].map(({ label, path, emoji, color, border, text }) => (
             <button
               key={label}
+              onTouchStart={() => navigate(path)}
               onClick={() => navigate(path)}
-              className={`${cls} text-xs sm:text-sm w-full py-2.5 sm:py-2`}
+              className="flex items-center gap-3 rounded-xl p-3 text-left active:scale-95"
+              style={{
+                background: color,
+                border: `1px solid ${border}`,
+                transition: 'transform 0.1s',
+                WebkitTapHighlightColor: 'transparent',
+              }}
             >
-              {label}
+              <span className="text-2xl leading-none flex-shrink-0">{emoji}</span>
+              <span className="text-sm font-semibold leading-tight" style={{ color: text }}>{label}</span>
             </button>
           ))}
         </div>

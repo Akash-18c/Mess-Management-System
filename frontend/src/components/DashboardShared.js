@@ -8,10 +8,10 @@ const MONTHS_FULL = ['January','February','March','April','May','June','July','A
 
 const glass = {
   background: 'rgba(255,255,255,0.04)',
-  backdropFilter: 'blur(20px)',
-  WebkitBackdropFilter: 'blur(20px)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  backdropFilter: 'blur(32px)',
+  WebkitBackdropFilter: 'blur(32px)',
+  border: '1px solid rgba(255,255,255,0.10)',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07)',
 };
 
 // Helper: extract display name — strips role prefix like "Admin (...)" → shows full name
