@@ -1,0 +1,370 @@
+import React, { useEffect, useState, useCallback } from 'react';
+import toast from 'react-hot-toast';
+import { ChevronLeft, ChevronRight, Users, Minus, Plus } from 'lucide-react';
+import api from '../../api';
+
+const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
+
+const glass = {
+  background: 'rgba(255,255,255,0.04)',
+  backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
+  border: '1px solid rgba(255,255,255,0.08)',
+};
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+export default function ManagerMeals() {
+  const now = new Date();
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year,  setYear]  = useState(now.getFullYear());
+  const [members,      setMembers]      = useState([]);
+  const [mealData,     setMealData]     = useState({});
+  const [selectedDate, setSelectedDate] = useState(now.toISOString().slice(0, 10));
+  const [saving,       setSaving]       = useState(''); // memberId being saved
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  const loadData = useCallback(async () => {
+    const [memsRes, mealsRes] = await Promise.all([
+      api.get('/members'),
+      api.get(`/meals/${month}/${year}`),
+    ]);
+    setMembers(memsRes.data);
+    const map = {};
+    mealsRes.data.forEach(m => {
+      const key = `${m.memberId?._id}_${m.date?.slice(0, 10)}`;
+      map[key] = m;
+    });
+    setMealData(map);
+  }, [month, year]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const toggleMeal = async (memberId, mealType) => {
+    const key = `${memberId}_${selectedDate}`;
+    const current = mealData[key] || {};
+    if (current.isOff) return;
+    setSaving(memberId);
+    try {
+      await api.post('/meals/mark', {
+        date: selectedDate, memberId,
+        breakfast: false,
+        lunch:  mealType === 'lunch'  ? !current.lunch  : (current.lunch  || false),
+        dinner: mealType === 'dinner' ? !current.dinner : (current.dinner || false),
+        isOff: false,
+        month, year,
+      });
+      await loadData();
+    } catch { toast.error('Failed to update'); }
+    finally { setSaving(''); }
+  };
+
+  const toggleOff = async (memberId) => {
+    const key = `${memberId}_${selectedDate}`;
+    const current = mealData[key] || {};
+    const isOff = !current.isOff;
+    setSaving(memberId);
+    try {
+      await api.post('/meals/mark', {
+        date: selectedDate, memberId,
+        breakfast: false,
+        lunch: isOff ? false : current.lunch || false,
+        dinner: isOff ? false : current.dinner || false,
+        isOff, month, year,
+      });
+      await loadData();
+    } catch { toast.error('Failed to update'); }
+    finally { setSaving(''); }
+  };
+
+  const changeGuest = async (memberId, delta) => {
+    const key = `${memberId}_${selectedDate}`;
+    const current = mealData[key] || {};
+    if (current.isOff) return;
+    const next = Math.max(0, Math.min(10, (current.guestMeals || 0) + delta));
+    setSaving(memberId + '_guest');
+    try {
+      await api.post('/meals/guest', { date: selectedDate, memberId, guestMeals: next, month, year });
+      await loadData();
+    } catch { toast.error('Failed to update guest meals'); }
+    finally { setSaving(''); }
+  };
+
+  const prevMonth = () => { if (month === 1) { setMonth(12); setYear(y => y - 1); } else setMonth(m => m - 1); };
+  const nextMonth = () => { if (month === 12) { setMonth(1); setYear(y => y + 1); } else setMonth(m => m + 1); };
+
+  const days = Array.from({ length: daysInMonth }, (_, i) => {
+    const d = new Date(year, month - 1, i + 1);
+    return { num: i + 1, dateStr: d.toISOString().slice(0, 10), dayIdx: d.getDay() };
+  });
+
+  const todayStr = now.toISOString().slice(0, 10);
+
+  // Summary counts for selected date
+  const lunchCount  = members.filter(m => mealData[`${m._id}_${selectedDate}`]?.lunch).length;
+  const dinnerCount = members.filter(m => mealData[`${m._id}_${selectedDate}`]?.dinner).length;
+  const offCount    = members.filter(m => mealData[`${m._id}_${selectedDate}`]?.isOff).length;
+  const guestCount  = members.reduce((s, m) => s + (mealData[`${m._id}_${selectedDate}`]?.guestMeals || 0), 0);
+
+  const selDate = new Date(selectedDate + 'T00:00:00');
+
+  return (
+    <div className="space-y-5">
+
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Daily Meals</h1>
+          <p className="text-sm" style={{ color: '#64748b' }}>Mark attendance for each member</p>
+        </div>
+        <div className="flex items-center gap-1 rounded-xl p-1" style={glass}>
+          <button onClick={prevMonth} className="p-2 rounded-lg text-slate-400 hover:text-white transition-colors" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            <ChevronLeft size={16} />
+          </button>
+          <span className="text-white font-semibold px-3 text-sm">{MONTHS_SHORT[month - 1]} {year}</span>
+          <button onClick={nextMonth} className="p-2 rounded-lg text-slate-400 hover:text-white transition-colors" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Date Strip ── */}
+      <div className="rounded-2xl p-4" style={glass}>
+        <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+          {days.map(({ num, dateStr, dayIdx }) => {
+            const isSel   = dateStr === selectedDate;
+            const isToday = dateStr === todayStr;
+            const isSun   = dayIdx === 0;
+            return (
+              <button
+                key={num}
+                onClick={() => setSelectedDate(dateStr)}
+                className="flex flex-col items-center flex-shrink-0 rounded-xl transition-all duration-150"
+                style={{
+                  width: '44px', padding: '8px 4px',
+                  background: isSel
+                    ? 'linear-gradient(135deg,#10b981,#059669)'
+                    : isToday
+                    ? 'rgba(16,185,129,0.12)'
+                    : 'rgba(255,255,255,0.04)',
+                  border: isSel
+                    ? '1px solid rgba(16,185,129,0.6)'
+                    : isToday
+                    ? '1px solid rgba(16,185,129,0.25)'
+                    : '1px solid rgba(255,255,255,0.06)',
+                  boxShadow: isSel ? '0 4px 12px rgba(16,185,129,0.30)' : 'none',
+                }}
+              >
+                <span className="text-[9px] font-semibold uppercase mb-0.5"
+                  style={{ color: isSel ? 'rgba(255,255,255,0.7)' : isSun ? '#f87171' : '#64748b' }}>
+                  {DAYS[dayIdx]}
+                </span>
+                <span className="text-sm font-bold"
+                  style={{ color: isSel ? '#fff' : isToday ? '#34d399' : '#e2e8f0' }}>
+                  {num}
+                </span>
+                {/* dot if any meal marked */}
+                {members.some(m => {
+                  const d = mealData[`${m._id}_${dateStr}`];
+                  return d?.lunch || d?.dinner || d?.guestMeals > 0;
+                }) && (
+                  <span className="w-1 h-1 rounded-full mt-1"
+                    style={{ background: isSel ? 'rgba(255,255,255,0.7)' : '#10b981' }} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Selected Date Label + Summary ── */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <p className="text-white font-semibold">
+            {selDate.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+          <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>
+            Tap Lunch / Dinner buttons to mark · Guest = extra meals
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {[
+            { label: 'Lunch',  value: lunchCount,  color: '#34d399' },
+            { label: 'Dinner', value: dinnerCount, color: '#60a5fa' },
+            { label: 'Guest',  value: guestCount,  color: '#f59e0b' },
+            { label: 'Off',    value: offCount,    color: '#f87171' },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="flex flex-col items-center px-3 py-1.5 rounded-xl"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', minWidth: '48px' }}>
+              <span className="text-lg font-bold" style={{ color }}>{value}</span>
+              <span className="text-[10px] font-medium" style={{ color: '#64748b' }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Member Cards ── */}
+      {members.length === 0 ? (
+        <div className="rounded-2xl py-16 flex flex-col items-center gap-3" style={glass}>
+          <Users size={40} style={{ color: '#334155' }} />
+          <p style={{ color: '#475569' }}>No members found</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {members.map(m => {
+            const key  = `${m._id}_${selectedDate}`;
+            const data = mealData[key] || {};
+            const isOff    = !!data.isOff;
+            const hasLunch  = !!data.lunch;
+            const hasDinner = !!data.dinner;
+            const guests    = data.guestMeals || 0;
+            const isSavingThis = saving === m._id || saving === m._id + '_guest';
+            const name = rn(m.name);
+            const totalMealsToday = (hasLunch ? 1 : 0) + (hasDinner ? 1 : 0) + guests;
+
+            const roleColor = m.role === 'admin' ? '#f87171' : m.role === 'manager' ? '#fbbf24' : '#94a3b8';
+
+            return (
+              <div
+                key={m._id}
+                className="rounded-2xl p-4 transition-all duration-200"
+                style={{
+                  ...glass,
+                  opacity: isOff ? 0.55 : 1,
+                  border: isOff
+                    ? '1px solid rgba(248,113,113,0.20)'
+                    : (hasLunch || hasDinner)
+                    ? '1px solid rgba(16,185,129,0.20)'
+                    : '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
+                {/* Member Info Row */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+                      style={{ background: isOff ? 'rgba(248,113,113,0.15)' : 'rgba(16,185,129,0.15)', border: `1px solid ${isOff ? 'rgba(248,113,113,0.25)' : 'rgba(16,185,129,0.25)'}` }}>
+                      {name[0]?.toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm leading-tight">{name}</p>
+                      <p className="text-xs" style={{ color: roleColor }}>
+                        {m.role !== 'member' ? m.role : `Room ${m.room || '—'}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isSavingThis && (
+                      <div className="w-3.5 h-3.5 rounded-full border border-t-transparent animate-spin"
+                        style={{ borderColor: 'rgba(16,185,129,0.4)', borderTopColor: '#10b981' }} />
+                    )}
+                    {/* Meal count badge */}
+                    {totalMealsToday > 0 && !isOff && (
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                        style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }}>
+                        {totalMealsToday} meal{totalMealsToday > 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {isOff && (
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                        style={{ background: 'rgba(248,113,113,0.12)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}>
+                        Day Off
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Lunch + Dinner Toggle Pills */}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {/* Lunch */}
+                  <button
+                    onClick={() => toggleMeal(m._id, 'lunch')}
+                    disabled={isOff}
+                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-150 disabled:cursor-not-allowed"
+                    style={{
+                      background: hasLunch
+                        ? 'linear-gradient(135deg,#10b981,#059669)'
+                        : 'rgba(255,255,255,0.05)',
+                      border: hasLunch
+                        ? '1px solid rgba(16,185,129,0.5)'
+                        : '1px solid rgba(255,255,255,0.08)',
+                      color: hasLunch ? '#fff' : '#64748b',
+                      boxShadow: hasLunch ? '0 4px 12px rgba(16,185,129,0.25)' : 'none',
+                    }}
+                  >
+                    <span style={{ fontSize: '15px' }}>☀️</span>
+                    Lunch
+                  </button>
+
+                  {/* Dinner */}
+                  <button
+                    onClick={() => toggleMeal(m._id, 'dinner')}
+                    disabled={isOff}
+                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-150 disabled:cursor-not-allowed"
+                    style={{
+                      background: hasDinner
+                        ? 'linear-gradient(135deg,#3b82f6,#2563eb)'
+                        : 'rgba(255,255,255,0.05)',
+                      border: hasDinner
+                        ? '1px solid rgba(59,130,246,0.5)'
+                        : '1px solid rgba(255,255,255,0.08)',
+                      color: hasDinner ? '#fff' : '#64748b',
+                      boxShadow: hasDinner ? '0 4px 12px rgba(59,130,246,0.25)' : 'none',
+                    }}
+                  >
+                    <span style={{ fontSize: '15px' }}>🌙</span>
+                    Dinner
+                  </button>
+                </div>
+
+                {/* Guest Meals + Day Off Row */}
+                <div className="flex items-center justify-between gap-2">
+                  {/* Guest counter */}
+                  <div className="flex items-center gap-1.5 flex-1 rounded-xl px-2 py-1.5"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <span className="text-xs font-medium flex-1" style={{ color: '#94a3b8' }}>👤 Guest</span>
+                    <button
+                      onClick={() => changeGuest(m._id, -1)}
+                      disabled={isOff || guests === 0}
+                      className="w-6 h-6 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      style={{ background: 'rgba(255,255,255,0.07)' }}
+                    >
+                      <Minus size={11} className="text-slate-300" />
+                    </button>
+                    <span className="w-5 text-center text-sm font-bold"
+                      style={{ color: guests > 0 ? '#f59e0b' : '#475569' }}>
+                      {guests}
+                    </span>
+                    <button
+                      onClick={() => changeGuest(m._id, +1)}
+                      disabled={isOff || guests >= 10}
+                      className="w-6 h-6 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      style={{ background: 'rgba(255,255,255,0.07)' }}
+                    >
+                      <Plus size={11} className="text-slate-300" />
+                    </button>
+                  </div>
+
+                  {/* Day Off toggle */}
+                  <button
+                    onClick={() => toggleOff(m._id)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
+                    style={{
+                      background: isOff ? 'rgba(248,113,113,0.15)' : 'rgba(255,255,255,0.05)',
+                      border: isOff ? '1px solid rgba(248,113,113,0.35)' : '1px solid rgba(255,255,255,0.08)',
+                      color: isOff ? '#f87171' : '#475569',
+                    }}
+                  >
+                    {isOff ? '✕ Off' : 'Off?'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
