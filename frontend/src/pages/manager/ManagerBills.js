@@ -102,7 +102,7 @@ export default function ManagerBills() {
                     { h: 'Meals',       cls: 'text-right' },
                     { h: 'Per Meal',    cls: 'text-right' },
                     { h: 'Meal Cost',   cls: 'text-right' },
-                    { h: 'Masi',        cls: 'text-right hidden sm:table-cell' },
+                    { h: 'Masi',        cls: 'text-right' },
                     { h: 'Advance',     cls: 'text-right' },
                     { h: 'Due / Refund',cls: 'text-right pr-4' },
                   ].map(({ h, cls }) => (
@@ -141,7 +141,7 @@ export default function ManagerBills() {
                       {/* Meal Cost */}
                       <td className="py-2.5 px-2 text-right text-slate-200">₹{(b.totalBill || 0).toFixed(2)}</td>
                       {/* Masi */}
-                      <td className="py-2.5 px-2 text-right text-slate-400 hidden sm:table-cell">₹{masi.toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right text-slate-400">₹{masi.toFixed(2)}</td>
                       {/* Advance */}
                       <td className="py-2.5 px-2 text-right text-green-400">₹{(b.advance || 0).toFixed(2)}</td>
                       {/* Due / Refund */}

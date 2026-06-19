@@ -25,6 +25,8 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
 
     const members = await User.find({ isActive: true });
     const bills = [];
+    const masiRec = await require('../models/MasiSalary').findOne({ month, year });
+    const masiPerMember = masiRec?.perMemberAmount || 0;
 
     for (const member of members) {
       const meals = await Meal.find({ month, year, memberId: member._id, isOff: false });
@@ -36,7 +38,7 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
       });
       const mealCount = lunch + dinner;
       const guestCharge = parseFloat((guestMeals * mealRate).toFixed(2));
-      const totalBill = parseFloat(((mealCount + guestMeals) * mealRate).toFixed(2));
+      const totalBill = parseFloat(((mealCount + guestMeals) * mealRate + masiPerMember).toFixed(2));
 
       const payments = await Payment.find({ memberId: member._id, month, year });
       const advance = parseFloat(payments.reduce((s, p) => s + p.amount, 0).toFixed(2));
@@ -44,7 +46,7 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
 
       const bill = await Bill.findOneAndUpdate(
         { memberId: member._id, month, year },
-        { mealCount, breakfastCount: 0, lunchCount: lunch, dinnerCount: dinner, mealRate, guestMeals, guestCharge, advance, totalBill, dueAmount, generatedBy: req.user._id },
+        { mealCount, breakfastCount: 0, lunchCount: lunch, dinnerCount: dinner, mealRate, guestMeals, guestCharge, masiSalary: masiPerMember, advance, totalBill, dueAmount, generatedBy: req.user._id },
         { upsert: true, new: true }
       );
       bills.push(bill);

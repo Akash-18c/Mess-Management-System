@@ -12,6 +12,7 @@ const billSchema = new mongoose.Schema({
   guestMeals: { type: Number, default: 0 },
   guestCharge: { type: Number, default: 0 },
   advance: { type: Number, default: 0 },
+  masiSalary: { type: Number, default: 0 },
   totalBill: { type: Number, default: 0 },
   dueAmount: { type: Number, default: 0 },
   generatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
