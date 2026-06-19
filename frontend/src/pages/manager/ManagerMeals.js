@@ -52,6 +52,11 @@ export default function ManagerMeals() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // prevent double-fire on touch (onTouchEnd + onClick both fire on mobile)
+  const handled = useRef(false);
+  const touch = (fn) => (e) => { e.preventDefault(); handled.current = true; fn(); };
+  const click = (fn) => () => { if (handled.current) { handled.current = false; return; } fn(); };
+
   // ── Optimistic toggle — update UI instantly, sync in background ──
   const toggleMeal = (memberId, mealType) => {
     const key = `${memberId}_${selectedDate}`;
@@ -157,7 +162,7 @@ export default function ManagerMeals() {
         </div>
         <div className="flex items-center gap-1 rounded-xl p-1 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <button
-            onTouchStart={prevMonth} onClick={prevMonth}
+            onTouchEnd={touch(prevMonth)} onClick={click(prevMonth)}
             className="p-2 rounded-lg text-slate-400 active:text-white"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
@@ -165,7 +170,7 @@ export default function ManagerMeals() {
           </button>
           <span className="text-white font-semibold px-2 text-xs whitespace-nowrap">{MONTHS_SHORT[month - 1]} {year}</span>
           <button
-            onTouchStart={nextMonth} onClick={nextMonth}
+            onTouchEnd={touch(nextMonth)} onClick={click(nextMonth)}
             className="p-2 rounded-lg text-slate-400 active:text-white"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
@@ -189,8 +194,8 @@ export default function ManagerMeals() {
             return (
               <button
                 key={num}
-                onTouchStart={() => setSelectedDate(dateStr)}
-                onClick={() => setSelectedDate(dateStr)}
+                onTouchEnd={touch(() => setSelectedDate(dateStr))}
+                onClick={click(() => setSelectedDate(dateStr))}
                 className="flex flex-col items-center flex-shrink-0 rounded-xl"
                 style={{
                   width: '40px', padding: '7px 3px',
@@ -309,8 +314,8 @@ export default function ManagerMeals() {
                 {/* Lunch + Dinner */}
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <button
-                    onTouchStart={() => toggleMeal(m._id, 'lunch')}
-                    onClick={() => toggleMeal(m._id, 'lunch')}
+                    onTouchEnd={touch(() => toggleMeal(m._id, 'lunch'))}
+                    onClick={click(() => toggleMeal(m._id, 'lunch'))}
                     disabled={isOff}
                     className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm disabled:cursor-not-allowed active:scale-95"
                     style={{
@@ -325,8 +330,8 @@ export default function ManagerMeals() {
                     <span style={{ fontSize: '14px' }}>☀️</span> Lunch
                   </button>
                   <button
-                    onTouchStart={() => toggleMeal(m._id, 'dinner')}
-                    onClick={() => toggleMeal(m._id, 'dinner')}
+                    onTouchEnd={touch(() => toggleMeal(m._id, 'dinner'))}
+                    onClick={click(() => toggleMeal(m._id, 'dinner'))}
                     disabled={isOff}
                     className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm disabled:cursor-not-allowed active:scale-95"
                     style={{
@@ -348,8 +353,8 @@ export default function ManagerMeals() {
                     style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
                     <span className="text-[10px] font-medium flex-1 text-slate-400">👤 Guest</span>
                     <button
-                      onTouchStart={() => changeGuest(m._id, -1)}
-                      onClick={() => changeGuest(m._id, -1)}
+                      onTouchEnd={touch(() => changeGuest(m._id, -1))}
+                      onClick={click(() => changeGuest(m._id, -1))}
                       disabled={isOff || guests === 0}
                       className="w-6 h-6 rounded-lg flex items-center justify-center disabled:opacity-30"
                       style={{ background: 'rgba(255,255,255,0.07)', WebkitTapHighlightColor: 'transparent' }}
@@ -361,8 +366,8 @@ export default function ManagerMeals() {
                       {guests}
                     </span>
                     <button
-                      onTouchStart={() => changeGuest(m._id, +1)}
-                      onClick={() => changeGuest(m._id, +1)}
+                      onTouchEnd={touch(() => changeGuest(m._id, +1))}
+                      onClick={click(() => changeGuest(m._id, +1))}
                       disabled={isOff || guests >= 10}
                       className="w-6 h-6 rounded-lg flex items-center justify-center disabled:opacity-30"
                       style={{ background: 'rgba(255,255,255,0.07)', WebkitTapHighlightColor: 'transparent' }}
@@ -371,8 +376,8 @@ export default function ManagerMeals() {
                     </button>
                   </div>
                   <button
-                    onTouchStart={() => toggleOff(m._id)}
-                    onClick={() => toggleOff(m._id)}
+                    onTouchEnd={touch(() => toggleOff(m._id))}
+                    onClick={click(() => toggleOff(m._id))}
                     className="px-3 py-1.5 rounded-xl text-xs font-semibold active:scale-95"
                     style={{
                       background: isOff ? 'rgba(248,113,113,0.15)' : 'rgba(255,255,255,0.05)',
