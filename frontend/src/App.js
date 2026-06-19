@@ -39,7 +39,14 @@ function RoleRedirect() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Toaster position="top-center" toastOptions={{ style: { background: '#1E293B', color: '#fff', border: '1px solid #334155' } }} />
+      <Toaster
+        position="top-center"
+        containerStyle={{ top: 16, left: '50%', transform: 'translateX(-50%)', width: 'max-content', maxWidth: 'calc(100vw - 32px)' }}
+        toastOptions={{
+          style: { background: '#1E293B', color: '#fff', border: '1px solid #334155', textAlign: 'center', whiteSpace: 'nowrap' },
+          duration: 3000,
+        }}
+      />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<RoleRedirect />} />

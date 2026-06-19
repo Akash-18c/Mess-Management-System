@@ -82,7 +82,6 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
 <meta charset="utf-8">
 <title>The Messy Kitchen — ${monthName} ${year}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@400;500;600;700;800&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Inter',Arial,sans-serif;background:#f8fafc;color:#0f172a;font-size:13px;print-color-adjust:exact;-webkit-print-color-adjust:exact}
   .page{background:#fff;max-width:860px;margin:0 auto;padding:40px 44px 50px}
@@ -199,7 +198,7 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
   </div>
 
 </div>
-<script>window.onload=()=>setTimeout(()=>window.print(),400)<\/script>
+<script>window.onload=()=>window.print()<\/script>
 </body>
 </html>`;
 
@@ -304,84 +303,81 @@ function IndividualCostTable({ individualCosts, mealRate, summary, totalCollecte
   return (
     <div className="rounded-xl overflow-hidden" style={glass}>
       {/* Statement header */}
-      <div className="p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
-        <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
-              <ChefHat size={20} className="text-green-400" />
+      <div className="p-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
+              <ChefHat size={16} className="text-green-400" />
             </div>
-            <div>
-              <p className="font-bold text-white text-sm">THE MESSY KITCHEN</p>
-              <p className="text-slate-500 text-xs">Mess Statement — {MONTHS_FULL[month - 1]} {year}</p>
+            <div className="min-w-0">
+              <p className="font-bold text-white text-xs">THE MESSY KITCHEN</p>
+              <p className="text-slate-500 text-[10px] truncate">Mess Statement — {MONTHS_FULL[month - 1]} {year}</p>
             </div>
           </div>
           <button
             onClick={() => summary ? downloadPDF(summary, individualCosts, totalCollected, month, year) : toast.error('No data yet')}
-            className="flex items-center gap-2 text-sm font-semibold bg-green-600 hover:bg-green-500 text-white px-4 py-2.5 rounded-xl transition-all active:scale-95">
-            <Download size={15} /> Download PDF
+            className="flex items-center gap-1.5 text-xs font-semibold bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-xl transition-all active:scale-95 flex-shrink-0">
+            <Download size={13} /> PDF
           </button>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-1.5">
           {[
             { label: 'Total Spent',     value: `₹${grandTotal.toFixed(2)}` },
             { label: 'Total Meals',     value: totalMeals },
             { label: 'Per Meal Cost',   value: `₹${(mealRate||0).toFixed(2)}` },
             { label: 'Total Collected', value: `₹${totalCollected.toFixed(2)}` },
           ].map(s => (
-            <div key={s.label} className="rounded-lg p-2.5 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="text-slate-500 text-xs mb-0.5">{s.label}</p>
-              <p className="font-bold text-sm text-white">{s.value}</p>
+            <div key={s.label} className="rounded-lg p-2 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <p className="text-slate-500 text-[10px] mb-0.5">{s.label}</p>
+              <p className="font-bold text-xs text-white">{s.value}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="p-4">
-        <p className="text-slate-400 text-xs mb-3">Per Meal Cost: <span className="text-white font-medium">₹{(mealRate||0).toFixed(2)}</span></p>
+      <div className="p-3">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full" style={{ minWidth: '320px', fontSize: '12px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                 {[
-                  { h: 'Name',        cls: 'text-left' },
-                  { h: 'Meals',       cls: 'text-right' },
-                  { h: 'Per Meal',    cls: 'text-right hidden sm:table-cell' },
-                  { h: 'Meal Cost',   cls: 'text-right' },
-                  { h: 'Masi',        cls: 'text-right hidden sm:table-cell' },
-                  { h: 'Paid',        cls: 'text-right hidden sm:table-cell' },
-                  { h: 'Balance',     cls: 'text-right' },
+                  { h: 'Name',     cls: 'text-left'  },
+                  { h: 'Meals',    cls: 'text-right' },
+                  { h: 'Per Meal', cls: 'text-right hidden sm:table-cell' },
+                  { h: 'Cost',     cls: 'text-right' },
+                  { h: 'Masi',     cls: 'text-right hidden sm:table-cell' },
+                  { h: 'Paid',     cls: 'text-right hidden sm:table-cell' },
+                  { h: 'Balance',  cls: 'text-right' },
                 ].map(({ h, cls }) => (
-                  <th key={h} className={`py-2.5 px-3 text-slate-500 font-semibold text-xs uppercase tracking-wide ${cls}`}>{h}</th>
+                  <th key={h} className={`py-2 px-1.5 text-slate-500 font-semibold text-[10px] uppercase tracking-wide ${cls}`}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {individualCosts.map((m, i) => (
-                <tr key={m._id} className="transition-colors"
+                <tr key={m._id}
                   style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 !== 0 ? 'rgba(255,255,255,0.02)' : 'transparent' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-                  onMouseLeave={e => e.currentTarget.style.background = i % 2 !== 0 ? 'rgba(255,255,255,0.02)' : 'transparent'}
                 >
-                  <td className="py-3 px-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                  <td className="py-2 px-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
                         style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.12)' }}>
                         {formatDisplayName(m.name, m.role)?.[0]?.toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <span className="text-white font-medium">{formatDisplayName(m.name, m.role)}</span>
-                        {m.role === 'manager' && <span className="ml-1.5 badge-manager text-[10px] px-1.5 py-0">Mgr</span>}
-                        {m.role === 'admin'   && <span className="ml-1.5 badge-admin   text-[10px] px-1.5 py-0">Admin</span>}
+                        <span className="text-white font-medium block truncate" style={{ maxWidth: '70px' }}>{formatDisplayName(m.name, m.role)}</span>
+                        {m.role === 'manager' && <span className="badge-manager text-[9px] px-1 py-0">Mgr</span>}
+                        {m.role === 'admin'   && <span className="badge-admin   text-[9px] px-1 py-0">Admin</span>}
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-3 text-right text-white font-semibold">{m.totalMeals}</td>
-                  <td className="py-3 px-3 text-right text-slate-400 hidden sm:table-cell">₹{(mealRate||0).toFixed(2)}</td>
-                  <td className="py-3 px-3 text-right text-slate-200">₹{m.totalMealCost.toFixed(2)}</td>
-                  <td className="py-3 px-3 text-right text-slate-400 hidden sm:table-cell">₹{(m.masiSalary||0).toFixed(2)}</td>
-                  <td className="py-3 px-3 text-right text-slate-200 hidden sm:table-cell">₹{m.moneyGiven.toFixed(2)}</td>
-                  <td className="py-3 px-3 text-right">
-                    <span className={`font-bold px-2 py-0.5 rounded-lg text-sm ${m.due >= 0 ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'}`}>
+                  <td className="py-2 px-1.5 text-right text-white font-semibold">{m.totalMeals}</td>
+                  <td className="py-2 px-1.5 text-right text-slate-400 hidden sm:table-cell">₹{(mealRate||0).toFixed(2)}</td>
+                  <td className="py-2 px-1.5 text-right text-slate-200">₹{m.totalMealCost.toFixed(2)}</td>
+                  <td className="py-2 px-1.5 text-right text-slate-400 hidden sm:table-cell">₹{(m.masiSalary||0).toFixed(2)}</td>
+                  <td className="py-2 px-1.5 text-right text-slate-200 hidden sm:table-cell">₹{m.moneyGiven.toFixed(2)}</td>
+                  <td className="py-2 px-1.5 text-right">
+                    <span className={`font-bold px-1.5 py-0.5 rounded-lg ${m.due >= 0 ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'}`}>
                       {m.due >= 0 ? '+' : ''}₹{Math.abs(m.due).toFixed(2)}
                     </span>
                   </td>
