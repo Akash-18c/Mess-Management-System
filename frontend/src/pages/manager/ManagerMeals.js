@@ -27,8 +27,11 @@ const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 export default function ManagerMeals() {
   const now = new Date();
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [year,  setYear]  = useState(now.getFullYear());
+  const curMonth = now.getMonth() + 1;
+  const curYear  = now.getFullYear();
+  const [month, setMonth] = useState(curMonth);
+  const [year,  setYear]  = useState(curYear);
+  const isLiveMonth = month === curMonth && year === curYear;
   const [members,      setMembers]      = useState([]);
   const [mealData,     setMealData]     = useState({});
   const [selectedDate, setSelectedDate] = useState(now.toISOString().slice(0, 10));
@@ -59,6 +62,7 @@ export default function ManagerMeals() {
 
   // ── Optimistic toggle — update UI instantly, sync in background ──
   const toggleMeal = (memberId, mealType) => {
+    if (!isLiveMonth) return;
     const key = `${memberId}_${selectedDate}`;
     const current = mealData[key] || {};
     if (current.isOff) return;
@@ -91,6 +95,7 @@ export default function ManagerMeals() {
   };
 
   const toggleOff = (memberId) => {
+    if (!isLiveMonth) return;
     const key = `${memberId}_${selectedDate}`;
     const current = mealData[key] || {};
     const isOff = !current.isOff;
@@ -118,6 +123,7 @@ export default function ManagerMeals() {
   };
 
   const changeGuest = (memberId, delta) => {
+    if (!isLiveMonth) return;
     const key = `${memberId}_${selectedDate}`;
     const current = mealData[key] || {};
     if (current.isOff) return;
@@ -158,7 +164,9 @@ export default function ManagerMeals() {
       <div className="flex items-center justify-between gap-3 rounded-2xl p-3 px-4" style={calGlass}>
         <div className="min-w-0">
           <h1 className="text-lg font-bold text-white leading-tight">Daily Meals</h1>
-          <p className="text-[10px] text-slate-500 mt-0.5">Mark attendance for each member</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">
+            {isLiveMonth ? 'Mark attendance for each member' : 'View only — editing allowed in current month only'}
+          </p>
         </div>
         <div className="flex items-center gap-1 rounded-xl p-1 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <button
@@ -253,7 +261,16 @@ export default function ManagerMeals() {
         </div>
       </div>
 
-      {/* ── Member Cards ── */}
+      {/* ── Read-only banner ── */}
+      {!isLiveMonth && (
+        <div className="rounded-2xl px-4 py-2.5 flex items-center gap-2"
+          style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.20)' }}>
+          <span className="text-amber-400 text-sm">👁</span>
+          <p className="text-amber-300 text-xs font-medium">View only — meal editing is allowed in the current month only</p>
+        </div>
+      )}
+
+      {/* ── Member Cards ── */}}
       {members.length === 0 ? (
         <div className="rounded-2xl py-16 flex flex-col items-center gap-3" style={glass}>
           <Users size={36} style={{ color: '#334155' }} />
@@ -316,7 +333,7 @@ export default function ManagerMeals() {
                   <button
                     onTouchEnd={touch(() => toggleMeal(m._id, 'lunch'))}
                     onClick={click(() => toggleMeal(m._id, 'lunch'))}
-                    disabled={isOff}
+                    disabled={isOff || !isLiveMonth}
                     className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm disabled:cursor-not-allowed active:scale-95"
                     style={{
                       background: hasLunch ? 'linear-gradient(135deg,#10b981,#059669)' : 'rgba(255,255,255,0.05)',
@@ -332,7 +349,7 @@ export default function ManagerMeals() {
                   <button
                     onTouchEnd={touch(() => toggleMeal(m._id, 'dinner'))}
                     onClick={click(() => toggleMeal(m._id, 'dinner'))}
-                    disabled={isOff}
+                    disabled={isOff || !isLiveMonth}
                     className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm disabled:cursor-not-allowed active:scale-95"
                     style={{
                       background: hasDinner ? 'linear-gradient(135deg,#3b82f6,#2563eb)' : 'rgba(255,255,255,0.05)',
@@ -355,7 +372,7 @@ export default function ManagerMeals() {
                     <button
                       onTouchEnd={touch(() => changeGuest(m._id, -1))}
                       onClick={click(() => changeGuest(m._id, -1))}
-                      disabled={isOff || guests === 0}
+                      disabled={isOff || guests === 0 || !isLiveMonth}
                       className="w-6 h-6 rounded-lg flex items-center justify-center disabled:opacity-30"
                       style={{ background: 'rgba(255,255,255,0.07)', WebkitTapHighlightColor: 'transparent' }}
                     >
@@ -368,7 +385,7 @@ export default function ManagerMeals() {
                     <button
                       onTouchEnd={touch(() => changeGuest(m._id, +1))}
                       onClick={click(() => changeGuest(m._id, +1))}
-                      disabled={isOff || guests >= 10}
+                      disabled={isOff || guests >= 10 || !isLiveMonth}
                       className="w-6 h-6 rounded-lg flex items-center justify-center disabled:opacity-30"
                       style={{ background: 'rgba(255,255,255,0.07)', WebkitTapHighlightColor: 'transparent' }}
                     >
@@ -378,6 +395,7 @@ export default function ManagerMeals() {
                   <button
                     onTouchEnd={touch(() => toggleOff(m._id))}
                     onClick={click(() => toggleOff(m._id))}
+                    disabled={!isLiveMonth}
                     className="px-3 py-1.5 rounded-xl text-xs font-semibold active:scale-95"
                     style={{
                       background: isOff ? 'rgba(248,113,113,0.15)' : 'rgba(255,255,255,0.05)',
