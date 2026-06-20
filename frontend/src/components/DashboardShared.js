@@ -248,36 +248,42 @@ function ExpenseTypeCard({ month, year, canEdit, categoryName, emoji, onStatusCh
   const total = entries.reduce((s, e) => s + e.amount, 0);
 
   return (
-    <div className="rounded-xl p-4" style={glass}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2.5">
-          <span className="text-xl">{emoji}</span>
+    <div className="rounded-2xl overflow-hidden" style={glass}>
+      {/* card header */}
+      <div className="flex items-center justify-between px-4 py-3"
+        style={{ borderBottom: entries.length ? '1px solid rgba(255,255,255,0.07)' : 'none', background: 'rgba(255,255,255,0.02)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
+            {emoji}
+          </div>
           <div>
-            <h3 className="font-semibold text-white text-sm">{categoryName}</h3>
-            <p className="text-slate-500 text-xs">{MONTHS_FULL[month - 1]} {year}</p>
+            <h3 className="font-semibold text-white text-sm leading-tight">{categoryName}</h3>
+            <p className="text-slate-500 text-xs mt-0.5">{MONTHS_FULL[month - 1]} {year}</p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-lg font-bold text-white">₹{total.toFixed(2)}</p>
-          <p className="text-slate-500 text-xs">{entries.length} {entries.length === 1 ? 'entry' : 'entries'}</p>
+        <div className="text-right flex-shrink-0 ml-3">
+          <p className="text-base font-bold text-white tabular-nums">₹{total.toFixed(2)}</p>
+          <p className="text-slate-500 text-[10px] mt-0.5">{entries.length} {entries.length === 1 ? 'entry' : 'entries'}</p>
         </div>
       </div>
 
       {entries.length === 0 ? (
-        <div className="py-3 text-center text-slate-600 text-xs border border-dashed border-slate-700/60 rounded-lg">
-          No {categoryName.toLowerCase()} entries this month
+        <div className="mx-4 my-3 py-4 text-center text-slate-600 text-xs rounded-xl"
+          style={{ border: '1px dashed rgba(255,255,255,0.10)' }}>
+          No entries this month
         </div>
       ) : (
-        <div className="space-y-1.5">
+        <div className="px-3 py-2 space-y-1.5">
           {entries.map(e => (
-            <div key={e._id} className="flex items-center justify-between rounded-lg px-3 py-2 transition-colors"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div key={e._id} className="flex items-center justify-between rounded-xl px-3 py-2.5"
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="min-w-0 flex-1 mr-3">
                 <p className="text-white text-sm font-medium truncate">{e.description || categoryName}</p>
-                <p className="text-slate-500 text-xs">{new Date(e.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
+                <p className="text-slate-500 text-xs mt-0.5">{new Date(e.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-sm font-bold text-slate-200">₹{e.amount.toFixed(2)}</span>
+                <span className="text-sm font-bold text-slate-200 tabular-nums">₹{e.amount.toFixed(2)}</span>
                 {canEdit ? (
                   <button onClick={() => toggleStatus(e)}
                     className={`text-xs px-2.5 py-1 rounded-full font-semibold border transition-all ${
@@ -312,45 +318,49 @@ function IndividualCostTable({ individualCosts, mealRate, summary, totalCollecte
   const totalCollected = tcProp ?? summary?.totalCollected ?? 0;
 
   return (
-    <div className="rounded-xl overflow-hidden" style={glass}>
-      {/* Statement header */}
-      <div className="p-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
-              <ChefHat size={16} className="text-green-400" />
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-white text-xs">THE MESSY KITCHEN</p>
-              <p className="text-slate-500 text-[10px] truncate">Mess Statement — {MONTHS_FULL[month - 1]} {year}</p>
-            </div>
-          </div>
-          <button
-            onClick={() => summary ? downloadPDF(summary, individualCosts, totalCollected, month, year) : toast.error('No data yet')}
-            className="flex items-center gap-1.5 text-xs font-semibold bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-xl transition-all active:scale-95 flex-shrink-0">
-            <Download size={13} /> PDF
-          </button>
+    <div className="rounded-2xl overflow-hidden" style={glass}>
+      {/* header row: icon+title | PDF button | Refresh button */}
+      <div className="flex items-center gap-3 px-4 py-3"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.20)' }}>
+          <ChefHat size={17} className="text-green-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-white text-sm leading-tight">The Messy Kitchen</p>
+          <p className="text-slate-500 text-xs mt-0.5 truncate">Statement — {MONTHS_FULL[month - 1]} {year}</p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
           {onRefresh && (
             <button onClick={onRefresh}
-              className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95 flex-shrink-0"
-              style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.25)', WebkitTapHighlightColor: 'transparent' }}>
-              <RefreshCw size={13} /> Refresh
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl active:scale-95 transition-all"
+              style={{ background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.22)', color: '#93c5fd', WebkitTapHighlightColor: 'transparent' }}>
+              <RefreshCw size={12} /> Refresh
             </button>
           )}
+          <button
+            onClick={() => summary ? downloadPDF(summary, individualCosts, totalCollected, month, year) : toast.error('No data yet')}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl active:scale-95 transition-all"
+            style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.28)', color: '#4ade80', WebkitTapHighlightColor: 'transparent' }}>
+            <Download size={12} /> PDF
+          </button>
         </div>
-        <div className="grid grid-cols-2 gap-1.5">
-          {[
-            { label: 'Total Spent',     value: `₹${grandTotal.toFixed(2)}` },
-            { label: 'Total Meals',     value: totalMeals },
-            { label: 'Per Meal Cost',   value: `₹${(mealRate||0).toFixed(2)}` },
-            { label: 'Total Collected', value: `₹${totalCollected.toFixed(2)}` },
-          ].map(s => (
-            <div key={s.label} className="rounded-lg p-2 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="text-slate-500 text-[10px] mb-0.5">{s.label}</p>
-              <p className="font-bold text-xs text-white">{s.value}</p>
-            </div>
-          ))}
-        </div>
+      </div>
+      {/* stats grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px"
+        style={{ background: 'rgba(255,255,255,0.05)' }}>
+        {[
+          { label: 'Total Spent',     value: `₹${grandTotal.toFixed(2)}`,      color: '#fbbf24' },
+          { label: 'Total Meals',     value: totalMeals,                         color: '#34d399' },
+          { label: 'Per Meal Cost',   value: `₹${(mealRate||0).toFixed(2)}`,   color: '#a78bfa' },
+          { label: 'Total Collected', value: `₹${totalCollected.toFixed(2)}`,  color: '#60a5fa' },
+        ].map(s => (
+          <div key={s.label} className="flex flex-col items-center justify-center py-3 px-2"
+            style={{ background: 'rgba(10,15,30,0.55)' }}>
+            <p className="font-bold text-sm tabular-nums" style={{ color: s.color }}>{s.value}</p>
+            <p className="text-slate-500 text-[10px] mt-0.5 text-center leading-tight">{s.label}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -401,57 +411,57 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
     <div className="space-y-5">
 
       {/* ── Welcome Banner ── */}
-      <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.10)' }}>
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold text-white"
+      <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-base font-bold text-white flex-shrink-0"
               style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
               {realName?.[0]?.toUpperCase()}
             </div>
             <div>
-              <p className="text-slate-500 text-xs uppercase tracking-wider">Welcome back</p>
+              <p className="text-slate-500 text-[10px] uppercase tracking-widest">Welcome back</p>
               <h2 style={{
                 fontFamily: "'Dancing Script', cursive",
-                fontSize: '1.75rem', fontWeight: 700, lineHeight: 1.2,
+                fontSize: 'clamp(1.3rem,5vw,1.75rem)', fontWeight: 700, lineHeight: 1.2,
                 background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 50%,#6ee7b7 100%)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>{realName}</h2>
               <span className="text-xs font-semibold" style={{ color: roleAccent }}>{roleBadgeLabel}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 rounded-xl px-4 py-2.5"
+          <div className="flex items-center gap-2 rounded-xl px-3 py-2"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
-            <ChefHat size={18} className="text-green-400" />
+            <ChefHat size={16} className="text-green-400 flex-shrink-0" />
             <div>
               <p style={{
                 fontFamily: "'Dancing Script', cursive",
-                fontSize: '1.1rem', fontWeight: 700, lineHeight: 1.2,
+                fontSize: '1rem', fontWeight: 700, lineHeight: 1.2,
                 background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 50%,#6ee7b7 100%)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>The Messy Kitchen</p>
-              <p className="text-slate-500 text-xs">{MONTHS_FULL[month - 1]} {year}</p>
+              <p className="text-slate-500 text-[10px]">{MONTHS_FULL[month - 1]} {year}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Financial + Meal Summary Cards — uniform glass ── */}
+      {/* ── Financial + Meal Summary Cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {summaryCards.map(({ label, value, icon: Icon, iconColor, sub, valueColor }) => (
-          <div key={label} className="rounded-xl p-4" style={glass}>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3"
+          <div key={label} className="rounded-2xl p-3.5 flex flex-col gap-1" style={glass}>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-1"
               style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.09)' }}>
               <Icon size={15} style={{ color: iconColor }} />
             </div>
-            <p className="text-xl font-bold text-white" style={valueColor ? { color: valueColor } : {}}>{value}</p>
-            <p className="text-slate-400 text-xs mt-0.5 font-medium">{label}</p>
-            <p className="text-slate-600 text-xs mt-0.5">{sub}</p>
+            <p className="text-lg font-bold text-white leading-tight tabular-nums" style={valueColor ? { color: valueColor } : {}}>{value}</p>
+            <p className="text-slate-300 text-xs font-semibold leading-tight">{label}</p>
+            <p className="text-slate-600 text-[10px] leading-tight">{sub}</p>
           </div>
         ))}
       </div>
 
       {/* ── Gas + Rice Bag + Other Expenses ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Gas Cylinder" emoji="🔥" onStatusChange={refreshSummary} />
         <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Rice Bag"     emoji="🌾" onStatusChange={refreshSummary} />
         <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Other"        emoji="📦" onStatusChange={refreshSummary} />
