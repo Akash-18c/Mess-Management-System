@@ -371,61 +371,82 @@ export default function MemberDashboard() {
 
       {/* ── Member Meal Count Bar Chart (current month only) ── */}
       {isCurrentMonth && chartData.some(m => m.meals > 0) && (
-        <div className="rounded-2xl p-4" style={{
+        <div className="rounded-2xl overflow-hidden" style={{
           background: 'rgba(255,255,255,0.045)',
           backdropFilter: 'blur(40px) saturate(180%)',
           WebkitBackdropFilter: 'blur(40px) saturate(180%)',
           border: '1px solid rgba(255,255,255,0.12)',
           boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.14)',
         }}>
-          <div className="flex items-center gap-2 mb-1">
-            <UtensilsCrossed size={14} className="text-green-400" />
-            <p className="text-sm font-semibold text-white">Member Meal Count</p>
+          {/* Chart header */}
+          <div className="flex items-center justify-between px-4 pt-4 pb-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.25)' }}>
+                  <UtensilsCrossed size={13} className="text-green-400" />
+                </div>
+                <p className="text-sm font-bold text-white">Member Meal Count</p>
+              </div>
+              <p className="text-slate-500 text-xs mt-0.5 pl-9">{selectedLabel}</p>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
+              style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)' }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              <span className="text-[10px] font-semibold text-green-400">{chartData.reduce((s,m)=>s+m.meals,0)} meals</span>
+            </div>
           </div>
-          <p className="text-slate-500 text-xs mb-4 pl-5">{selectedLabel}</p>
 
-          {/* Horizontally scrollable on mobile */}
-          <div style={{ overflowX: 'auto', overflowY: 'hidden', marginLeft: '-4px', marginRight: '-4px' }}>
-            <div style={{ minWidth: `${barWidth}px`, height: '220px' }}>
+          {/* Scrollable chart */}
+          <div className="px-2 pb-3" style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+            <div style={{ minWidth: Math.max(chartData.length * 60, 300) + 'px', height: '240px' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={chartData}
-                  margin={{ top: 20, right: 12, left: -16, bottom: 50 }}
-                  barCategoryGap="30%"
-                >
+                <BarChart data={chartData} margin={{ top: 24, right: 16, left: -8, bottom: 52 }} barCategoryGap="28%">
+                  <defs>
+                    {chartData.map((_, i) => (
+                      <linearGradient key={i} id={`bar-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%"  stopColor={BAR_COLORS[i % BAR_COLORS.length]} stopOpacity={1} />
+                        <stop offset="100%" stopColor={BAR_COLORS[i % BAR_COLORS.length]} stopOpacity={0.55} />
+                      </linearGradient>
+                    ))}
+                  </defs>
                   <XAxis
                     dataKey="name"
-                    tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 500 }}
-                    axisLine={false}
+                    tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }}
+                    axisLine={{ stroke: 'rgba(255,255,255,0.06)' }}
                     tickLine={false}
                     interval={0}
-                    angle={-35}
+                    angle={-38}
                     textAnchor="end"
-                    height={54}
+                    height={56}
                   />
                   <YAxis
                     tick={{ fill: '#64748b', fontSize: 10 }}
                     axisLine={false}
                     tickLine={false}
                     allowDecimals={false}
-                    width={28}
+                    width={26}
+                    tickFormatter={v => v === 0 ? '' : v}
                   />
                   <Tooltip
                     contentStyle={{
-                      background: 'rgba(8,14,28,0.97)',
-                      border: '1px solid rgba(34,197,94,0.25)',
-                      borderRadius: '10px',
+                      background: 'rgba(8,14,28,0.96)',
+                      border: '1px solid rgba(34,197,94,0.30)',
+                      borderRadius: '12px',
                       color: '#fff',
                       fontSize: '12px',
-                      padding: '8px 12px',
+                      padding: '8px 14px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
                     }}
-                    cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                    formatter={v => [v, 'Meals']}
+                    cursor={{ fill: 'rgba(255,255,255,0.04)', radius: 6 }}
+                    formatter={(v, _, p) => [
+                      <span style={{ color: BAR_COLORS[p.index % BAR_COLORS.length], fontWeight: 700 }}>{v} meals</span>, p.payload.name
+                    ]}
                   />
-                  <Bar dataKey="meals" radius={[6, 6, 0, 0]} maxBarSize={44}
-                    label={{ position: 'top', fill: '#94a3b8', fontSize: 10, fontWeight: 600 }}>
+                  <Bar dataKey="meals" radius={[8, 8, 3, 3]} maxBarSize={48}
+                    label={{ position: 'top', fill: '#94a3b8', fontSize: 11, fontWeight: 700, formatter: v => v > 0 ? v : '' }}>
                     {chartData.map((_, i) => (
-                      <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />
+                      <Cell key={i} fill={`url(#bar-grad-${i})`} />
                     ))}
                   </Bar>
                 </BarChart>

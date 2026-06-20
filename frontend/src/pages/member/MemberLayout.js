@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, History, LogOut, Menu } from 'lucide-react';
+import { LayoutDashboard, History, LogOut, Menu, X } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
@@ -12,9 +12,19 @@ const links = [
 
 export default function MemberLayout() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const mainRef = useRef(null);
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const handleLogout = () => { logout(); navigate('/login'); };
+
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const onScroll = () => setScrolled(el.scrollTop > 10);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -66,22 +76,44 @@ export default function MemberLayout() {
       </aside>
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-64 bg-slate-800 border-r border-slate-700 flex flex-col">
             <SidebarContent />
           </aside>
         </div>
       )}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
-          <button onClick={() => setOpen(true)} className="text-slate-400 hover:text-white"><Menu size={22} /></button>
+        {/* Mobile header — glass effect deepens on scroll */}
+        <header className="lg:hidden flex items-center justify-between px-4 py-3 transition-all duration-300"
+          style={scrolled ? {
+            background: 'rgba(8,14,28,0.85)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            borderBottom: '1px solid rgba(255,255,255,0.10)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 -1px 0 rgba(255,255,255,0.04)',
+          } : {
+            background: 'rgba(8,14,28,0.45)',
+            backdropFilter: 'blur(16px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+          }}>
+          <button onClick={() => setOpen(true)}
+            className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
+            <Menu size={18} className="text-slate-300" />
+          </button>
           <div className="flex items-center gap-2">
-            <img src="/messy-logo.png" alt="logo" className="w-7 h-7 object-contain" />
-            <span style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.1rem', fontWeight: 700, background: 'linear-gradient(135deg,#34d399,#059669)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>The Messy Kitchen</span>
+            <img src="/messy-logo.png" alt="logo" className="w-7 h-7 object-contain"
+              style={{ filter: 'drop-shadow(0 0 6px rgba(34,197,94,0.5))' }} />
+            <span style={{
+              fontFamily: "'Dancing Script', cursive", fontSize: '1.1rem', fontWeight: 700,
+              background: 'linear-gradient(135deg,#ffffff 0%,#bbf7d0 50%,#34d399 100%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            }}>The Messy Kitchen</span>
           </div>
           <span className="badge-member">Member</span>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6"><Outlet /></main>
+        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 lg:p-6"><Outlet /></main>
       </div>
     </div>
   );
