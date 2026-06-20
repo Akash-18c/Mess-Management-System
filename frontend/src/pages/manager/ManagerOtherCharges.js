@@ -37,7 +37,7 @@ export default function ManagerOtherCharges() {
 
   const load = useCallback(() => {
     api.get(`/expenses/charges/${MONTH}/${YEAR}`).then(r => setCharges(r.data)).catch(() => {});
-    api.get('/admin/members').then(r => setMembers(r.data.filter(m => m.isActive && m.role !== 'admin'))).catch(() => {});
+    api.get('/members').then(r => setMembers(r.data.filter(m => m.isActive && m.role !== 'admin'))).catch(() => {});
   }, []);
 
   useEffect(() => { load(); }, [load]);
