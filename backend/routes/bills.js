@@ -10,11 +10,21 @@ const { auth, requireRole } = require('../middleware/auth');
 const router = express.Router();
 router.use(auth);
 
+// Member — only their own bill — MUST be before /:month/:year to avoid 'my' matching :month
+router.get('/my/:month/:year', async (req, res) => {
+  try {
+    const bill = await Bill.findOne({ memberId: req.user._id, month: req.params.month, year: req.params.year })
+      .populate('memberId', 'name room email');
+    res.json(bill || null);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Manager/Admin — all bills for a month
 router.get('/:month/:year', requireRole('admin', 'manager'), async (req, res) => {
   try {
-    const bills = await Bill.find({ month: req.params.month, year: req.params.year })
+    const bill = await Bill.findOne({ memberId: req.user._id, month: req.params.month, year: req.params.year })
       .populate('memberId', 'name room email');
-    res.json(bills);
+    res.json(bill || null);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
@@ -23,35 +33,42 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
     const { month, year } = req.params;
     const summary = await MonthlySummary.findOne({ month, year });
     const mealRate = summary?.mealRate || 0;
+    const masiRec = await require('../models/MasiSalary').findOne({ month, year });
+    const masiPerMember = masiRec?.perMemberAmount || 0;
 
     const members = await User.find({ isActive: true });
     const bills = [];
-    const masiRec = await require('../models/MasiSalary').findOne({ month, year });
-    const masiPerMember = masiRec?.perMemberAmount || 0;
 
     for (const member of members) {
       const meals = await Meal.find({ month, year, memberId: member._id, isOff: false });
       let lunch = 0, dinner = 0, guestMeals = 0;
-      meals.forEach((m) => {
+      meals.forEach(m => {
         if (m.lunch) lunch++;
         if (m.dinner) dinner++;
         guestMeals += m.guestMeals || 0;
       });
-      const mealCount = lunch + dinner;
+      const mealCount   = lunch + dinner;
       const guestCharge = parseFloat((guestMeals * mealRate).toFixed(2));
+      // mealCost = (own meals + guest meals) × rate
+      const mealCost    = parseFloat(((mealCount + guestMeals) * mealRate).toFixed(2));
 
+      // otherCharges = only THIS member's individual charges
       const memberCharges = await OtherCharge.find({ memberId: member._id, month, year });
-      const otherCharges = parseFloat(memberCharges.reduce((s, c) => s + c.amount, 0).toFixed(2));
+      const otherCharges  = parseFloat(memberCharges.reduce((s, c) => s + c.amount, 0).toFixed(2));
 
-      const totalBill = parseFloat(((mealCount + guestMeals) * mealRate + masiPerMember + otherCharges).toFixed(2));
+      // totalBill = mealCost + masi (same for everyone) + otherCharges (individual)
+      const totalBill = parseFloat((mealCost + masiPerMember + otherCharges).toFixed(2));
 
       const payments = await Payment.find({ memberId: member._id, month, year });
-      const advance = parseFloat(payments.reduce((s, p) => s + p.amount, 0).toFixed(2));
+      const advance   = parseFloat(payments.reduce((s, p) => s + p.amount, 0).toFixed(2));
       const dueAmount = parseFloat((totalBill - advance).toFixed(2));
 
       const bill = await Bill.findOneAndUpdate(
         { memberId: member._id, month, year },
-        { mealCount, breakfastCount: 0, lunchCount: lunch, dinnerCount: dinner, mealRate, guestMeals, guestCharge, masiSalary: masiPerMember, otherCharges, advance, totalBill, dueAmount, generatedBy: req.user._id },
+        { mealCount, breakfastCount: 0, lunchCount: lunch, dinnerCount: dinner,
+          mealRate, guestMeals, guestCharge, mealCost, otherCharges,
+          masiSalary: masiPerMember, advance, totalBill, dueAmount,
+          generatedBy: req.user._id },
         { upsert: true, new: true }
       );
       bills.push(bill);
@@ -63,9 +80,8 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
 router.get('/member/:memberId/:month/:year', async (req, res) => {
   try {
     const { memberId, month, year } = req.params;
-    if (req.user.role === 'member' && req.user._id.toString() !== memberId) {
+    if (req.user.role === 'member' && req.user._id.toString() !== memberId)
       return res.status(403).json({ message: 'Forbidden' });
-    }
     const bill = await Bill.findOne({ memberId, month, year }).populate('memberId', 'name room email');
     res.json(bill);
   } catch (err) { res.status(500).json({ message: err.message }); }

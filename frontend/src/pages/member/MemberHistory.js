@@ -201,29 +201,25 @@ export default function MemberHistory() {
                                   {/* Calculation */}
                                   <div className="bg-slate-800/80 rounded-lg p-3.5 space-y-1.5 text-sm border border-slate-700/50">
                                     <div className="flex justify-between text-slate-400">
-                                      <span>Meal Rate</span>
-                                      <span className="text-white">₹{b.mealRate?.toFixed(2)}/meal</span>
-                                    </div>
-                                    <div className="flex justify-between text-slate-400">
                                       <span>{b.mealCount} meals × ₹{b.mealRate?.toFixed(2)}</span>
-                                      <span className="text-white">₹{((b.mealCount || 0) * (b.mealRate || 0)).toFixed(2)}</span>
+                                      <span className="text-white">₹{(b.mealCost ?? (b.mealCount * b.mealRate) ?? 0).toFixed(2)}</span>
                                     </div>
-                                    {b.guestMeals > 0 && (
+                                    {(b.guestMeals > 0) && (
                                       <div className="flex justify-between text-slate-400">
-                                        <span>{b.guestMeals} guest × ₹{b.mealRate?.toFixed(2)}</span>
-                                        <span className="text-amber-400">+₹{b.guestCharge?.toFixed(2)}</span>
+                                        <span>{b.guestMeals} guest meals</span>
+                                        <span className="text-amber-300">+₹{b.guestCharge?.toFixed(2)}</span>
                                       </div>
                                     )}
-                                    {b.masiSalary > 0 && (
-                                      <div className="flex justify-between text-slate-400">
-                                        <span>Masi Salary</span>
-                                        <span className="text-amber-400">+₹{b.masiSalary?.toFixed(2)}</span>
-                                      </div>
-                                    )}
-                                    {b.otherCharges > 0 && (
+                                    {(b.otherCharges > 0) && (
                                       <div className="flex justify-between text-slate-400">
                                         <span>Other Charges</span>
                                         <span className="text-orange-400">+₹{b.otherCharges?.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    {(b.masiSalary > 0) && (
+                                      <div className="flex justify-between text-slate-400">
+                                        <span>Masi Salary</span>
+                                        <span className="text-amber-400">+₹{b.masiSalary?.toFixed(2)}</span>
                                       </div>
                                     )}
                                     <div className="flex justify-between font-bold border-t border-slate-600 pt-1.5">

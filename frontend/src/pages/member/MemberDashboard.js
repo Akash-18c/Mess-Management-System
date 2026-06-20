@@ -64,7 +64,7 @@ export default function MemberDashboard() {
   }, []);
 
   useEffect(() => {
-    api.get(`/bills/${selectedMonth}/${selectedYear}`).then(r => setBills(r.data)).catch(() => setBills([]));
+    api.get(`/bills/my/${selectedMonth}/${selectedYear}`).then(r => setBills(r.data ? [r.data] : [])).catch(() => setBills([]));
     api.get(`/expenses/charges/my/${selectedMonth}/${selectedYear}`).then(r => setMyCharges(r.data)).catch(() => setMyCharges([]));
   }, [selectedMonth, selectedYear]);
 

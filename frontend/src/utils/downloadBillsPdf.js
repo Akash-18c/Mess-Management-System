@@ -89,16 +89,17 @@ function generate({ bills, summary, month, year }) {
 
     const tableRows = bills.map((b) => {
       const due = b.dueAmount ?? 0;
-      const mealCost = ((b.mealCount || 0) * mealRate).toFixed(2);
+      // Use stored mealCost if available, fallback to mealCount × rate
+      const mealCost = (b.mealCost ?? (b.mealCount || 0) * mealRate).toFixed(2);
       return [
         rn(b.memberId?.name),
-        String(b.mealCount),
+        String(b.mealCount || 0),
         `Rs ${mealRate.toFixed(2)}`,
         `Rs ${mealCost}`,
         `Rs ${(b.otherCharges || 0).toFixed(2)}`,
         `Rs ${(b.masiSalary || 0).toFixed(2)}`,
         `Rs ${(b.advance || 0).toFixed(2)}`,
-        due > 0 ? `Rs ${due.toFixed(2)}` : `-Rs ${Math.abs(due).toFixed(2)}`,
+        due > 0 ? `Rs ${due.toFixed(2)}` : `+Rs ${Math.abs(due).toFixed(2)}`,
       ];
     });
 
