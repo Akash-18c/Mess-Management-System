@@ -3,7 +3,6 @@ const Bill = require('../models/Bill');
 const Meal = require('../models/Meal');
 const Payment = require('../models/Payment');
 const MonthlySummary = require('../models/MonthlySummary');
-const OtherCharge = require('../models/OtherCharge');
 const User = require('../models/User');
 const { auth, requireRole } = require('../middleware/auth');
 
@@ -35,6 +34,8 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
     const mealRate = summary?.mealRate || 0;
     const masiRec = await require('../models/MasiSalary').findOne({ month, year });
     const masiPerMember = masiRec?.perMemberAmount || 0;
+    // other shared charge = paid other expenses ÷ active members (already in summary)
+    const otherSharedCharge = summary?.otherPaidPerMember || 0;
 
     const members = await User.find({ isActive: true });
     const bills = [];
@@ -52,12 +53,8 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
       // mealCost = (own meals + guest meals) × rate
       const mealCost    = parseFloat(((mealCount + guestMeals) * mealRate).toFixed(2));
 
-      // otherCharges = only THIS member's individual charges
-      const memberCharges = await OtherCharge.find({ memberId: member._id, month, year });
-      const otherCharges  = parseFloat(memberCharges.reduce((s, c) => s + c.amount, 0).toFixed(2));
-
-      // totalBill = mealCost + masi (same for everyone) + otherCharges (individual)
-      const totalBill = parseFloat((mealCost + masiPerMember + otherCharges).toFixed(2));
+      // totalBill = mealCost + masi + otherSharedCharge (paid other expenses split equally)
+      const totalBill = parseFloat((mealCost + masiPerMember + otherSharedCharge).toFixed(2));
 
       const payments = await Payment.find({ memberId: member._id, month, year });
       const advance   = parseFloat(payments.reduce((s, p) => s + p.amount, 0).toFixed(2));
@@ -66,7 +63,7 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
       const bill = await Bill.findOneAndUpdate(
         { memberId: member._id, month, year },
         { mealCount, breakfastCount: 0, lunchCount: lunch, dinnerCount: dinner,
-          mealRate, guestMeals, guestCharge, mealCost, otherCharges,
+          mealRate, guestMeals, guestCharge, mealCost, otherCharges: 0, otherSharedCharge,
           masiSalary: masiPerMember, advance, totalBill, dueAmount,
           generatedBy: req.user._id },
         { upsert: true, new: true }

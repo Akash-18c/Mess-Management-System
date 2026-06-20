@@ -113,10 +113,10 @@ export default function MemberHistory() {
                   {s && (
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-700">
                       {[
-                        { label: 'Grocery', value: s.groceryTotal, color: 'text-green-400' },
-                        { label: 'Other', value: s.otherTotal, color: 'text-amber-400' },
-                        { label: 'Grand Total', value: s.grandTotal, color: 'text-blue-400' },
-                        { label: 'Mess Balance', value: s.messBalance, color: s.messBalance >= 0 ? 'text-green-400' : 'text-red-400' },
+                        { label: 'Grocery',      value: s.groceryTotal,    color: 'text-green-400' },
+                        { label: 'Other (Paid)', value: s.otherPaidTotal || 0, color: 'text-orange-400' },
+                        { label: 'Grand Total',  value: s.grandTotal,      color: 'text-blue-400' },
+                        { label: 'Mess Balance', value: s.messBalance,     color: s.messBalance >= 0 ? 'text-green-400' : 'text-red-400' },
                       ].map(({ label, value, color }) => (
                         <div key={label} className="bg-slate-800 px-4 py-3 text-center">
                           <p className="text-slate-500 text-xs mb-0.5">{label}</p>
@@ -210,10 +210,10 @@ export default function MemberHistory() {
                                         <span className="text-amber-300">+₹{b.guestCharge?.toFixed(2)}</span>
                                       </div>
                                     )}
-                                    {(b.otherCharges > 0) && (
+                                    {(b.otherSharedCharge > 0) && (
                                       <div className="flex justify-between text-slate-400">
-                                        <span>Other Charges</span>
-                                        <span className="text-orange-400">+₹{b.otherCharges?.toFixed(2)}</span>
+                                        <span>Shared Expenses <span className="text-[10px] text-slate-600">(Gas/Rice/Other ÷ members)</span></span>
+                                        <span className="text-orange-400">+₹{b.otherSharedCharge?.toFixed(2)}</span>
                                       </div>
                                     )}
                                     {(b.masiSalary > 0) && (

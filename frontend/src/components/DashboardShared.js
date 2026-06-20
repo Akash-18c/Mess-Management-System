@@ -64,11 +64,13 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
     const roleTag = m.role === 'admin' ? ' <span class="role-admin">Admin</span>' : m.role === 'manager' ? ' <span class="role-mgr">Mgr</span>' : '';
     const due = m.due;
     const masiSalary = m.masiSalary || 0;
+    const otherShared = m.otherSharedCharge || 0;
     return `<tr class="${i % 2 === 0 ? 'even' : ''}">
       <td><span class="avatar">${name[0].toUpperCase()}</span>${name}${roleTag}</td>
       <td class="center">${m.totalMeals}</td>
       <td class="right">&#8377;${mealRate.toFixed(2)}</td>
-      <td class="right">&#8377;${m.totalMealCost.toFixed(2)}</td>
+      <td class="right">&#8377;${m.mealCost?.toFixed(2) ?? m.totalMealCost.toFixed(2)}</td>
+      <td class="right"${otherShared > 0 ? ' style="color:#ea580c;font-weight:600"' : ''}>&#8377;${otherShared.toFixed(2)}</td>
       <td class="right">&#8377;${masiSalary.toFixed(2)}</td>
       <td class="right">&#8377;${m.moneyGiven.toFixed(2)}</td>
       <td class="right ${due >= 0 ? 'pos' : 'neg'}">${due >= 0 ? '+' : ''}&#8377;${Math.abs(due).toFixed(2)}</td>
@@ -174,7 +176,8 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
         <th class="center">Meals</th>
         <th class="right">Per Meal</th>
         <th class="right">Meal Cost</th>
-        <th class="right">Masi Salary</th>
+        <th class="right">Shared Exp</th>
+        <th class="right">Masi</th>
         <th class="right">Amount Paid</th>
         <th class="right">Balance</th>
       </tr>

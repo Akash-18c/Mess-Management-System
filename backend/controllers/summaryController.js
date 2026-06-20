@@ -3,33 +3,43 @@ const OtherExpense = require('../models/OtherExpense');
 const Meal = require('../models/Meal');
 const MonthlySummary = require('../models/MonthlySummary');
 const Payment = require('../models/Payment');
+const User = require('../models/User');
 
 async function recalcSummary(month, year) {
-  const groceries = await GroceryExpense.find({ month, year });
-  const others = await OtherExpense.find({ month, year, status: 'Paid' }); // Only PAID other expenses affect balance
-  const allOthers = await OtherExpense.find({ month, year });               // All for otherTotal display
-  const meals = await Meal.find({ month, year, isOff: false });
-  const payments = await Payment.find({ month, year });
+  const [groceries, allOthers, meals, payments, activeMembers] = await Promise.all([
+    GroceryExpense.find({ month, year }),
+    OtherExpense.find({ month, year }),
+    Meal.find({ month, year, isOff: false }),
+    Payment.find({ month, year }),
+    User.countDocuments({ isActive: true }),
+  ]);
 
-  const groceryTotal = parseFloat(groceries.reduce((s, e) => s + e.total, 0).toFixed(2));
-  const otherPaidTotal = parseFloat(others.reduce((s, e) => s + e.amount, 0).toFixed(2));
-  const otherTotal = parseFloat(allOthers.reduce((s, e) => s + e.amount, 0).toFixed(2)); // shown in UI
-  const grandTotal = parseFloat((groceryTotal + otherPaidTotal).toFixed(2)); // only paid counts toward cost
+  const paidOthers = allOthers.filter(o => o.status === 'Paid');
+
+  const groceryTotal    = parseFloat(groceries.reduce((s, e) => s + e.total, 0).toFixed(2));
+  const otherTotal      = parseFloat(allOthers.reduce((s, e) => s + e.amount, 0).toFixed(2));
+  const otherPaidTotal  = parseFloat(paidOthers.reduce((s, e) => s + e.amount, 0).toFixed(2));
+
+  // mealRate is based on grocery ONLY — other expenses split separately per member
+  const grandTotal = groceryTotal;
 
   let totalMeals = 0;
   meals.forEach((m) => {
-    if (m.lunch) totalMeals++;
+    if (m.lunch)  totalMeals++;
     if (m.dinner) totalMeals++;
     totalMeals += m.guestMeals || 0;
   });
 
   const mealRate = totalMeals > 0 ? parseFloat((grandTotal / totalMeals).toFixed(2)) : 0;
+  const otherPaidPerMember = activeMembers > 0 ? parseFloat((otherPaidTotal / activeMembers).toFixed(2)) : 0;
+
   const totalCollected = parseFloat(payments.reduce((s, p) => s + p.amount, 0).toFixed(2));
-  const messBalance = parseFloat((totalCollected - grandTotal).toFixed(2));
+  // messBalance accounts for both grocery + paid other expenses
+  const messBalance = parseFloat((totalCollected - groceryTotal - otherPaidTotal).toFixed(2));
 
   await MonthlySummary.findOneAndUpdate(
     { month, year },
-    { groceryTotal, otherTotal, grandTotal, totalMeals, mealRate, totalCollected, messBalance },
+    { groceryTotal, otherTotal, otherPaidTotal, otherPaidPerMember, grandTotal, totalMeals, mealRate, totalCollected, messBalance },
     { upsert: true, new: true }
   );
 }

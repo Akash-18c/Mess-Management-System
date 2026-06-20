@@ -98,14 +98,14 @@ export default function ManagerBills() {
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
                   {[
-                    { h: 'Member',        cls: 'text-left  pl-4' },
-                    { h: 'Meals',         cls: 'text-right' },
-                    { h: 'Per Meal',      cls: 'text-right' },
-                    { h: 'Meal Cost',     cls: 'text-right' },
-                    { h: 'Other',         cls: 'text-right' },
-                    { h: 'Masi',          cls: 'text-right' },
-                    { h: 'Advance',       cls: 'text-right' },
-                    { h: 'Due / Refund',  cls: 'text-right pr-4' },
+                    { h: 'Member',         cls: 'text-left  pl-4' },
+                    { h: 'Meals',          cls: 'text-right' },
+                    { h: 'Per Meal',       cls: 'text-right' },
+                    { h: 'Meal Cost',      cls: 'text-right' },
+                    { h: 'Shared Exp',     cls: 'text-right' },
+                    { h: 'Masi',           cls: 'text-right' },
+                    { h: 'Advance',        cls: 'text-right' },
+                    { h: 'Due / Refund',   cls: 'text-right pr-4' },
                   ].map(({ h, cls }) => (
                     <th key={h} className={`py-2.5 px-2 text-slate-500 font-semibold text-[10px] uppercase tracking-wide ${cls}`}>{h}</th>
                   ))}
@@ -141,8 +141,8 @@ export default function ManagerBills() {
                       <td className="py-2.5 px-2 text-right text-amber-400">₹{mealRate.toFixed(2)}</td>
                       {/* Meal Cost = stored mealCost (meals+guest × rate) */}
                       <td className="py-2.5 px-2 text-right text-slate-200">₹{(b.mealCost ?? (b.mealCount * mealRate)).toFixed(2)}</td>
-                      {/* Other Charges — only this member's individual */}
-                      <td className="py-2.5 px-2 text-right" style={{ color: (b.otherCharges || 0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.otherCharges || 0).toFixed(2)}</td>
+                      {/* Other Shared Charge — paid others ÷ members */}
+                      <td className="py-2.5 px-2 text-right" style={{ color: (b.otherSharedCharge || 0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.otherSharedCharge || 0).toFixed(2)}</td>
                       {/* Masi — same for everyone */}
                       <td className="py-2.5 px-2 text-right text-slate-400">₹{(b.masiSalary || 0).toFixed(2)}</td>
                       {/* Advance */}

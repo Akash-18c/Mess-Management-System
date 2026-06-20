@@ -5,6 +5,8 @@ const monthlySummarySchema = new mongoose.Schema({
   year: { type: Number, required: true },
   groceryTotal: { type: Number, default: 0 },
   otherTotal: { type: Number, default: 0 },
+  otherPaidTotal: { type: Number, default: 0 },
+  otherPaidPerMember: { type: Number, default: 0 },
   grandTotal: { type: Number, default: 0 },
   totalMeals: { type: Number, default: 0 },
   mealRate: { type: Number, default: 0 },

@@ -93,7 +93,8 @@ export default function ManagerExpenses() {
         await api.put(`/expenses/other/${editId}`, { ...form, amount: +form.amount });
         toast.success('Updated');
       } else {
-        await api.post('/expenses/other', { ...form, month: MONTH, year: YEAR, amount: +form.amount });
+        const payload = { categoryName: form.categoryName, description: form.description, amount: +form.amount, paidBy: form.paidBy, date: form.date, note: form.note, status: form.status, month: MONTH, year: YEAR };
+        await api.post('/expenses/other', payload);
         toast.success('Expense added');
       }
       load();
