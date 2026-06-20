@@ -1,15 +1,171 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronDown, ChevronUp, ReceiptText, Users, TrendingUp, IndianRupee, Wallet } from 'lucide-react';
+import { ChevronDown, ChevronUp, ReceiptText, History, UtensilsCrossed, IndianRupee, CreditCard, Flame, Leaf, Package, Users } from 'lucide-react';
 import api from '../../api';
 
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS       = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+const glass = {
+  background: 'rgba(255,255,255,0.03)',
+  backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
+  border: '1px solid rgba(255,255,255,0.09)',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)',
+};
+
+const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
+
+function StatPill({ label, value, color }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-3 px-2"
+      style={{ background: 'rgba(10,15,30,0.5)' }}>
+      <p className="font-bold text-sm tabular-nums" style={{ color }}>{value}</p>
+      <p className="text-slate-500 text-[10px] mt-0.5 text-center leading-tight">{label}</p>
+    </div>
+  );
+}
+
+function BillBreakdown({ b, memberPays, isLoading }) {
+  const rows = [
+    b.mealCount > 0 && {
+      label: `${b.mealCount} meals × ₹${b.mealRate?.toFixed(2)}`,
+      value: `₹${(b.mealCost ?? (b.mealCount * b.mealRate) ?? 0).toFixed(2)}`,
+      color: '#e2e8f0', icon: UtensilsCrossed, iconColor: '#34d399',
+    },
+    b.guestMeals > 0 && {
+      label: `${b.guestMeals} guest meal${b.guestMeals > 1 ? 's' : ''}`,
+      value: `+₹${b.guestCharge?.toFixed(2)}`,
+      color: '#fcd34d', icon: Users, iconColor: '#fcd34d',
+    },
+    b.gasCharge > 0 && {
+      label: 'Gas Cylinder',
+      value: `+₹${b.gasCharge?.toFixed(2)}`,
+      color: '#fb923c', icon: Flame, iconColor: '#fb923c',
+    },
+    b.riceCharge > 0 && {
+      label: 'Rice Bag',
+      value: `+₹${b.riceCharge?.toFixed(2)}`,
+      color: '#86efac', icon: Leaf, iconColor: '#86efac',
+    },
+    b.otherSharedCharge > 0 && {
+      label: 'Other Expenses',
+      value: `+₹${b.otherSharedCharge?.toFixed(2)}`,
+      color: '#fb923c', icon: Package, iconColor: '#fb923c',
+    },
+    b.otherCharges > 0 && {
+      label: 'Other Charges',
+      value: `+₹${b.otherCharges?.toFixed(2)}`,
+      color: '#f472b6', icon: Package, iconColor: '#f472b6',
+    },
+    b.masiSalary > 0 && {
+      label: 'Masi Salary',
+      value: `+₹${b.masiSalary?.toFixed(2)}`,
+      color: '#fbbf24', icon: IndianRupee, iconColor: '#fbbf24',
+    },
+  ].filter(Boolean);
+
+  return (
+    <div className="px-3 pb-3 pt-1 space-y-3">
+      {isLoading ? (
+        <div className="flex items-center justify-center py-6">
+          <div className="w-5 h-5 rounded-full border-2 border-green-500/30 border-t-green-400 animate-spin" />
+        </div>
+      ) : (
+        <>
+          {/* Meal count tiles */}
+          <div className="grid grid-cols-4 gap-1.5">
+            {[
+              { label: 'Lunch',  value: b.lunchCount  || 0, accent: '#4ade80' },
+              { label: 'Dinner', value: b.dinnerCount || 0, accent: '#60a5fa' },
+              { label: 'Guest',  value: b.guestMeals  || 0, accent: '#fbbf24' },
+              { label: 'Total',  value: b.mealCount   || 0, accent: '#ffffff' },
+            ].map(({ label, value, accent }) => (
+              <div key={label} className="rounded-xl py-2.5 px-1 text-center"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <p className="text-[10px] text-slate-500 mb-1">{label}</p>
+                <p className="font-bold text-base leading-none tabular-nums" style={{ color: accent }}>{value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Cost breakdown */}
+          <div className="rounded-2xl overflow-hidden"
+            style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="px-3 py-2 flex items-center gap-1.5"
+              style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+              <ReceiptText size={11} className="text-slate-500" />
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Cost Breakdown</p>
+            </div>
+            <div className="px-3 py-2 space-y-0">
+              {rows.map(({ label, value, color, icon: Icon, iconColor }) => (
+                <div key={label} className="flex items-center justify-between py-2"
+                  style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Icon size={12} style={{ color: iconColor, flexShrink: 0 }} />
+                    <span className="text-slate-400 text-xs truncate">{label}</span>
+                  </div>
+                  <span className="text-xs font-semibold tabular-nums flex-shrink-0 ml-3" style={{ color }}>{value}</span>
+                </div>
+              ))}
+              {/* Total */}
+              <div className="flex items-center justify-between py-2.5 mt-1"
+                style={{ borderTop: '1px solid rgba(255,255,255,0.10)' }}>
+                <span className="text-white text-sm font-bold">Total Bill</span>
+                <span className="text-white text-sm font-bold tabular-nums">₹{b.totalBill?.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between pb-2"
+                style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span className="text-slate-400 text-xs">Advance Paid</span>
+                <span className="text-green-400 text-xs font-semibold tabular-nums">− ₹{b.advance?.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between py-2.5">
+                <span className="text-sm font-bold" style={{ color: b.dueAmount > 0 ? '#f87171' : '#4ade80' }}>
+                  {b.dueAmount > 0 ? 'Amount Due' : 'Refund'}
+                </span>
+                <span className="text-sm font-bold tabular-nums" style={{ color: b.dueAmount > 0 ? '#f87171' : '#4ade80' }}>
+                  ₹{Math.abs(b.dueAmount).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment history */}
+          {memberPays.length > 0 && (
+            <div className="rounded-2xl overflow-hidden"
+              style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="px-3 py-2 flex items-center gap-1.5"
+                style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                <CreditCard size={11} className="text-slate-500" />
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Payment History</p>
+              </div>
+              <div className="px-3 py-2 space-y-0">
+                {memberPays.map((p, i) => (
+                  <div key={p._id} className="flex items-center justify-between py-2"
+                    style={{ borderBottom: i < memberPays.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                    <span className="text-slate-400 text-xs">
+                      {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                    </span>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                      style={{ background: 'rgba(96,165,250,0.12)', color: '#93c5fd', border: '1px solid rgba(96,165,250,0.20)' }}>
+                      {p.method}
+                    </span>
+                    <span className="text-green-400 font-bold text-xs tabular-nums">₹{p.amount.toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function MemberHistory() {
-  const [groups, setGroups] = useState([]);
-  const [expandedMonth, setExpandedMonth] = useState(null);
-  const [expandedBill, setExpandedBill] = useState(null);
-  const [payments, setPayments] = useState({});
+  const [groups,          setGroups]          = useState([]);
+  const [expandedMonth,   setExpandedMonth]   = useState(null);
+  const [expandedBill,    setExpandedBill]    = useState(null);
+  const [payments,        setPayments]        = useState({});
   const [loadingPayments, setLoadingPayments] = useState({});
 
   useEffect(() => {
@@ -29,12 +185,12 @@ export default function MemberHistory() {
     setLoadingPayments(l => ({ ...l, [key]: true }));
     try {
       const res = await api.get(`/member/all-payments/${b.month}/${b.year}`);
-      const memberPayments = res.data.filter(p =>
+      const mp = res.data.filter(p =>
         p.memberId?._id === b.memberId?._id?.toString() ||
         p.memberId?._id === b.memberId?._id ||
         p.memberId === b.memberId?._id?.toString()
       );
-      setPayments(p => ({ ...p, [key]: memberPayments }));
+      setPayments(p => ({ ...p, [key]: mp }));
     } catch {
       setPayments(p => ({ ...p, [key]: [] }));
     } finally {
@@ -44,248 +200,178 @@ export default function MemberHistory() {
 
   if (groups.length === 0) return (
     <div className="space-y-4">
-      <div><h1 className="text-2xl font-bold text-white">Mess History</h1><p className="text-slate-400 text-sm">All members' monthly records</p></div>
-      <div className="card py-16 text-center"><Users size={44} className="text-slate-600 mx-auto mb-3" /><p className="text-slate-500">No history yet. Start marking meals to see records here.</p></div>
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <History size={18} className="text-green-400" />
+          <h1 style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.6rem', fontWeight: 700,
+            background: 'linear-gradient(135deg,#ffffff 0%,#bbf7d0 40%,#34d399 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            Mess History
+          </h1>
+        </div>
+        <p className="text-slate-500 text-xs pl-6">All members' monthly records</p>
+      </div>
+      <div className="rounded-2xl py-16 text-center" style={glass}>
+        <History size={40} className="text-slate-700 mx-auto mb-3" />
+        <p className="text-slate-500 text-sm">No history yet.</p>
+        <p className="text-slate-600 text-xs mt-1">Start marking meals to see records here.</p>
+      </div>
     </div>
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 pb-8">
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Mess History</h1>
-        <p className="text-slate-400 text-sm">All members — monthly bills & breakdown</p>
+        <div className="flex items-center gap-2 mb-0.5">
+          <History size={16} className="text-green-400 flex-shrink-0" />
+          <h1 style={{ fontFamily: "'Dancing Script', cursive", fontSize: 'clamp(1.4rem,5vw,1.7rem)', fontWeight: 700,
+            background: 'linear-gradient(135deg,#ffffff 0%,#bbf7d0 40%,#34d399 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.2 }}>
+            Mess History
+          </h1>
+        </div>
+        <p className="text-slate-500 text-xs pl-5">All members — monthly bills & breakdown</p>
       </div>
 
-      <div className="space-y-4">
-        {groups.map(group => {
-          const key = `${group.year}-${group.month}`;
-          const isMonthOpen = expandedMonth === key;
-          const s = group.summary;
-          const totalDue = group.bills.reduce((sum, b) => sum + Math.max(b.dueAmount, 0), 0);
-          const totalPaid = group.bills.reduce((sum, b) => sum + b.advance, 0);
+      {groups.map(group => {
+        const key = `${group.year}-${group.month}`;
+        const isMonthOpen = expandedMonth === key;
+        const s = group.summary;
+        const totalDue  = group.bills.reduce((sum, b) => sum + Math.max(b.dueAmount, 0), 0);
 
-          return (
-            <div key={key} className="rounded-xl border border-slate-700 overflow-hidden bg-slate-800">
-              {/* Month Header */}
-              <button
-                onClick={() => toggleMonth(key)}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-700/40 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/20 flex flex-col items-center justify-center">
-                    <span className="text-green-400 text-xs font-semibold">{SHORT_MONTHS[group.month - 1]}</span>
-                    <span className="text-slate-400 text-xs">{group.year}</span>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-white font-semibold">{MONTHS[group.month - 1]} {group.year}</p>
-                    <p className="text-slate-400 text-xs">{group.bills.length} members · ₹{s?.mealRate?.toFixed(2) || '0'}/meal</p>
-                  </div>
+        return (
+          <div key={key} className="rounded-2xl overflow-hidden" style={glass}>
+
+            {/* ── Month header button ── */}
+            <button onClick={() => toggleMonth(key)} className="w-full text-left"
+              style={{ WebkitTapHighlightColor: 'transparent' }}>
+              <div className="flex items-center gap-3 px-4 py-3.5">
+                {/* Calendar badge */}
+                <div className="w-11 h-11 rounded-xl flex flex-col items-center justify-center flex-shrink-0"
+                  style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.22)' }}>
+                  <span className="text-green-400 text-[10px] font-bold leading-tight">{SHORT_MONTHS[group.month - 1]}</span>
+                  <span className="text-slate-500 text-[10px] leading-tight">{group.year}</span>
                 </div>
-                <div className="flex items-center gap-5">
+
+                {/* Title + sub */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-bold text-sm leading-tight">{MONTHS[group.month - 1]} {group.year}</p>
+                  <p className="text-slate-500 text-xs mt-0.5">
+                    {group.bills.length} members · ₹{s?.mealRate?.toFixed(2) || '0'}/meal
+                    {s?.isClosed && <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded-full font-bold"
+                      style={{ background: 'rgba(248,113,113,0.12)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.22)' }}>Closed</span>}
+                  </p>
+                </div>
+
+                {/* Right stats — responsive */}
+                <div className="flex items-center gap-3 flex-shrink-0">
                   <div className="text-right hidden sm:block">
-                    <p className="text-white font-medium text-sm">₹{s?.grandTotal?.toFixed(2) || '0.00'}</p>
-                    <p className="text-slate-500 text-xs">Total Expense</p>
-                  </div>
-                  <div className="text-right hidden md:block">
-                    <p className="text-green-400 font-medium text-sm">₹{totalPaid.toFixed(2)}</p>
-                    <p className="text-slate-500 text-xs">Collected</p>
-                  </div>
-                  <div className="text-right hidden md:block">
-                    <p className={`font-semibold text-sm ${s?.messBalance >= 0 ? 'text-blue-400' : 'text-red-400'}`}>
-                      {s?.messBalance >= 0 ? '+' : ''}₹{(s?.messBalance || 0).toFixed(2)}
-                    </p>
-                    <p className="text-slate-500 text-xs">Mess Balance</p>
+                    <p className="text-white text-xs font-bold tabular-nums">₹{s?.grandTotal?.toFixed(2) || '0.00'}</p>
+                    <p className="text-slate-600 text-[10px]">Expense</p>
                   </div>
                   <div className="text-right">
-                    <p className={`font-semibold text-sm ${totalDue > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                    <p className={`text-xs font-bold tabular-nums ${totalDue > 0 ? 'text-red-400' : 'text-green-400'}`}>
                       ₹{totalDue.toFixed(2)}
                     </p>
-                    <p className="text-slate-500 text-xs">Total Due</p>
+                    <p className="text-slate-600 text-[10px]">Due</p>
                   </div>
-                  <div className="text-slate-400 ml-2">{isMonthOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</div>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                    {isMonthOpen
+                      ? <ChevronUp size={14} className="text-slate-400" />
+                      : <ChevronDown size={14} className="text-slate-400" />}
+                  </div>
                 </div>
-              </button>
+              </div>
+            </button>
 
-              {/* Month Expanded */}
-              {isMonthOpen && (
-                <div className="border-t border-slate-700">
-                  {/* Month Summary Bar */}
-                  {s && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-700">
-                      {[
-                        { label: 'Grocery',      value: s.groceryTotal,    color: 'text-green-400' },
-                        { label: 'Other (Paid)', value: s.otherPaidTotal || 0, color: 'text-orange-400' },
-                        { label: 'Grand Total',  value: s.grandTotal,      color: 'text-blue-400' },
-                        { label: 'Mess Balance', value: s.messBalance,     color: s.messBalance >= 0 ? 'text-green-400' : 'text-red-400' },
-                      ].map(({ label, value, color }) => (
-                        <div key={label} className="bg-slate-800 px-4 py-3 text-center">
-                          <p className="text-slate-500 text-xs mb-0.5">{label}</p>
-                          <p className={`font-bold text-sm ${color}`}>
-                            {value < 0 ? '-' : ''}₹{Math.abs(value || 0).toFixed(2)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+            {/* ── Expanded content ── */}
+            {isMonthOpen && (
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
 
-                  {/* Members List */}
-                  <div className="divide-y divide-slate-700/50">
-                    {group.bills.map(b => {
-                      const isBillOpen = expandedBill === b._id;
-                      const memberPays = payments[b._id] || [];
-                      const isLoadingPay = loadingPayments[b._id];
+                {/* Summary stat grid */}
+                {s && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-px"
+                    style={{ background: 'rgba(255,255,255,0.05)' }}>
+                    <StatPill label="Grocery"      value={`₹${(s.groceryTotal||0).toFixed(2)}`}    color="#4ade80" />
+                    <StatPill label="Other (Paid)" value={`₹${(s.otherPaidTotal||0).toFixed(2)}`}  color="#fb923c" />
+                    <StatPill label="Grand Total"  value={`₹${(s.grandTotal||0).toFixed(2)}`}      color="#60a5fa" />
+                    <StatPill label="Mess Balance" value={`${(s.messBalance||0) >= 0 ? '+' : ''}₹${Math.abs(s.messBalance||0).toFixed(2)}`}
+                      color={(s.messBalance||0) >= 0 ? '#4ade80' : '#f87171'} />
+                  </div>
+                )}
 
-                      return (
-                        <div key={b._id}>
-                          {/* Member Row */}
-                          <div
-                            className="flex items-center justify-between px-4 py-3 hover:bg-slate-700/20 cursor-pointer"
-                            onClick={() => toggleBill(b)}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
-                                {b.memberId?.name?.[0]?.toUpperCase()}
-                              </div>
-                              <div>
-                                <p className="text-white text-sm font-medium">{b.memberId?.name}</p>
-                                <p className="text-slate-500 text-xs">
-                                  {b.memberId?.room ? `Room ${b.memberId.room} · ` : ''}{b.mealCount} meals
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3 sm:gap-5">
-                              <div className="text-right hidden sm:block">
-                                <p className="text-white text-sm">₹{b.totalBill?.toFixed(2)}</p>
-                                <p className="text-slate-500 text-xs">Bill</p>
-                              </div>
-                              <div className="text-right hidden sm:block">
-                                <p className="text-green-400 text-sm">₹{b.advance?.toFixed(2)}</p>
-                                <p className="text-slate-500 text-xs">Advance</p>
-                              </div>
-                              <div className="text-right">
-                                <p className={`font-bold text-sm ${b.dueAmount > 0 ? 'text-red-400' : 'text-green-400'}`}>
-                                  {b.dueAmount > 0 ? `-₹${b.dueAmount.toFixed(2)}` : `+₹${Math.abs(b.dueAmount).toFixed(2)}`}
-                                </p>
-                                <p className="text-slate-500 text-xs">{b.dueAmount > 0 ? 'Due' : 'Refund'}</p>
-                              </div>
-                              <button className="flex items-center gap-1 text-xs text-slate-400 hover:text-white bg-slate-700 hover:bg-slate-600 px-2.5 py-1.5 rounded-lg transition-colors">
-                                <ReceiptText size={12} />
-                                <span className="hidden sm:inline">{isBillOpen ? 'Hide' : 'Breakdown'}</span>
-                                {isBillOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                              </button>
-                            </div>
+                {/* Member bill rows */}
+                <div>
+                  {group.bills.map((b, bi) => {
+                    const isBillOpen   = expandedBill === b._id;
+                    const memberPays   = payments[b._id] || [];
+                    const isLoadingPay = loadingPayments[b._id];
+                    const name         = rn(b.memberId?.name);
+
+                    return (
+                      <div key={b._id} style={{ borderTop: bi === 0 ? 'none' : '1px solid rgba(255,255,255,0.05)' }}>
+
+                        {/* Member row */}
+                        <div className="flex items-center gap-3 px-4 py-3 cursor-pointer"
+                          style={{ WebkitTapHighlightColor: 'transparent' }}
+                          onClick={() => toggleBill(b)}>
+
+                          {/* Avatar */}
+                          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+                            style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.20)' }}>
+                            {name?.[0]?.toUpperCase()}
                           </div>
 
-                          {/* Bill Breakdown */}
-                          {isBillOpen && (
-                            <div className="bg-slate-900/70 px-5 py-4 space-y-4 border-t border-slate-700/50">
-                              {isLoadingPay ? (
-                                <p className="text-slate-400 text-sm text-center py-2">Loading...</p>
-                              ) : (
-                                <>
-                                  {/* Meal counts */}
-                                  <div className="grid grid-cols-4 gap-2">
-                                    {[
-                                      { label: 'Lunch', value: b.lunchCount, color: 'text-green-400' },
-                                      { label: 'Dinner', value: b.dinnerCount, color: 'text-blue-400' },
-                                      { label: 'Guest', value: b.guestMeals, color: 'text-amber-400' },
-                                      { label: 'Total', value: b.mealCount, color: 'text-white' },
-                                    ].map(({ label, value, color }) => (
-                                      <div key={label} className="bg-slate-700/50 rounded-lg p-2.5 text-center">
-                                        <p className="text-slate-500 text-xs">{label}</p>
-                                        <p className={`font-bold text-lg ${color}`}>{value || 0}</p>
-                                      </div>
-                                    ))}
-                                  </div>
+                          {/* Name + meals */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-semibold truncate">{name}</p>
+                            <p className="text-slate-500 text-xs mt-0.5">{b.mealCount} meals
+                              {b.memberId?.room ? ` · Room ${b.memberId.room}` : ''}
+                            </p>
+                          </div>
 
-                                  {/* Calculation */}
-                                  <div className="bg-slate-800/80 rounded-lg p-3.5 space-y-1.5 text-sm border border-slate-700/50">
-                                    <div className="flex justify-between text-slate-400">
-                                      <span>{b.mealCount} meals × ₹{b.mealRate?.toFixed(2)}</span>
-                                      <span className="text-white">₹{(b.mealCost ?? (b.mealCount * b.mealRate) ?? 0).toFixed(2)}</span>
-                                    </div>
-                                    {(b.guestMeals > 0) && (
-                                      <div className="flex justify-between text-slate-400">
-                                        <span>{b.guestMeals} guest meals</span>
-                                        <span className="text-amber-300">+₹{b.guestCharge?.toFixed(2)}</span>
-                                      </div>
-                                    )}
-                                    {(b.otherCharges > 0) && (
-                                      <div className="flex justify-between text-slate-400">
-                                        <span>Other Charges</span>
-                                        <span className="text-pink-400">+₹{b.otherCharges?.toFixed(2)}</span>
-                                      </div>
-                                    )}
-                                    {(b.gasCharge > 0) && (
-                                      <div className="flex justify-between text-slate-400">
-                                        <span>Gas Cylinder</span>
-                                        <span className="text-orange-400">+₹{b.gasCharge?.toFixed(2)}</span>
-                                      </div>
-                                    )}
-                                    {(b.riceCharge > 0) && (
-                                      <div className="flex justify-between text-slate-400">
-                                        <span>Rice Bag</span>
-                                        <span className="text-lime-400">+₹{b.riceCharge?.toFixed(2)}</span>
-                                      </div>
-                                    )}
-                                    {(b.otherSharedCharge > 0) && (
-                                      <div className="flex justify-between text-slate-400">
-                                        <span>Other Expenses</span>
-                                        <span className="text-orange-400">+₹{b.otherSharedCharge?.toFixed(2)}</span>
-                                      </div>
-                                    )}
-                                    {(b.masiSalary > 0) && (
-                                      <div className="flex justify-between text-slate-400">
-                                        <span>Masi Salary</span>
-                                        <span className="text-amber-400">+₹{b.masiSalary?.toFixed(2)}</span>
-                                      </div>
-                                    )}
-                                    <div className="flex justify-between font-bold border-t border-slate-600 pt-1.5">
-                                      <span className="text-slate-200">Total Bill</span>
-                                      <span className="text-white">₹{b.totalBill?.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-slate-400">
-                                      <span>Advance Paid</span>
-                                      <span className="text-green-400">− ₹{b.advance?.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between font-bold border-t border-slate-600 pt-1.5">
-                                      <span className="text-slate-200">{b.dueAmount > 0 ? 'Amount Due' : 'Refund'}</span>
-                                      <span className={b.dueAmount > 0 ? 'text-red-400' : 'text-green-400'}>
-                                        ₹{Math.abs(b.dueAmount).toFixed(2)}
-                                      </span>
-                                    </div>
-                                  </div>
+                          {/* Bill + advance (hidden on tiny screens) */}
+                          <div className="text-right hidden sm:block flex-shrink-0">
+                            <p className="text-white text-xs font-medium tabular-nums">₹{b.totalBill?.toFixed(2)}</p>
+                            <p className="text-slate-600 text-[10px]">Bill</p>
+                          </div>
+                          <div className="text-right hidden sm:block flex-shrink-0">
+                            <p className="text-green-400 text-xs font-medium tabular-nums">₹{b.advance?.toFixed(2)}</p>
+                            <p className="text-slate-600 text-[10px]">Paid</p>
+                          </div>
 
-                                  {/* Payments */}
-                                  {memberPays.length > 0 && (
-                                    <div>
-                                      <p className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-2">Payment History</p>
-                                      <div className="space-y-1.5">
-                                        {memberPays.map(p => (
-                                          <div key={p._id} className="flex items-center justify-between bg-slate-700/40 rounded-lg px-3 py-2 text-xs">
-                                            <span className="text-slate-400">{new Date(p.date).toLocaleDateString('en-IN')}</span>
-                                            <span className="text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">{p.method}</span>
-                                            <span className="text-green-400 font-semibold">₹{p.amount.toFixed(2)}</span>
-                                            {p.note && <span className="text-slate-500 hidden sm:inline">{p.note}</span>}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          )}
+                          {/* Due / Refund */}
+                          <div className="text-right flex-shrink-0">
+                            <p className={`text-xs font-bold tabular-nums ${b.dueAmount > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                              {b.dueAmount > 0 ? `-₹${b.dueAmount.toFixed(2)}` : `+₹${Math.abs(b.dueAmount).toFixed(2)}`}
+                            </p>
+                            <p className="text-slate-600 text-[10px]">{b.dueAmount > 0 ? 'Due' : 'Refund'}</p>
+                          </div>
+
+                          {/* Toggle button */}
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ml-1"
+                            style={{ background: isBillOpen ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isBillOpen ? 'rgba(34,197,94,0.22)' : 'rgba(255,255,255,0.08)'}` }}>
+                            <ReceiptText size={13} className={isBillOpen ? 'text-green-400' : 'text-slate-500'} />
+                          </div>
                         </div>
-                      );
-                    })}
-                  </div>
+
+                        {/* Bill breakdown */}
+                        {isBillOpen && (
+                          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
+                            <BillBreakdown b={b} memberPays={memberPays} isLoading={isLoadingPay} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
