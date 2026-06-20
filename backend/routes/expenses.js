@@ -99,7 +99,9 @@ router.get('/charges/my/:month/:year', async (req, res) => {
 
 router.get('/charges/:month/:year', requireRole('manager', 'admin'), async (req, res) => {
   try {
-    const items = await OtherCharge.find({ memberId: req.user._id, month: req.params.month, year: req.params.year }).sort({ date: 1 });
+    const items = await OtherCharge.find({ month: req.params.month, year: req.params.year })
+      .populate('memberId', 'name room')
+      .sort({ date: 1 });
     res.json(items);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
