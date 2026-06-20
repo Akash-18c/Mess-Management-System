@@ -8,6 +8,7 @@ const groceryExpenseSchema = new mongoose.Schema({
   unit: { type: String, default: '' },
   unitPrice: { type: Number, required: true },
   total: { type: Number, required: true },
+  meal: { type: String, enum: ['Lunch', 'Dinner', ''], default: '' },
   date: { type: Date, required: true },
   buyerName: { type: String, default: '' },
   addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

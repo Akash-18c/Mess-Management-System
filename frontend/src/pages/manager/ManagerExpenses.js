@@ -13,7 +13,7 @@ const OTHER_CATS = [
   { id: 'Other',        emoji: '📦', label: 'Other'        },
 ];
 
-const EMPTY_G = { item:'', unitPrice:'', buyerName:'', date: now.toISOString().slice(0,10) };
+const EMPTY_G = { item:'', unitPrice:'', buyerName:'', date: now.toISOString().slice(0,10), meal:'Lunch' };
 const EMPTY_O = { categoryName:'Gas Cylinder', description:'', amount:'', paidBy:'', date: now.toISOString().slice(0,10), note:'', status:'Due' };
 
 const glass = {
@@ -87,7 +87,7 @@ export default function ManagerExpenses() {
     setModal(false);
     try {
       if (tab === 'grocery') {
-        await api.post('/expenses/grocery', { item: form.item, unitPrice: +form.unitPrice, buyerName: form.buyerName, date: form.date, month: MONTH, year: YEAR });
+        await api.post('/expenses/grocery', { item: form.item, unitPrice: +form.unitPrice, buyerName: form.buyerName, date: form.date, meal: form.meal, month: MONTH, year: YEAR });
         toast.success('Grocery added');
       } else if (editId) {
         await api.put(`/expenses/other/${editId}`, { ...form, amount: +form.amount });
@@ -183,7 +183,10 @@ export default function ManagerExpenses() {
               <div key={g._id} className="rounded-2xl p-3" style={glass}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="text-white font-semibold text-sm truncate">{g.item}</p>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-white font-semibold text-sm truncate">{g.item}</p>
+                      {g.meal && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: g.meal==='Lunch'?'rgba(251,191,36,0.15)':'rgba(139,92,246,0.15)', color: g.meal==='Lunch'?'#fbbf24':'#a78bfa', border: g.meal==='Lunch'?'1px solid rgba(251,191,36,0.3)':'1px solid rgba(139,92,246,0.3)' }}>{g.meal==='Lunch'?'☀️ Lunch':'🌙 Dinner'}</span>}
+                    </div>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       {g.quantity && <span className="text-[10px] text-slate-500">Qty: {g.quantity}</span>}
                       <span className="text-[10px] text-slate-500">₹{g.unitPrice}/unit</span>
@@ -265,6 +268,24 @@ export default function ManagerExpenses() {
                     <div>
                       <label className="label text-xs">Date</label>
                       <input className="input" type="date" value={form.date} onChange={e => f({ date: e.target.value })} required />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="label text-xs mb-2">Meal</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['Lunch','Dinner'].map(m => (
+                        <button key={m} type="button" onClick={() => f({ meal: m })}
+                          className="py-2.5 rounded-xl text-xs font-bold transition-all"
+                          style={{
+                            background: form.meal===m ? (m==='Lunch'?'rgba(251,191,36,0.15)':'rgba(139,92,246,0.15)') : 'rgba(255,255,255,0.04)',
+                            border: form.meal===m ? (m==='Lunch'?'1px solid rgba(251,191,36,0.4)':'1px solid rgba(139,92,246,0.4)') : '1px solid rgba(255,255,255,0.08)',
+                            color: form.meal===m ? (m==='Lunch'?'#fbbf24':'#a78bfa') : '#64748b',
+                            WebkitTapHighlightColor: 'transparent',
+                          }}
+                        >
+                          {m==='Lunch' ? '☀️ Lunch' : '🌙 Dinner'}
+                        </button>
+                      ))}
                     </div>
                   </div>
                   <div>
