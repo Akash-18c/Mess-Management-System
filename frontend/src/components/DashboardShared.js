@@ -7,11 +7,11 @@ import useAuthStore from '../store/authStore';
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 const glass = {
-  background: 'rgba(255,255,255,0.045)',
-  backdropFilter: 'blur(40px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-  border: '1px solid rgba(255,255,255,0.13)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.1)',
+  background: 'rgba(255,255,255,0.03)',
+  backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
+  border: '1px solid rgba(255,255,255,0.10)',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)',
 };
 
 // Helper: extract display name — strips role prefix like "Admin (...)" → shows full name
@@ -431,11 +431,11 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
 
       {/* ── Welcome Banner ── */}
       <div className="rounded-2xl p-4" style={{
-        background: 'rgba(255,255,255,0.04)',
-        backdropFilter: 'blur(48px) saturate(200%)',
-        WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-        border: '1px solid rgba(255,255,255,0.13)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.1)',
+        background: 'rgba(255,255,255,0.03)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10)',
       }}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">

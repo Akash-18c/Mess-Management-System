@@ -138,13 +138,13 @@ export default function MemberDashboard() {
             className="flex items-center gap-2 text-sm font-semibold text-white"
             style={{
               background: 'rgba(34,197,94,0.08)',
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-              border: '1px solid rgba(34,197,94,0.28)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(34,197,94,0.25)',
               borderRadius: '12px', padding: '8px 12px',
               minWidth: '160px',
               justifyContent: 'space-between',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
               WebkitTapHighlightColor: 'transparent',
             }}
           >
@@ -246,11 +246,11 @@ export default function MemberDashboard() {
       {/* ── My Other Charges ── */}
       {myCharges.length > 0 && (
         <div className="rounded-2xl overflow-hidden" style={{
-          background: 'rgba(245,158,11,0.06)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          border: '1px solid rgba(245,158,11,0.18)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.10)',
+          background: 'rgba(245,158,11,0.05)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(245,158,11,0.15)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)',
         }}>
           {/* Card header */}
           <div className="flex items-center justify-between px-4 py-3"
@@ -285,11 +285,11 @@ export default function MemberDashboard() {
       {/* ── Personal Meal Summary (current month only) ── */}
       {isCurrentMonth && (
         <div className="rounded-2xl p-4" style={{
-          background: 'rgba(255,255,255,0.045)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.14)',
+          background: 'rgba(255,255,255,0.03)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)',
         }}>
           {/* Section label */}
           <div className="flex items-center gap-2 mb-4">
@@ -339,11 +339,9 @@ export default function MemberDashboard() {
             ].map(({ icon: Icon, value, label, sub, accent, bg, border }) => (
               <div key={label} className="rounded-xl p-3.5 flex flex-col gap-2"
                 style={{
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
                   background: bg,
                   border: `1px solid ${border}`,
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07)',
                 }}>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
@@ -363,11 +361,11 @@ export default function MemberDashboard() {
       {/* ── Member Meal Count Bar Chart (current month only) ── */}
       {isCurrentMonth && chartData.some(m => m.meals > 0) && (
         <div className="rounded-2xl overflow-hidden" style={{
-          background: 'rgba(255,255,255,0.045)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.14)',
+          background: 'rgba(255,255,255,0.03)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)',
         }}>
           {/* Chart header */}
           <div className="flex items-center justify-between px-4 pt-4 pb-2">
