@@ -210,6 +210,12 @@ export default function MemberHistory() {
                                         <span className="text-amber-300">+₹{b.guestCharge?.toFixed(2)}</span>
                                       </div>
                                     )}
+                                    {(b.otherCharges > 0) && (
+                                      <div className="flex justify-between text-slate-400">
+                                        <span>Other Charges</span>
+                                        <span className="text-pink-400">+₹{b.otherCharges?.toFixed(2)}</span>
+                                      </div>
+                                    )}
                                     {(b.gasCharge > 0) && (
                                       <div className="flex justify-between text-slate-400">
                                         <span>Gas Cylinder</span>

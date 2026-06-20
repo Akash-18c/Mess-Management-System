@@ -3,6 +3,7 @@ const Bill = require('../models/Bill');
 const Meal = require('../models/Meal');
 const Payment = require('../models/Payment');
 const MonthlySummary = require('../models/MonthlySummary');
+const OtherCharge = require('../models/OtherCharge');
 const User = require('../models/User');
 const { auth, requireRole } = require('../middleware/auth');
 
@@ -39,6 +40,7 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
     const riceCharge = summary?.ricePerMember || 0;
 
     const members = await User.find({ isActive: true });
+    const allOtherCharges = await OtherCharge.find({ month, year });
     const bills = [];
 
     for (const member of members) {
@@ -51,11 +53,13 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
       });
       const mealCount   = lunch + dinner;
       const guestCharge = parseFloat((guestMeals * mealRate).toFixed(2));
-      // mealCost = (own meals + guest meals) × rate
       const mealCost    = parseFloat(((mealCount + guestMeals) * mealRate).toFixed(2));
 
-      // totalBill = mealCost + masi + otherSharedCharge + gas + rice
-      const totalBill = parseFloat((mealCost + masiPerMember + otherSharedCharge + gasCharge + riceCharge).toFixed(2));
+      const memberOtherCharges = allOtherCharges.filter(c => c.memberId.toString() === member._id.toString());
+      const otherCharges = parseFloat(memberOtherCharges.reduce((s, c) => s + c.amount, 0).toFixed(2));
+
+      // totalBill = mealCost + masi + otherSharedCharge + gas + rice + individual otherCharges
+      const totalBill = parseFloat((mealCost + masiPerMember + otherSharedCharge + gasCharge + riceCharge + otherCharges).toFixed(2));
 
       const payments = await Payment.find({ memberId: member._id, month, year });
       const advance   = parseFloat(payments.reduce((s, p) => s + p.amount, 0).toFixed(2));
@@ -64,7 +68,7 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
       const bill = await Bill.findOneAndUpdate(
         { memberId: member._id, month, year },
         { mealCount, breakfastCount: 0, lunchCount: lunch, dinnerCount: dinner,
-          mealRate, guestMeals, guestCharge, mealCost, otherCharges: 0, otherSharedCharge,
+          mealRate, guestMeals, guestCharge, mealCost, otherCharges, otherSharedCharge,
           gasCharge, riceCharge, masiSalary: masiPerMember, advance, totalBill, dueAmount,
           generatedBy: req.user._id },
         { upsert: true, new: true }

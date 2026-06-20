@@ -5,6 +5,7 @@ const Payment = require('../models/Payment');
 const MonthlySummary = require('../models/MonthlySummary');
 const GroceryExpense = require('../models/GroceryExpense');
 const OtherExpense = require('../models/OtherExpense');
+const OtherCharge = require('../models/OtherCharge');
 const User = require('../models/User');
 const MasiSalary = require('../models/MasiSalary');
 const { auth, requireRole } = require('../middleware/auth');
@@ -21,7 +22,7 @@ router.get('/dashboard', async (req, res) => {
     const year = now.getFullYear();
     const today = now.toISOString().slice(0, 10);
 
-    const [meals, payments, summary, allMeals, allPayments, groceries, others, members, bills, masiRec] = await Promise.all([
+    const [meals, payments, summary, allMeals, allPayments, groceries, others, members, bills, masiRec, allOtherCharges] = await Promise.all([
       Meal.find({ memberId: req.user._id, month, year }),
       Payment.find({ memberId: req.user._id, month, year }),
       MonthlySummary.findOne({ month, year }),
@@ -32,6 +33,7 @@ router.get('/dashboard', async (req, res) => {
       User.find({ isActive: true }, 'name _id role'),
       Bill.find({ month, year }).populate('memberId', 'name room'),
       MasiSalary.findOne({ month, year }),
+      OtherCharge.find({ month, year }),
     ]);
 
     let lunch = 0, dinner = 0, guestMeals = 0;
@@ -68,33 +70,38 @@ router.get('/dashboard', async (req, res) => {
       const totalMeals = mealCount + guestCount;
       const mBill = bills.find(b => b.memberId?._id?.toString() === m._id.toString());
       const mealCost = parseFloat(((mealCount + guestCount) * mealRate).toFixed(2));
-      const mGasCharge  = mBill?.gasCharge  ?? gasCharge;
-      const mRiceCharge = mBill?.riceCharge ?? riceCharge;
+      const mGasCharge   = mBill?.gasCharge        ?? gasCharge;
+      const mRiceCharge  = mBill?.riceCharge       ?? riceCharge;
       const mOtherShared = mBill?.otherSharedCharge ?? otherSharedCharge;
+      const mOtherCharges = mBill
+        ? (mBill.otherCharges || 0)
+        : parseFloat(allOtherCharges.filter(c => c.memberId.toString() === m._id.toString()).reduce((s, c) => s + c.amount, 0).toFixed(2));
       // totalMealCost from generated bill (most accurate)
       const totalMealCost = mBill
         ? parseFloat(mBill.totalBill.toFixed(2))
-        : parseFloat((mealCost + masiPerMember + mOtherShared + mGasCharge + mRiceCharge).toFixed(2));
+        : parseFloat((mealCost + masiPerMember + mOtherShared + mGasCharge + mRiceCharge + mOtherCharges).toFixed(2));
       const mPayments = allPayments.filter(p => p.memberId?.toString() === m._id.toString());
       const moneyGiven = parseFloat(mPayments.reduce((s, p) => s + p.amount, 0).toFixed(2));
       const due = parseFloat((moneyGiven - totalMealCost).toFixed(2));
-      return { _id: m._id, name: rn(m.name), role: m.role, totalMeals, perMealCost: mealRate, mealCost, otherSharedCharge: mOtherShared, gasCharge: mGasCharge, riceCharge: mRiceCharge, masiSalary: masiPerMember, totalMealCost, moneyGiven, due };
-    }).filter(m => m.totalMeals > 0 || m.moneyGiven > 0 || m.masiSalary > 0 || m.otherSharedCharge > 0);
+      return { _id: m._id, name: rn(m.name), role: m.role, totalMeals, perMealCost: mealRate, mealCost, otherSharedCharge: mOtherShared, gasCharge: mGasCharge, riceCharge: mRiceCharge, otherCharges: mOtherCharges, masiSalary: masiPerMember, totalMealCost, moneyGiven, due };
+    }).filter(m => m.totalMeals > 0 || m.moneyGiven > 0 || m.masiSalary > 0 || m.otherSharedCharge > 0 || m.otherCharges > 0);
 
-    res.json({ lunch, dinner, guestMeals, mealRate, estimatedBill, otherSharedCharge, gasCharge, riceCharge, masiPerMember, advance, todayExpense, totalCollected, memberMealCounts, summary, individualCosts });
+    const myOtherChargesTotal = parseFloat(allOtherCharges.filter(c => c.memberId.toString() === req.user._id.toString()).reduce((s, c) => s + c.amount, 0).toFixed(2));
+    res.json({ lunch, dinner, guestMeals, mealRate, estimatedBill, otherSharedCharge, gasCharge, riceCharge, masiPerMember, myOtherCharges: myOtherChargesTotal, advance, todayExpense, totalCollected, memberMealCounts, summary, individualCosts });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
 router.get('/month-data/:month/:year', async (req, res) => {
   try {
     const { month, year } = req.params;
-    const [summary, allBills, allPayments, allMembers, allMeals, masiRec] = await Promise.all([
+    const [summary, allBills, allPayments, allMembers, allMeals, masiRec, allOtherCharges] = await Promise.all([
       MonthlySummary.findOne({ month, year }),
       Bill.find({ month, year }).populate('memberId', 'name room'),
       Payment.find({ month, year }),
       User.find({ isActive: true }, 'name _id role'),
       Meal.find({ month, year, isOff: false }),
       MasiSalary.findOne({ month, year }),
+      OtherCharge.find({ month, year }),
     ]);
     const totalCollected = parseFloat(allPayments.reduce((s, p) => s + p.amount, 0).toFixed(2));
     const mealRate = summary?.mealRate || 0;
@@ -110,17 +117,20 @@ router.get('/month-data/:month/:year', async (req, res) => {
       const totalMeals = mealCount + guestCount;
       const mBill = allBills.find(b => b.memberId?._id?.toString() === m._id.toString());
       const mealCost = parseFloat(((mealCount + guestCount) * mealRate).toFixed(2));
-      const mGasCharge  = mBill?.gasCharge  ?? gasCharge;
-      const mRiceCharge = mBill?.riceCharge ?? riceCharge;
+      const mGasCharge   = mBill?.gasCharge        ?? gasCharge;
+      const mRiceCharge  = mBill?.riceCharge       ?? riceCharge;
       const mOtherShared = mBill?.otherSharedCharge ?? otherSharedCharge;
+      const mOtherCharges = mBill
+        ? (mBill.otherCharges || 0)
+        : parseFloat(allOtherCharges.filter(c => c.memberId.toString() === m._id.toString()).reduce((s, c) => s + c.amount, 0).toFixed(2));
       const totalMealCost = mBill
         ? parseFloat(mBill.totalBill.toFixed(2))
-        : parseFloat((mealCost + masiPerMember + mOtherShared + mGasCharge + mRiceCharge).toFixed(2));
+        : parseFloat((mealCost + masiPerMember + mOtherShared + mGasCharge + mRiceCharge + mOtherCharges).toFixed(2));
       const mPays = allPayments.filter(p => p.memberId?.toString() === m._id.toString());
       const moneyGiven = parseFloat(mPays.reduce((s, p) => s + p.amount, 0).toFixed(2));
       const due = parseFloat((moneyGiven - totalMealCost).toFixed(2));
-      return { _id: m._id, name: rn(m.name), role: m.role, totalMeals, perMealCost: mealRate, mealCost, otherSharedCharge: mOtherShared, gasCharge: mGasCharge, riceCharge: mRiceCharge, masiSalary: masiPerMember, totalMealCost, moneyGiven, due };
-    }).filter(m => m.totalMeals > 0 || m.moneyGiven > 0 || m.masiSalary > 0 || m.otherSharedCharge > 0);
+      return { _id: m._id, name: rn(m.name), role: m.role, totalMeals, perMealCost: mealRate, mealCost, otherSharedCharge: mOtherShared, gasCharge: mGasCharge, riceCharge: mRiceCharge, otherCharges: mOtherCharges, masiSalary: masiPerMember, totalMealCost, moneyGiven, due };
+    }).filter(m => m.totalMeals > 0 || m.moneyGiven > 0 || m.masiSalary > 0 || m.otherSharedCharge > 0 || m.otherCharges > 0);
 
     res.json({ summary, totalCollected, individualCosts });
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -128,13 +138,14 @@ router.get('/month-data/:month/:year', async (req, res) => {
 
 router.get('/all-history', async (req, res) => {
   try {
-    const [allMeals, allSummaries, allBills, allPayments, allMembers, allMasiSalaries] = await Promise.all([
+    const [allMeals, allSummaries, allBills, allPayments, allMembers, allMasiSalaries, allOtherCharges] = await Promise.all([
       Meal.find({}).select('month year memberId lunch dinner guestMeals isOff').lean(),
       MonthlySummary.find().lean(),
       Bill.find().populate('memberId', 'name room').lean(),
       Payment.find().lean(),
       User.find({ isActive: true }, 'name _id role room').lean(),
       MasiSalary.find().lean(),
+      OtherCharge.find({}).lean(),
     ]);
 
     const masiMap = {};
@@ -167,10 +178,13 @@ router.get('/all-history', async (req, res) => {
         const totalMeals = mealCount + guestCount;
         const mBill = monthBills.find(b => b.memberId?._id?.toString() === m._id.toString());
         const mealCost = parseFloat(((mealCount + guestCount) * mealRate).toFixed(2));
-        const mGasCharge  = mBill?.gasCharge  ?? gasCharge;
-        const mRiceCharge = mBill?.riceCharge ?? riceCharge;
+        const mGasCharge   = mBill?.gasCharge        ?? gasCharge;
+        const mRiceCharge  = mBill?.riceCharge       ?? riceCharge;
         const billOtherShared = mBill ? (mBill.otherSharedCharge || otherSharedCharge) : otherSharedCharge;
-        const totalBill = mBill ? mBill.totalBill : parseFloat((mealCost + masiPerMember + billOtherShared + mGasCharge + mRiceCharge).toFixed(2));
+        const mOtherCharges = mBill
+          ? (mBill.otherCharges || 0)
+          : parseFloat(allOtherCharges.filter(c => c.memberId.toString() === m._id.toString() && c.month === month && c.year === year).reduce((s, c) => s + c.amount, 0).toFixed(2));
+        const totalBill = mBill ? mBill.totalBill : parseFloat((mealCost + masiPerMember + billOtherShared + mGasCharge + mRiceCharge + mOtherCharges).toFixed(2));
         const lunchCount  = mBill ? mBill.lunchCount  : mMeals.filter(ml => ml.lunch).length;
         const dinnerCount = mBill ? mBill.dinnerCount : mMeals.filter(ml => ml.dinner).length;
         const guestMeals  = mBill ? mBill.guestMeals  : guestCount;
@@ -178,13 +192,13 @@ router.get('/all-history', async (req, res) => {
         const mPays = monthPayments.filter(p => p.memberId?.toString() === m._id.toString());
         const advance = parseFloat(mPays.reduce((s, p) => s + p.amount, 0).toFixed(2));
         const dueAmount = parseFloat((totalBill - advance).toFixed(2));
-        if (totalMeals === 0 && advance === 0 && masiPerMember === 0 && otherSharedCharge === 0 && mGasCharge === 0 && mRiceCharge === 0) return null;
+        if (totalMeals === 0 && advance === 0 && masiPerMember === 0 && otherSharedCharge === 0 && mGasCharge === 0 && mRiceCharge === 0 && mOtherCharges === 0) return null;
         return {
           _id: mBill?._id || m._id,
           memberId: { _id: m._id, name: rn(m.name), room: m.room },
           role: m.role, month, year,
           mealCount: totalMeals, lunchCount, dinnerCount, guestMeals, guestCharge,
-          mealCost, otherSharedCharge: billOtherShared, gasCharge: mGasCharge, riceCharge: mRiceCharge, masiSalary: masiPerMember,
+          mealCost, otherSharedCharge: billOtherShared, gasCharge: mGasCharge, riceCharge: mRiceCharge, otherCharges: mOtherCharges, masiSalary: masiPerMember,
           mealRate, totalBill, advance, dueAmount,
         };
       }).filter(Boolean);

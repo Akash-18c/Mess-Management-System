@@ -65,8 +65,9 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
     const due = m.due;
     const masiSalary = m.masiSalary || 0;
     const otherShared = m.otherSharedCharge || 0;
-    const gas   = m.gasCharge   || 0;
-    const rice  = m.riceCharge  || 0;
+    const gas        = m.gasCharge    || 0;
+    const rice       = m.riceCharge   || 0;
+    const otherChg   = m.otherCharges || 0;
     return `<tr class="${i % 2 === 0 ? 'even' : ''}">
       <td><span class="avatar">${name[0].toUpperCase()}</span>${name}${roleTag}</td>
       <td class="center">${m.totalMeals}</td>
@@ -75,6 +76,7 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
       <td class="right"${gas > 0 ? ' style="color:#ea580c;font-weight:600"' : ''}>&#8377;${gas.toFixed(2)}</td>
       <td class="right"${rice > 0 ? ' style="color:#65a30d;font-weight:600"' : ''}>&#8377;${rice.toFixed(2)}</td>
       <td class="right"${otherShared > 0 ? ' style="color:#ea580c;font-weight:600"' : ''}>&#8377;${otherShared.toFixed(2)}</td>
+      <td class="right"${otherChg > 0 ? ' style="color:#db2777;font-weight:600"' : ''}>&#8377;${otherChg.toFixed(2)}</td>
       <td class="right">&#8377;${masiSalary.toFixed(2)}</td>
       <td class="right">&#8377;${m.moneyGiven.toFixed(2)}</td>
       <td class="right ${due >= 0 ? 'pos' : 'neg'}">${due >= 0 ? '+' : ''}&#8377;${Math.abs(due).toFixed(2)}</td>
@@ -183,6 +185,7 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
         <th class="right">Gas</th>
         <th class="right">Rice</th>
         <th class="right">Other Exp</th>
+        <th class="right">Other Chg</th>
         <th class="right">Masi</th>
         <th class="right">Amount Paid</th>
         <th class="right">Balance</th>
