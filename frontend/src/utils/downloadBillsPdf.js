@@ -94,6 +94,7 @@ function generate({ bills, summary, month, year }) {
         String(b.mealCount),
         `Rs ${mealRate.toFixed(2)}`,
         `Rs ${(b.totalBill || 0).toFixed(2)}`,
+        `Rs ${(b.otherCharges || 0).toFixed(2)}`,
         `Rs ${(b.masiSalary || 0).toFixed(2)}`,
         `Rs ${(b.advance || 0).toFixed(2)}`,
         due > 0 ? `Rs ${due.toFixed(2)}` : `-Rs ${Math.abs(due).toFixed(2)}`,
@@ -102,7 +103,7 @@ function generate({ bills, summary, month, year }) {
 
     autoTable(doc, {
       startY: cardY + 24,
-      head: [['Member', 'Meals', 'Per Meal', 'Meal Cost', 'Masi', 'Advance', 'Due / Refund']],
+      head: [['Member', 'Meals', 'Per Meal', 'Meal Cost', 'Other', 'Masi', 'Advance', 'Due / Refund']],
       body: tableRows,
       theme: 'plain',
       styles: { font: 'helvetica', fontSize: 8.5, textColor: [226, 232, 240], cellPadding: { top: 3.5, bottom: 3.5, left: 3, right: 3 }, lineColor: [30, 45, 80], lineWidth: 0.25 },
@@ -112,14 +113,15 @@ function generate({ bills, summary, month, year }) {
         1: { halign: 'center' },
         2: { halign: 'right', textColor: [251, 191, 36] },
         3: { halign: 'right' },
-        4: { halign: 'right', textColor: [148, 163, 184] },
-        5: { halign: 'right', textColor: [74, 222, 128] },
-        6: { halign: 'right' },
+        4: { halign: 'right', textColor: [251, 146, 60] },
+        5: { halign: 'right', textColor: [148, 163, 184] },
+        6: { halign: 'right', textColor: [74, 222, 128] },
+        7: { halign: 'right' },
       },
       alternateRowStyles: { fillColor: [14, 22, 44] },
       bodyStyles: { fillColor: [10, 16, 34] },
       didParseCell(data) {
-        if (data.section === 'body' && data.column.index === 6) {
+        if (data.section === 'body' && data.column.index === 7) {
           const v = String(data.cell.raw);
           data.cell.styles.textColor = v.startsWith('-') ? [52, 211, 153] : [248, 113, 113];
           data.cell.styles.fontStyle = 'bold';

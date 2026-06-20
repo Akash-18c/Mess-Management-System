@@ -1,6 +1,7 @@
 const express = require('express');
 const GroceryExpense = require('../models/GroceryExpense');
 const OtherExpense = require('../models/OtherExpense');
+const OtherCharge = require('../models/OtherCharge');
 const { auth, requireRole } = require('../middleware/auth');
 const { recalcSummary } = require('../controllers/summaryController');
 
@@ -87,4 +88,44 @@ router.delete('/other/:id', requireRole('manager', 'admin'), async (req, res) =>
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// --- Other Charges (per-member individual charges) ---
+router.get('/charges/:month/:year', requireRole('manager', 'admin'), async (req, res) => {
+  try {
+    const items = await OtherCharge.find({ month: req.params.month, year: req.params.year })
+      .populate('memberId', 'name room').sort({ memberId: 1, date: 1 });
+    res.json(items);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Member sees only their own
+router.get('/charges/my/:month/:year', async (req, res) => {
+  try {
+    const items = await OtherCharge.find({ memberId: req.user._id, month: req.params.month, year: req.params.year }).sort({ date: 1 });
+    res.json(items);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+router.post('/charges', requireRole('manager', 'admin'), async (req, res) => {
+  try {
+    const { memberId, month, year, reason, amount, date } = req.body;
+    const charge = await OtherCharge.create({ memberId, month, year, reason, amount: +amount, date, addedBy: req.user._id });
+    res.status(201).json(charge);
+  } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
+router.put('/charges/:id', requireRole('manager', 'admin'), async (req, res) => {
+  try {
+    const charge = await OtherCharge.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(charge);
+  } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
+router.delete('/charges/:id', requireRole('manager', 'admin'), async (req, res) => {
+  try {
+    await OtherCharge.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Deleted' });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 module.exports = router;
+

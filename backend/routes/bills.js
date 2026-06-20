@@ -3,6 +3,7 @@ const Bill = require('../models/Bill');
 const Meal = require('../models/Meal');
 const Payment = require('../models/Payment');
 const MonthlySummary = require('../models/MonthlySummary');
+const OtherCharge = require('../models/OtherCharge');
 const User = require('../models/User');
 const { auth, requireRole } = require('../middleware/auth');
 
@@ -38,7 +39,11 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
       });
       const mealCount = lunch + dinner;
       const guestCharge = parseFloat((guestMeals * mealRate).toFixed(2));
-      const totalBill = parseFloat(((mealCount + guestMeals) * mealRate + masiPerMember).toFixed(2));
+
+      const memberCharges = await OtherCharge.find({ memberId: member._id, month, year });
+      const otherCharges = parseFloat(memberCharges.reduce((s, c) => s + c.amount, 0).toFixed(2));
+
+      const totalBill = parseFloat(((mealCount + guestMeals) * mealRate + masiPerMember + otherCharges).toFixed(2));
 
       const payments = await Payment.find({ memberId: member._id, month, year });
       const advance = parseFloat(payments.reduce((s, p) => s + p.amount, 0).toFixed(2));
@@ -46,7 +51,7 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
 
       const bill = await Bill.findOneAndUpdate(
         { memberId: member._id, month, year },
-        { mealCount, breakfastCount: 0, lunchCount: lunch, dinnerCount: dinner, mealRate, guestMeals, guestCharge, masiSalary: masiPerMember, advance, totalBill, dueAmount, generatedBy: req.user._id },
+        { mealCount, breakfastCount: 0, lunchCount: lunch, dinnerCount: dinner, mealRate, guestMeals, guestCharge, masiSalary: masiPerMember, otherCharges, advance, totalBill, dueAmount, generatedBy: req.user._id },
         { upsert: true, new: true }
       );
       bills.push(bill);

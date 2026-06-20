@@ -18,6 +18,7 @@ import ManagerMeals from './pages/manager/ManagerMeals';
 import ManagerExpenses from './pages/manager/ManagerExpenses';
 import ManagerPayments from './pages/manager/ManagerPayments';
 import ManagerBills from './pages/manager/ManagerBills';
+import ManagerOtherCharges from './pages/manager/ManagerOtherCharges';
 import MemberLayout from './pages/member/MemberLayout';
 import MemberDashboard from './pages/member/MemberDashboard';
 import MemberHistory from './pages/member/MemberHistory';
@@ -73,6 +74,7 @@ export default function App() {
           <Route path="expenses" element={<ManagerExpenses />} />
           <Route path="payments" element={<ManagerPayments />} />
           <Route path="bills" element={<ManagerBills />} />
+          <Route path="charges" element={<ManagerOtherCharges />} />
         </Route>
 
         <Route path="/member" element={<ProtectedRoute roles={['member', 'manager', 'admin']}><MemberLayout /></ProtectedRoute>}>

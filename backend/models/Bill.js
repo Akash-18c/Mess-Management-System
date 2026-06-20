@@ -11,6 +11,7 @@ const billSchema = new mongoose.Schema({
   mealRate: { type: Number, default: 0 },
   guestMeals: { type: Number, default: 0 },
   guestCharge: { type: Number, default: 0 },
+  otherCharges: { type: Number, default: 0 },
   advance: { type: Number, default: 0 },
   masiSalary: { type: Number, default: 0 },
   totalBill: { type: Number, default: 0 },

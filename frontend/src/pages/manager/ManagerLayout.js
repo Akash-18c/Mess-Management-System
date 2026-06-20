@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, UtensilsCrossed, ShoppingCart, CreditCard, FileText, LogOut, Menu } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, ShoppingCart, CreditCard, FileText, LogOut, Menu, Receipt } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
@@ -9,6 +9,7 @@ const links = [
   { to: '/manager', icon: LayoutDashboard, label: 'Dashboard', end: true },
   { to: '/manager/meals', icon: UtensilsCrossed, label: 'Meals' },
   { to: '/manager/expenses', icon: ShoppingCart, label: 'Expenses' },
+  { to: '/manager/charges', icon: Receipt, label: 'Other Charges' },
   { to: '/manager/payments', icon: CreditCard, label: 'Payments' },
   { to: '/manager/bills', icon: FileText, label: 'Bills' },
 ];

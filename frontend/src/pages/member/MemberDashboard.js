@@ -45,6 +45,7 @@ export default function MemberDashboard() {
   const [allSummaries, setAllSummaries] = useState([]);
   const [monthData, setMonthData] = useState(null);
   const [bills, setBills] = useState([]);
+  const [myCharges, setMyCharges] = useState([]);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(curMonth);
@@ -64,6 +65,7 @@ export default function MemberDashboard() {
 
   useEffect(() => {
     api.get(`/bills/${selectedMonth}/${selectedYear}`).then(r => setBills(r.data)).catch(() => setBills([]));
+    api.get(`/expenses/charges/my/${selectedMonth}/${selectedYear}`).then(r => setMyCharges(r.data)).catch(() => setMyCharges([]));
   }, [selectedMonth, selectedYear]);
 
   const isCurrentMonth = selectedMonth === curMonth && selectedYear === curYear;
@@ -209,6 +211,27 @@ export default function MemberDashboard() {
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}
       />
+
+      {/* ── My Other Charges ── */}
+      {myCharges.length > 0 && (
+        <div className="rounded-2xl overflow-hidden" style={glass}>
+          <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(245,158,11,0.05)' }}>
+            <p className="text-sm font-semibold text-white">My Other Charges</p>
+            <span className="text-sm font-bold text-amber-400">₹{myCharges.reduce((s,c) => s + c.amount, 0).toFixed(0)}</span>
+          </div>
+          <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+            {myCharges.map(c => (
+              <div key={c._id} className="flex items-center justify-between px-5 py-3">
+                <div>
+                  <p className="text-white text-sm">{c.reason}</p>
+                  <p className="text-slate-500 text-xs mt-0.5">{new Date(c.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
+                </div>
+                <span className="text-amber-400 font-bold text-sm">₹{c.amount.toFixed(0)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Download Bills PDF ── */}
       {bills.length > 0 && (
