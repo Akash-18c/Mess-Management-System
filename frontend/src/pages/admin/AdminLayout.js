@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, Tag, FileText, Trash2, LogOut, Menu, HandCoins } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Tag, FileText, Trash2, LogOut, Menu, HandCoins, CalendarDays } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
 const links = [
-  { to: '/admin',             icon: LayoutDashboard, label: 'Dashboard',   end: true },
+  { to: '/admin',             icon: LayoutDashboard, label: 'Dashboard',    end: true },
+  { to: '/admin/months',      icon: CalendarDays,    label: 'Month Control' },
   { to: '/admin/members',     icon: Users,           label: 'Members' },
   { to: '/admin/assignments', icon: Calendar,        label: 'Assignments' },
   { to: '/admin/categories',  icon: Tag,             label: 'Categories' },

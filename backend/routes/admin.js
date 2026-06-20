@@ -287,18 +287,61 @@ router.post('/close-month/:month/:year', async (req, res) => {
       { month, year },
       reopen
         ? { isClosed: false, closedBy: null, closedAt: null }
-        : { isClosed: true, closedBy: req.user._id, closedAt: new Date() },
+        : { isClosed: true, isOpen: false, closedBy: req.user._id, closedAt: new Date() },
       { new: true, upsert: true }
     );
-    // When closing a month: revert the manager back to member role
-    // so admin must re-assign for the next month
     if (!reopen) {
       const assignment = await MonthAssignment.findOne({ month, year });
-      if (assignment) {
-        await User.findByIdAndUpdate(assignment.managerId, { role: 'member' });
-      }
+      if (assignment) await User.findByIdAndUpdate(assignment.managerId, { role: 'member' });
     }
     res.json(summary);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Open a month for manager access
+router.post('/open-month/:month/:year', async (req, res) => {
+  try {
+    const { month, year } = req.params;
+    const { managerId } = req.body;
+    // upsert summary with isOpen=true
+    const summary = await MonthlySummary.findOneAndUpdate(
+      { month, year },
+      { isOpen: true, isClosed: false, openedAt: new Date() },
+      { new: true, upsert: true }
+    );
+    // assign manager if provided
+    if (managerId) {
+      const existing = await MonthAssignment.findOne({ month, year });
+      if (existing) {
+        await User.findByIdAndUpdate(existing.managerId, { role: 'member' });
+        await MonthAssignment.findByIdAndUpdate(existing._id, { managerId, assignedBy: req.user._id, assignedAt: new Date() });
+      } else {
+        await MonthAssignment.create({ month, year, managerId, assignedBy: req.user._id });
+      }
+      await User.findByIdAndUpdate(managerId, { role: 'manager' });
+    }
+    res.json(summary);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Get all months with their status (for admin months page)
+router.get('/months', async (req, res) => {
+  try {
+    const summaries = await MonthlySummary.find().sort({ year: -1, month: -1 });
+    const assignments = await MonthAssignment.find().populate('managerId', 'name');
+    const months = summaries.map(s => {
+      const a = assignments.find(a => a.month === s.month && a.year === s.year);
+      return { month: s.month, year: s.year, isOpen: s.isOpen, isClosed: s.isClosed, openedAt: s.openedAt, closedAt: s.closedAt, manager: a?.managerId || null };
+    });
+    res.json(months);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Get open months for manager (used by manager to know which months they can edit)
+router.get('/active-months', async (req, res) => {
+  try {
+    const summaries = await MonthlySummary.find({ isOpen: true, isClosed: false }).sort({ year: -1, month: -1 });
+    res.json(summaries.map(s => ({ month: s.month, year: s.year })));
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 

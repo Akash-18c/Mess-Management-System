@@ -10,6 +10,8 @@ const monthlySummarySchema = new mongoose.Schema({
   mealRate: { type: Number, default: 0 },
   totalCollected: { type: Number, default: 0 },
   messBalance: { type: Number, default: 0 },
+  isOpen: { type: Boolean, default: false },
+  openedAt: { type: Date, default: null },
   isClosed: { type: Boolean, default: false },
   closedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   closedAt: { type: Date, default: null },
