@@ -22,9 +22,9 @@ router.get('/my/:month/:year', async (req, res) => {
 // Manager/Admin — all bills for a month
 router.get('/:month/:year', requireRole('admin', 'manager'), async (req, res) => {
   try {
-    const bill = await Bill.findOne({ memberId: req.user._id, month: req.params.month, year: req.params.year })
+    const bills = await Bill.find({ month: req.params.month, year: req.params.year })
       .populate('memberId', 'name room email');
-    res.json(bill || null);
+    res.json(bills);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 

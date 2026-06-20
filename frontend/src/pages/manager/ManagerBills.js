@@ -22,7 +22,7 @@ export default function ManagerBills() {
   const [generating, setGenerating] = useState(false);
 
   const load = useCallback(() => {
-    api.get(`/bills/${MONTH}/${YEAR}`).then(r => setBills(r.data)).catch(() => {});
+    api.get(`/bills/${MONTH}/${YEAR}`).then(r => setBills(Array.isArray(r.data) ? r.data : [])).catch(() => {});
     api.get(`/summary/${MONTH}/${YEAR}`).then(r => setSummary(r.data)).catch(() => {});
   }, []);
 

@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { UtensilsCrossed, IndianRupee, TrendingUp, Wallet, Calendar, ChevronDown, Sparkles, Download } from 'lucide-react';
+import { UtensilsCrossed, IndianRupee, TrendingUp, Wallet, Calendar, ChevronDown, Sparkles } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
 import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
 import useAuthStore from '../../store/authStore';
-import { downloadBillsPdf } from '../../utils/downloadBillsPdf';
 
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -231,24 +230,6 @@ export default function MemberDashboard() {
             ))}
           </div>
         </div>
-      )}
-
-      {/* ── Download Bills PDF ── */}
-      {bills.length > 0 && (
-        <button
-          onClick={async () => {
-            setPdfLoading(true);
-            try { await downloadBillsPdf({ bills, summary: activeSummary, month: selectedMonth, year: selectedYear }); }
-            catch { toast.error('PDF generation failed'); }
-            finally { setPdfLoading(false); }
-          }}
-          disabled={pdfLoading}
-          className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white py-3 rounded-2xl active:scale-95 disabled:opacity-60"
-          style={{ background: 'linear-gradient(135deg,#059669,#047857)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s' }}
-        >
-          <Download size={16} className={pdfLoading ? 'animate-bounce' : ''} />
-          {pdfLoading ? 'Generating PDF…' : `Download Bills PDF — ${selectedLabel}`}
-        </button>
       )}
 
       {/* ── Personal Stats (current month only) ── */}
