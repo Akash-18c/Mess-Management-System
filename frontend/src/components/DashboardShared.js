@@ -7,11 +7,11 @@ import useAuthStore from '../store/authStore';
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 const glass = {
-  background: 'rgba(255,255,255,0.04)',
-  backdropFilter: 'blur(32px)',
-  WebkitBackdropFilter: 'blur(32px)',
-  border: '1px solid rgba(255,255,255,0.10)',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07)',
+  background: 'rgba(255,255,255,0.045)',
+  backdropFilter: 'blur(40px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+  border: '1px solid rgba(255,255,255,0.13)',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.1)',
 };
 
 // Helper: extract display name — strips role prefix like "Admin (...)" → shows full name
@@ -313,17 +313,35 @@ function ExpenseTypeCard({ month, year, canEdit, categoryName, emoji, onStatusCh
 function IndividualCostTable({ individualCosts, mealRate, summary, totalCollected: tcProp, month, year, onRefresh }) {
   if (!individualCosts?.length) return null;
 
+  const [pdfBusy,     setPdfBusy]     = useState(false);
+  const [refreshBusy, setRefreshBusy] = useState(false);
+
   const grandTotal     = summary?.grandTotal || 0;
   const totalMeals     = summary?.totalMeals || 0;
   const totalCollected = tcProp ?? summary?.totalCollected ?? 0;
 
+  const handlePDF = async () => {
+    if (pdfBusy) return;
+    if (!summary) { toast.error('No data yet'); return; }
+    setPdfBusy(true);
+    try { await downloadPDF(summary, individualCosts, totalCollected, month, year); }
+    finally { setPdfBusy(false); }
+  };
+
+  const handleRefresh = async () => {
+    if (refreshBusy || !onRefresh) return;
+    setRefreshBusy(true);
+    try { await onRefresh(); }
+    finally { setTimeout(() => setRefreshBusy(false), 600); }
+  };
+
   return (
     <div className="rounded-2xl overflow-hidden" style={glass}>
-      {/* header row: icon+title | PDF button | Refresh button */}
+      {/* header */}
       <div className="flex items-center gap-3 px-4 py-3"
         style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.20)' }}>
+          style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.22)' }}>
           <ChefHat size={17} className="text-green-400" />
         </div>
         <div className="flex-1 min-w-0">
@@ -331,32 +349,33 @@ function IndividualCostTable({ individualCosts, mealRate, summary, totalCollecte
           <p className="text-slate-500 text-xs mt-0.5 truncate">Statement — {MONTHS_FULL[month - 1]} {year}</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          {onRefresh && (
-            <button onClick={onRefresh}
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl active:scale-95 transition-all"
-              style={{ background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.22)', color: '#93c5fd', WebkitTapHighlightColor: 'transparent' }}>
-              <RefreshCw size={12} /> Refresh
-            </button>
-          )}
-          <button
-            onClick={() => summary ? downloadPDF(summary, individualCosts, totalCollected, month, year) : toast.error('No data yet')}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl active:scale-95 transition-all"
-            style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.28)', color: '#4ade80', WebkitTapHighlightColor: 'transparent' }}>
-            <Download size={12} /> PDF
+          {/* Refresh */}
+          <button onClick={handleRefresh} disabled={refreshBusy}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition-all active:scale-95"
+            style={{ background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.25)', color: '#93c5fd', WebkitTapHighlightColor: 'transparent', opacity: refreshBusy ? 0.7 : 1 }}>
+            <RefreshCw size={12} className={refreshBusy ? 'animate-spin' : ''} />
+            <span>{refreshBusy ? '...' : 'Refresh'}</span>
+          </button>
+          {/* PDF */}
+          <button onClick={handlePDF} disabled={pdfBusy}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl transition-all active:scale-95"
+            style={{ background: pdfBusy ? 'rgba(34,197,94,0.08)' : 'rgba(34,197,94,0.18)', border: '1px solid rgba(34,197,94,0.32)', color: '#4ade80', WebkitTapHighlightColor: 'transparent', opacity: pdfBusy ? 0.7 : 1 }}>
+            {pdfBusy
+              ? <><span className="w-3 h-3 rounded-full border-2 border-green-400/30 border-t-green-400 animate-spin" /><span>PDF...</span></>
+              : <><Download size={12} /><span>PDF</span></>}
           </button>
         </div>
       </div>
-      {/* stats grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px"
-        style={{ background: 'rgba(255,255,255,0.05)' }}>
+      {/* stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px" style={{ background: 'rgba(255,255,255,0.06)' }}>
         {[
-          { label: 'Total Spent',     value: `₹${grandTotal.toFixed(2)}`,      color: '#fbbf24' },
-          { label: 'Total Meals',     value: totalMeals,                         color: '#34d399' },
-          { label: 'Per Meal Cost',   value: `₹${(mealRate||0).toFixed(2)}`,   color: '#a78bfa' },
-          { label: 'Total Collected', value: `₹${totalCollected.toFixed(2)}`,  color: '#60a5fa' },
+          { label: 'Total Spent',     value: `₹${grandTotal.toFixed(2)}`,     color: '#fbbf24' },
+          { label: 'Total Meals',     value: totalMeals,                        color: '#34d399' },
+          { label: 'Per Meal Cost',   value: `₹${(mealRate||0).toFixed(2)}`,  color: '#a78bfa' },
+          { label: 'Total Collected', value: `₹${totalCollected.toFixed(2)}`, color: '#60a5fa' },
         ].map(s => (
-          <div key={s.label} className="flex flex-col items-center justify-center py-3 px-2"
-            style={{ background: 'rgba(10,15,30,0.55)' }}>
+          <div key={s.label} className="flex flex-col items-center justify-center py-4 px-2"
+            style={{ background: 'rgba(10,15,30,0.5)' }}>
             <p className="font-bold text-sm tabular-nums" style={{ color: s.color }}>{s.value}</p>
             <p className="text-slate-500 text-[10px] mt-0.5 text-center leading-tight">{s.label}</p>
           </div>
@@ -411,7 +430,13 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
     <div className="space-y-5">
 
       {/* ── Welcome Banner ── */}
-      <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+      <div className="rounded-2xl p-4" style={{
+        background: 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(48px) saturate(200%)',
+        WebkitBackdropFilter: 'blur(48px) saturate(200%)',
+        border: '1px solid rgba(255,255,255,0.13)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.1)',
+      }}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-base font-bold text-white flex-shrink-0"
