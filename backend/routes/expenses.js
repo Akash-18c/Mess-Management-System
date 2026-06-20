@@ -27,8 +27,10 @@ router.get('/grocery/:month/:year', async (req, res) => {
 router.post('/grocery', requireRole('manager', 'admin'), async (req, res) => {
   try {
     const { item, quantity, unitPrice, unit, date, buyerName, month, year } = req.body;
-    const total = parseFloat((quantity * unitPrice).toFixed(2));
-    const expense = await GroceryExpense.create({ item, quantity, unitPrice, unit, date, buyerName, total, month, year, addedBy: req.user._id });
+    const qty = parseFloat(quantity);
+    const price = parseFloat(unitPrice);
+    const total = !isNaN(qty) ? parseFloat((qty * price).toFixed(2)) : parseFloat(price.toFixed(2));
+    const expense = await GroceryExpense.create({ item, ...(qty ? { quantity: qty } : {}), unitPrice: price, unit, date, buyerName, total, month, year, addedBy: req.user._id });
     await recalcSummary(month, year);
     res.status(201).json(expense);
   } catch (err) { res.status(400).json({ message: err.message }); }
