@@ -139,12 +139,12 @@ export default function ManagerBills() {
                       <td className="py-2.5 px-2 text-right text-white font-semibold">{b.mealCount}</td>
                       {/* Per Meal */}
                       <td className="py-2.5 px-2 text-right text-amber-400">₹{mealRate.toFixed(2)}</td>
-                      {/* Meal Cost */}
-                      <td className="py-2.5 px-2 text-right text-slate-200">₹{(b.totalBill || 0).toFixed(2)}</td>
+                      {/* Meal Cost = meals × rate only */}
+                      <td className="py-2.5 px-2 text-right text-slate-200">₹{((b.mealCount || 0) * mealRate).toFixed(2)}</td>
                       {/* Other Charges */}
                       <td className="py-2.5 px-2 text-right" style={{ color: b.otherCharges > 0 ? '#fb923c' : '#475569' }}>₹{(b.otherCharges || 0).toFixed(2)}</td>
                       {/* Masi */}
-                      <td className="py-2.5 px-2 text-right text-slate-400">₹{masi.toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right text-slate-400">₹{(b.masiSalary || 0).toFixed(2)}</td>
                       {/* Advance */}
                       <td className="py-2.5 px-2 text-right text-green-400">₹{(b.advance || 0).toFixed(2)}</td>
                       {/* Due / Refund */}

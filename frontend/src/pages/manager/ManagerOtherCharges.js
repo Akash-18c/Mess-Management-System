@@ -58,6 +58,7 @@ export default function ManagerOtherCharges() {
         await api.put(`/expenses/charges/${editId}`, { reason: form.reason, amount: +form.amount, date: form.date });
         toast.success('Updated');
       } else {
+        if (!form.memberId) { toast.error('Select a member'); setModal(true); setLoading(false); return; }
         await api.post('/expenses/charges', { ...form, amount: +form.amount, month: MONTH, year: YEAR });
         toast.success('Charge added');
       }
@@ -171,11 +172,32 @@ export default function ManagerOtherCharges() {
             <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3">
               {!editId && (
                 <div>
-                  <label className="label text-xs">Member</label>
-                  <select className="input" value={form.memberId} onChange={e => f({ memberId: e.target.value })} required>
-                    <option value="">-- Select Member --</option>
-                    {members.map(m => <option key={m._id} value={m._id}>{rn(m.name)} {m.room ? `(Room ${m.room})` : ''}</option>)}
-                  </select>
+                  <label className="label text-xs mb-2">Member</label>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
+                    {members.map(m => {
+                      const name = rn(m.name);
+                      const sel = form.memberId === m._id;
+                      return (
+                        <button key={m._id} type="button" onClick={() => f({ memberId: m._id })}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all"
+                          style={{
+                            background: sel ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.04)',
+                            border: sel ? '1px solid rgba(245,158,11,0.40)' : '1px solid rgba(255,255,255,0.07)',
+                            WebkitTapHighlightColor: 'transparent',
+                          }}>
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                            style={{ background: sel ? 'rgba(245,158,11,0.25)' : 'rgba(255,255,255,0.08)', color: sel ? '#fbbf24' : '#94a3b8' }}>
+                            {name?.[0]?.toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate" style={{ color: sel ? '#fcd34d' : '#e2e8f0' }}>{name}</p>
+                            {m.room && <p className="text-[10px] text-slate-500">Room {m.room}</p>}
+                          </div>
+                          {sel && <span className="text-amber-400 text-xs font-bold flex-shrink-0">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
               <div>

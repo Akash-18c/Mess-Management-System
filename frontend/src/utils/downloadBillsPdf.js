@@ -89,11 +89,12 @@ function generate({ bills, summary, month, year }) {
 
     const tableRows = bills.map((b) => {
       const due = b.dueAmount ?? 0;
+      const mealCost = ((b.mealCount || 0) * mealRate).toFixed(2);
       return [
         rn(b.memberId?.name),
         String(b.mealCount),
         `Rs ${mealRate.toFixed(2)}`,
-        `Rs ${(b.totalBill || 0).toFixed(2)}`,
+        `Rs ${mealCost}`,
         `Rs ${(b.otherCharges || 0).toFixed(2)}`,
         `Rs ${(b.masiSalary || 0).toFixed(2)}`,
         `Rs ${(b.advance || 0).toFixed(2)}`,

@@ -86,12 +86,12 @@ export default function MemberDashboard() {
     </div>
   );
 
-  const { lunch, dinner, mealRate, estimatedBill, advance, totalCollected, memberMealCounts, summary, individualCosts } = data;
+  const { lunch, dinner, mealRate, estimatedBill, myOtherCharges, masiPerMember, advance, totalCollected, memberMealCounts, summary, individualCosts } = data;
   const totalMeals = lunch + dinner;
-  // find logged-in user's masiSalary from individualCosts
   const myRow = individualCosts?.find(c => c._id === user?._id || c._id?.toString() === user?._id?.toString());
-  const masiSalary = myRow?.masiSalary || 0;
-  const due = estimatedBill + masiSalary - advance;
+  const masiSalary = myRow?.masiSalary ?? masiPerMember ?? 0;
+  const myOther = myRow?.otherCharges ?? myOtherCharges ?? 0;
+  const due = estimatedBill + masiSalary + myOther - advance;
 
   const activeSummary = isCurrentMonth ? summary : monthData?.summary;
   const activeTotalCollected = isCurrentMonth ? totalCollected : (monthData?.totalCollected ?? 0);
@@ -260,7 +260,8 @@ export default function MemberDashboard() {
               { icon: UtensilsCrossed, value: totalMeals,   label: 'My Meals',  sub: `L:${lunch}  D:${dinner}`,
                 color: due > 0 ? '#f87171' : '#4ade80' },
               { icon: TrendingUp,      value: `₹${mealRate.toFixed(2)}`,       label: 'Per Meal' },
-              { icon: IndianRupee,     value: `₹${(estimatedBill + masiSalary).toFixed(2)}`,  label: 'My Bill', sub: masiSalary > 0 ? `Masi: ₹${masiSalary.toFixed(2)}` : undefined },
+              { icon: IndianRupee, value: `₹${(estimatedBill + masiSalary + myOther).toFixed(2)}`, label: 'My Bill',
+                sub: [masiSalary > 0 ? `Masi ₹${masiSalary.toFixed(2)}` : '', myOther > 0 ? `Other ₹${myOther.toFixed(2)}` : ''].filter(Boolean).join(' · ') || undefined },
               { icon: Wallet,
                 value: due > 0 ? `-₹${due.toFixed(2)}` : `+₹${Math.abs(due).toFixed(2)}`,
                 label: due > 0 ? 'I Owe' : 'My Credit',
