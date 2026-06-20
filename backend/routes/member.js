@@ -59,8 +59,9 @@ router.get('/dashboard', async (req, res) => {
 
     const memberMealCounts = members.map(m => {
       const mMeals = allMeals.filter(ml => ml.memberId?._id?.toString() === m._id.toString() && !ml.isOff);
-      const count = mMeals.reduce((s, ml) => s + (ml.lunch ? 1 : 0) + (ml.dinner ? 1 : 0), 0);
-      return { name: rn(m.name).split(' ')[0], meals: count };
+      const lunch  = mMeals.filter(ml => ml.lunch).length;
+      const dinner = mMeals.filter(ml => ml.dinner).length;
+      return { name: rn(m.name).split(' ')[0], lunch, dinner, meals: lunch + dinner };
     });
 
     const individualCosts = members.map(m => {

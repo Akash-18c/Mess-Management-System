@@ -107,8 +107,10 @@ export default function MemberDashboard() {
 
   // bar chart: ensure names are short (first name only)
   const chartData = (memberMealCounts || []).map(m => ({
-    ...m,
     name: m.name?.split(' ')[0] ?? m.name,
+    lunch: m.lunch ?? 0,
+    dinner: m.dinner ?? 0,
+    meals: (m.lunch ?? 0) + (m.dinner ?? 0),
   }));
 
   return (
@@ -379,25 +381,35 @@ export default function MemberDashboard() {
               </div>
               <p className="text-slate-500 text-xs mt-0.5 pl-9">{selectedLabel}</p>
             </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
-              style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)' }}>
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-              <span className="text-[10px] font-semibold text-green-400">{chartData.reduce((s,m)=>s+m.meals,0)} meals</span>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-green-300">
+                <span className="w-2 h-2 rounded-sm inline-block bg-green-400" /> Lunch
+              </span>
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-300">
+                <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#34d399' }} /> Dinner
+              </span>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
+                style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)' }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                <span className="text-[10px] font-semibold text-green-400">{chartData.reduce((s,m)=>s+m.meals,0)} meals</span>
+              </div>
             </div>
           </div>
 
           {/* Scrollable chart */}
           <div className="px-2 pb-3" style={{ overflowX: 'auto', overflowY: 'hidden' }}>
-            <div style={{ minWidth: Math.max(chartData.length * 60, 300) + 'px', height: '240px' }}>
+            <div style={{ minWidth: Math.max(chartData.length * 72, 300) + 'px', height: '240px' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 24, right: 16, left: -8, bottom: 52 }} barCategoryGap="28%">
+                <BarChart data={chartData} margin={{ top: 24, right: 16, left: -8, bottom: 52 }} barCategoryGap="30%" barGap={3}>
                   <defs>
-                    {chartData.map((_, i) => (
-                      <linearGradient key={i} id={`bar-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%"  stopColor={BAR_COLORS[i % BAR_COLORS.length]} stopOpacity={1} />
-                        <stop offset="100%" stopColor={BAR_COLORS[i % BAR_COLORS.length]} stopOpacity={0.55} />
-                      </linearGradient>
-                    ))}
+                    <linearGradient id="mem-lunch" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"  stopColor="#22c55e" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#22c55e" stopOpacity={0.55} />
+                    </linearGradient>
+                    <linearGradient id="mem-dinner" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"  stopColor="#34d399" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#34d399" stopOpacity={0.55} />
+                    </linearGradient>
                   </defs>
                   <XAxis
                     dataKey="name"
@@ -428,16 +440,15 @@ export default function MemberDashboard() {
                       boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
                     }}
                     cursor={{ fill: 'rgba(255,255,255,0.04)', radius: 6 }}
-                    formatter={(v, _, p) => [
-                      <span style={{ color: BAR_COLORS[p.index % BAR_COLORS.length], fontWeight: 700 }}>{v} meals</span>, p.payload.name
+                    formatter={(v, name) => [
+                      <span style={{ color: name === 'lunch' ? '#22c55e' : '#34d399', fontWeight: 700 }}>{v} meals</span>,
+                      name === 'lunch' ? '☀️ Lunch' : '🌙 Dinner'
                     ]}
                   />
-                  <Bar dataKey="meals" radius={[8, 8, 3, 3]} maxBarSize={48}
-                    label={{ position: 'top', fill: '#94a3b8', fontSize: 11, fontWeight: 700, formatter: v => v > 0 ? v : '' }}>
-                    {chartData.map((_, i) => (
-                      <Cell key={i} fill={`url(#bar-grad-${i})`} />
-                    ))}
-                  </Bar>
+                  <Bar dataKey="lunch"  name="lunch"  radius={[6,6,2,2]} maxBarSize={28} fill="url(#mem-lunch)"
+                    label={{ position: 'top', fill: '#86efac', fontSize: 10, fontWeight: 700, formatter: v => v > 0 ? v : '' }} />
+                  <Bar dataKey="dinner" name="dinner" radius={[6,6,2,2]} maxBarSize={28} fill="url(#mem-dinner)"
+                    label={{ position: 'top', fill: '#6ee7b7', fontSize: 10, fontWeight: 700, formatter: v => v > 0 ? v : '' }} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

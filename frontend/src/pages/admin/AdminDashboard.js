@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, TrendingUp, Crown, Lock, Unlock, ChevronDown, Calendar, Sparkles, Activity } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { Users, TrendingUp, Crown, Lock, Unlock, ChevronDown, Calendar, Sparkles, Activity, UtensilsCrossed } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar } from 'recharts';
 import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
 
@@ -25,6 +25,8 @@ function buildMonthRange() {
   }
   return list.reverse();
 }
+
+const BAR_COLORS = ['#2dd4bf','#34d399','#22c55e','#4ade80','#14b8a6','#06b6d4','#38bdf8','#60a5fa'];
 
 const glass = {
   background: 'rgba(255,255,255,0.03)',
@@ -52,6 +54,8 @@ export default function AdminDashboard() {
   const [monthData,     setMonthData]     = useState(null);
   const [allSummaries,  setAllSummaries]  = useState([]);
   const [dropdownOpen,  setDropdownOpen]  = useState(false);
+  const [members,       setMembers]       = useState([]);
+  const [meals,         setMeals]         = useState([]);
   const dropRef  = useRef(null);
   const navigate = useNavigate();
 
@@ -64,7 +68,12 @@ export default function AdminDashboard() {
   useEffect(() => {
     api.get('/admin/dashboard').then(r => setData(r.data));
     api.get('/summary/list').then(r => setAllSummaries(r.data)).catch(() => {});
+    api.get('/admin/members').then(r => setMembers(r.data.filter(m => m.isActive))).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    api.get(`/meals/${selectedMonth}/${selectedYear}`).then(r => setMeals(r.data)).catch(() => setMeals([]));
+  }, [selectedMonth, selectedYear]);
 
   const isCurrentMonth = selectedMonth === curMonth && selectedYear === curYear;
 
@@ -97,6 +106,14 @@ export default function AdminDashboard() {
   });
 
   const selectedLabel = `${MONTHS_FULL[selectedMonth - 1]} ${selectedYear}`;
+
+  const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
+  const memberMealCounts = members.map(m => {
+    const mm = meals.filter(ml => ml.memberId?._id === m._id && !ml.isOff);
+    const lunch  = mm.filter(ml => ml.lunch).length;
+    const dinner = mm.filter(ml => ml.dinner).length;
+    return { name: rn(m.name).split(' ')[0], lunch, dinner, meals: lunch + dinner };
+  });
 
   const chartData = [...allSummaries].reverse().map(s => ({
     name: `${MONTHS[s.month - 1]} '${String(s.year).slice(2)}`,
@@ -167,18 +184,20 @@ export default function AdminDashboard() {
                 <Calendar size={13} style={{ color: '#2dd4bf' }} />
                 <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#2dd4bf' }}>Select Month</p>
               </div>
-              <div className="max-h-72 overflow-y-auto">
+              <div className="max-h-72 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                 {monthOptions.map(o => {
                   const isSel = o.month === selectedMonth && o.year === selectedYear;
                   return (
                     <button
                       key={`${o.month}-${o.year}`}
                       onClick={() => { setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
-                      className="w-full text-left flex items-center justify-between transition-all duration-150"
+                      className="w-full text-left flex items-center justify-between"
                       style={{
                         padding: '10px 16px',
                         background: isSel ? 'rgba(20,184,166,0.12)' : 'transparent',
                         borderLeft: isSel ? '2px solid #14b8a6' : '2px solid transparent',
+                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        WebkitTapHighlightColor: 'transparent',
                       }}
                       onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
                       onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
@@ -186,8 +205,8 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-2.5">
                         <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                           style={{ background: o.hasData ? (o.isClosed ? '#f87171' : '#34d399') : '#334155' }} />
-                        <span className="text-sm font-medium" style={{ color: isSel ? '#2dd4bf' : '#e2e8f0' }}>
-                          {MONTHS_FULL[o.month - 1]} {o.year}
+                        <span className="text-sm font-medium" style={{ color: isSel ? '#2dd4bf' : '#cbd5e1' }}>
+                          {MONTHS_FULL[o.month - 1].slice(0,3)} {o.year}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
@@ -203,8 +222,12 @@ export default function AdminDashboard() {
                   );
                 })}
               </div>
-              <div className="px-4 py-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                <p className="text-[10px] text-slate-600">● Has data &nbsp;○ No data yet</p>
+              <div className="flex items-center gap-4 px-4 py-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
+                {[['#34d399','Open'],['#f87171','Closed'],['#334155','No data']].map(([c,l]) => (
+                  <span key={l} className="flex items-center gap-1.5 text-[9px] text-slate-500">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: c }} />{l}
+                  </span>
+                ))}
               </div>
             </div>
           )}
@@ -239,6 +262,72 @@ export default function AdminDashboard() {
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}
       />
+
+      {/* ── Member Meal Bar Chart ── */}
+      {memberMealCounts.some(m => m.meals > 0) && (
+        <div className="rounded-2xl overflow-hidden" style={glass}>
+          <div className="flex items-center justify-between px-4 pt-4 pb-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ background: 'rgba(45,212,191,0.15)', border: '1px solid rgba(45,212,191,0.25)' }}>
+                  <UtensilsCrossed size={13} style={{ color: '#2dd4bf' }} />
+                </div>
+                <p className="text-sm font-bold text-white">Member Meal Count</p>
+              </div>
+              <p className="text-slate-500 text-xs mt-0.5 pl-9">{selectedLabel}</p>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#2dd4bf' }}>
+                <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#2dd4bf' }} /> Lunch
+              </span>
+              <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#34d399' }}>
+                <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#34d399' }} /> Dinner
+              </span>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
+                style={{ background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.18)' }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#2dd4bf' }} />
+                <span className="text-[10px] font-semibold" style={{ color: '#2dd4bf' }}>{memberMealCounts.reduce((s,m)=>s+m.meals,0)} meals</span>
+              </div>
+            </div>
+          </div>
+          <div className="px-2 pb-3" style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+            <div style={{ minWidth: Math.max(memberMealCounts.length * 72, 300) + 'px', height: '240px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={memberMealCounts} margin={{ top: 24, right: 16, left: -8, bottom: 52 }} barCategoryGap="30%" barGap={3}>
+                  <defs>
+                    <linearGradient id="adm-lunch" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"  stopColor="#2dd4bf" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#2dd4bf" stopOpacity={0.5} />
+                    </linearGradient>
+                    <linearGradient id="adm-dinner" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"  stopColor="#34d399" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#34d399" stopOpacity={0.5} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }}
+                    axisLine={{ stroke: 'rgba(255,255,255,0.06)' }} tickLine={false}
+                    interval={0} angle={-38} textAnchor="end" height={56} />
+                  <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false}
+                    allowDecimals={false} width={26} tickFormatter={v => v === 0 ? '' : v} />
+                  <Tooltip
+                    contentStyle={{ background: 'rgba(8,14,28,0.96)', border: '1px solid rgba(45,212,191,0.30)', borderRadius: '12px', color: '#fff', fontSize: '12px', padding: '8px 14px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}
+                    cursor={{ fill: 'rgba(255,255,255,0.04)', radius: 6 }}
+                    formatter={(v, name) => [
+                      <span style={{ color: name === 'lunch' ? '#2dd4bf' : '#34d399', fontWeight: 700 }}>{v} meals</span>,
+                      name === 'lunch' ? '☀️ Lunch' : '🌙 Dinner'
+                    ]}
+                  />
+                  <Bar dataKey="lunch"  name="lunch"  radius={[6,6,2,2]} maxBarSize={28} fill="url(#adm-lunch)"
+                    label={{ position: 'top', fill: '#99f6e4', fontSize: 10, fontWeight: 700, formatter: v => v > 0 ? v : '' }} />
+                  <Bar dataKey="dinner" name="dinner" radius={[6,6,2,2]} maxBarSize={28} fill="url(#adm-dinner)"
+                    label={{ position: 'top', fill: '#6ee7b7', fontSize: 10, fontWeight: 700, formatter: v => v > 0 ? v : '' }} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Charts ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

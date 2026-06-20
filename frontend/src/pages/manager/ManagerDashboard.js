@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Calendar, ChevronDown, Sparkles } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
+import { Calendar, ChevronDown, Sparkles, UtensilsCrossed } from 'lucide-react';
 import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
 
@@ -32,12 +32,14 @@ function buildMonthRange() {
   return list.reverse();
 }
 
+const BAR_COLORS = ['#f59e0b','#fbbf24','#fcd34d','#fde68a','#f97316','#fb923c','#fdba74','#fed7aa'];
+
 const glass = {
-  background: 'rgba(255,255,255,0.05)',
-  backdropFilter: 'blur(40px)',
-  WebkitBackdropFilter: 'blur(40px)',
-  border: '1px solid rgba(255,255,255,0.12)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10)',
+  background: 'rgba(255,255,255,0.03)',
+  backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
+  border: '1px solid rgba(255,255,255,0.10)',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)',
 };
 
 export default function ManagerDashboard() {
@@ -143,7 +145,9 @@ export default function ManagerDashboard() {
 
   const memberMealCounts = members.map(m => {
     const mm = meals.filter(ml => ml.memberId?._id === m._id && !ml.isOff);
-    return { name: rn(m.name).split(' ')[0], meals: mm.reduce((s, ml) => s + (ml.lunch ? 1 : 0) + (ml.dinner ? 1 : 0), 0) };
+    const lunch  = mm.filter(ml => ml.lunch).length;
+    const dinner = mm.filter(ml => ml.dinner).length;
+    return { name: rn(m.name).split(' ')[0], lunch, dinner, meals: lunch + dinner };
   });
 
   const todayTotal = meals.filter(m => m.date?.slice(0, 10) === today)
@@ -196,12 +200,12 @@ export default function ManagerDashboard() {
         {dropdownOpen && (
           <div className="absolute right-0 top-full mt-2 z-[200] rounded-2xl overflow-hidden" style={{
             minWidth: '220px',
-            background: 'rgba(8,14,28,0.97)',
+            background: 'rgba(8,14,28,0.98)',
             backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
             border: '1px solid rgba(245,158,11,0.20)',
             boxShadow: '0 24px 60px rgba(0,0,0,0.8)',
           }}>
-            <div className="px-3 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(245,158,11,0.08)' }}>
+            <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(245,158,11,0.08)' }}>
               <Calendar size={12} className="text-amber-400" />
               <p className="text-[10px] font-bold text-amber-300 uppercase tracking-widest">Select Month</p>
             </div>
@@ -215,25 +219,33 @@ export default function ManagerDashboard() {
                     onClick={() => { setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
                     className="w-full text-left flex items-center justify-between"
                     style={{
-                      padding: '9px 14px',
-                      background: isSel ? 'rgba(245,158,11,0.15)' : 'transparent',
+                      padding: '10px 14px',
+                      background: isSel ? 'rgba(245,158,11,0.12)' : 'transparent',
                       borderLeft: isSel ? '2px solid #f59e0b' : '2px solid transparent',
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
                       WebkitTapHighlightColor: 'transparent',
                     }}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: o.hasData ? (o.isClosed ? '#f87171' : '#34d399') : '#334155' }} />
-                      <span className="text-xs font-medium" style={{ color: isSel ? '#fcd34d' : '#e2e8f0' }}>
-                        {MONTHS_FULL[o.month - 1]} {o.year}
+                      <span className="text-sm font-medium" style={{ color: isSel ? '#fcd34d' : '#cbd5e1' }}>
+                        {MONTHS_FULL[o.month - 1].slice(0,3)} {o.year}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                      {o.isCurrent && <span style={{ fontSize: '8px', background: 'rgba(245,158,11,0.25)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.40)', padding: '2px 5px', borderRadius: '999px', fontWeight: 700 }}>LIVE</span>}
-                      {o.hasData && o.isClosed && <span style={{ fontSize: '8px', background: 'rgba(248,113,113,0.12)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)', padding: '2px 5px', borderRadius: '999px' }}>Closed</span>}
+                      {o.isCurrent && <span style={{ fontSize: '9px', background: 'rgba(245,158,11,0.22)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.40)', padding: '2px 6px', borderRadius: '999px', fontWeight: 700 }}>LIVE</span>}
+                      {o.hasData && o.isClosed && <span style={{ fontSize: '9px', background: 'rgba(248,113,113,0.12)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)', padding: '2px 6px', borderRadius: '999px' }}>Closed</span>}
                     </div>
                   </button>
                 );
               })}
+            </div>
+            <div className="flex items-center gap-4 px-4 py-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
+              {[['#34d399','Open'],['#f87171','Closed'],['#334155','No data']].map(([c,l]) => (
+                <span key={l} className="flex items-center gap-1.5 text-[9px] text-slate-500">
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: c }} />{l}
+                </span>
+              ))}
             </div>
           </div>
         )}
@@ -253,54 +265,84 @@ export default function ManagerDashboard() {
       />
 
       {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Today's Meals", value: isCurrentMonth ? todayTotal : '—', emoji: '🍽' },
-          { label: 'Total Expense', value: `₹${summary?.grandTotal?.toFixed(0) || '0'}`, emoji: '💸' },
-          { label: 'Members', value: members.length, emoji: '👥' },
-        ].map(({ label, value, emoji }) => (
-          <div key={label} className="rounded-2xl p-3" style={glass}>
-            <div className="text-lg mb-1">{emoji}</div>
-            <p className="text-base font-bold text-white leading-none truncate">{value}</p>
-            <p className="text-[10px] text-slate-500 mt-1 leading-tight">{label}</p>
+          { label: "Today's Meals", value: isCurrentMonth ? todayTotal : '—', emoji: '🍽️', accent: 'rgba(34,197,94,0.10)',  border: 'rgba(34,197,94,0.18)',  top: 'rgba(34,197,94,0.06)'  },
+          { label: 'Total Expense',  value: `₹${summary?.grandTotal?.toFixed(0) || '0'}`, emoji: '💸', accent: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.18)', top: 'rgba(245,158,11,0.06)' },
+          { label: 'Members',        value: members.length, emoji: '👥', accent: 'rgba(96,165,250,0.10)',  border: 'rgba(96,165,250,0.18)',  top: 'rgba(96,165,250,0.06)'  },
+        ].map(({ label, value, emoji, accent, border, top }) => (
+          <div key={label} className="rounded-2xl overflow-hidden"
+            style={{ background: accent, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: `1px solid ${border}`, boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+            <div className="px-3 pt-3 pb-2.5">
+              <div className="text-2xl mb-2 leading-none">{emoji}</div>
+              <p className="text-lg font-bold text-white leading-none tabular-nums truncate">{value}</p>
+              <p className="text-[10px] text-slate-400 mt-1.5 leading-tight font-medium">{label}</p>
+            </div>
           </div>
         ))}
       </div>
 
       {/* ── Bar Chart ── */}
       {memberMealCounts.some(m => m.meals > 0) && (
-        <div className="rounded-2xl p-3" style={glass}>
-          <h3 className="font-semibold text-white text-sm mb-0.5">Member Meal Count</h3>
-          <p className="text-slate-500 text-xs mb-3">{selectedLabel}</p>
-          <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>
-            <div style={{ minWidth: Math.max(memberMealCounts.length * 36, 300) + 'px', height: '200px' }}>
+        <div className="rounded-2xl overflow-hidden" style={glass}>
+          {/* header */}
+          <div className="flex items-center justify-between px-4 pt-4 pb-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.25)' }}>
+                  <UtensilsCrossed size={13} className="text-amber-400" />
+                </div>
+                <p className="text-sm font-bold text-white">Member Meal Count</p>
+              </div>
+              <p className="text-slate-500 text-xs mt-0.5 pl-9">{selectedLabel}</p>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-300">
+                <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#f59e0b' }} /> Lunch
+              </span>
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-orange-300">
+                <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#fb923c' }} /> Dinner
+              </span>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
+                style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.18)' }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span className="text-[10px] font-semibold text-amber-400">{memberMealCounts.reduce((s,m)=>s+m.meals,0)} meals</span>
+              </div>
+            </div>
+          </div>
+          {/* chart */}
+          <div className="px-2 pb-3" style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+            <div style={{ minWidth: Math.max(memberMealCounts.length * 72, 300) + 'px', height: '240px' }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={memberMealCounts}
-                  margin={{ top: 4, right: 8, left: -18, bottom: 48 }}
-                  barCategoryGap="20%"
-                >
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: '#64748b', fontSize: 9 }}
-                    axisLine={false}
-                    tickLine={false}
-                    interval={0}
-                    angle={-40}
-                    textAnchor="end"
-                    height={52}
-                  />
-                  <YAxis
-                    tick={{ fill: '#64748b', fontSize: 9 }}
-                    axisLine={false}
-                    tickLine={false}
-                    width={28}
-                  />
+                <BarChart data={memberMealCounts} margin={{ top: 24, right: 16, left: -8, bottom: 52 }} barCategoryGap="30%" barGap={3}>
+                  <defs>
+                    <linearGradient id="mgr-lunch" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"  stopColor="#f59e0b" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.5} />
+                    </linearGradient>
+                    <linearGradient id="mgr-dinner" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"  stopColor="#fb923c" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#fb923c" stopOpacity={0.5} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }}
+                    axisLine={{ stroke: 'rgba(255,255,255,0.06)' }} tickLine={false}
+                    interval={0} angle={-38} textAnchor="end" height={56} />
+                  <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false}
+                    allowDecimals={false} width={26} tickFormatter={v => v === 0 ? '' : v} />
                   <Tooltip
-                    contentStyle={{ background: 'rgba(8,14,28,0.97)', border: '1px solid rgba(245,158,11,0.20)', borderRadius: '10px', color: '#fff', fontSize: '11px' }}
-                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                    contentStyle={{ background: 'rgba(8,14,28,0.96)', border: '1px solid rgba(245,158,11,0.30)', borderRadius: '12px', color: '#fff', fontSize: '12px', padding: '8px 14px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}
+                    cursor={{ fill: 'rgba(255,255,255,0.04)', radius: 6 }}
+                    formatter={(v, name) => [
+                      <span style={{ color: name === 'lunch' ? '#f59e0b' : '#fb923c', fontWeight: 700 }}>{v} meals</span>,
+                      name === 'lunch' ? '☀️ Lunch' : '🌙 Dinner'
+                    ]}
                   />
-                  <Bar dataKey="meals" fill="#f59e0b" radius={[4,4,0,0]} name="Meals" maxBarSize={28} />
+                  <Bar dataKey="lunch"  name="lunch"  radius={[6,6,2,2]} maxBarSize={28} fill="url(#mgr-lunch)"
+                    label={{ position: 'top', fill: '#fcd34d', fontSize: 10, fontWeight: 700, formatter: v => v > 0 ? v : '' }} />
+                  <Bar dataKey="dinner" name="dinner" radius={[6,6,2,2]} maxBarSize={28} fill="url(#mgr-dinner)"
+                    label={{ position: 'top', fill: '#fdba74', fontSize: 10, fontWeight: 700, formatter: v => v > 0 ? v : '' }} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
