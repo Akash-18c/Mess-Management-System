@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { DancingScriptBold } from '../DancingScript-Bold-b64';
 
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -33,6 +34,10 @@ function generate({ bills, summary, month, year }) {
     const PW = doc.internal.pageSize.getWidth();
     const PH = doc.internal.pageSize.getHeight();
 
+    // Register Dancing Script font
+    doc.addFileToVFS('DancingScript-Bold.ttf', DancingScriptBold);
+    doc.addFont('DancingScript-Bold.ttf', 'DancingScript', 'bold');
+
     doc.setFillColor(8, 14, 28);
     doc.rect(0, 0, PW, PH, 'F');
 
@@ -45,18 +50,20 @@ function generate({ bills, summary, month, year }) {
       doc.addImage(logoData.dataUrl, 'PNG', 9, 4, lw, lh);
     }
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
+    doc.setFont('DancingScript', 'bold');
+    doc.setFontSize(28);
     doc.setTextColor(251, 191, 36);
-    doc.text('MessKit', PW / 2, 13, { align: 'center' });
+    doc.text('The Messy Kitchen', PW / 2, 13, { align: 'center' });
 
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(148, 163, 184);
-    doc.text('Mess Meal Management System', PW / 2, 20, { align: 'center' });
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(110, 231, 183);
+    doc.setCharSpace(2.8);
+    doc.text('MESS MEAL MANAGEMENT SYSTEM', PW / 2, 20, { align: 'center' });
+    doc.setCharSpace(0);
 
     doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('DancingScript', 'bold');
     doc.setTextColor(255, 255, 255);
     doc.text(`Bills — ${monthLabel}`, PW / 2, 29, { align: 'center' });
 
@@ -145,10 +152,10 @@ function generate({ bills, summary, month, year }) {
     doc.setDrawColor(30, 45, 80);
     doc.setLineWidth(0.3);
     doc.line(10, PH - 12, PW - 10, PH - 12);
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setFont('DancingScript', 'bold');
     doc.setTextColor(71, 85, 105);
-    doc.text('MessKit — Mess Meal Management System', PW / 2, PH - 7, { align: 'center' });
+    doc.text('The Messy Kitchen', PW / 2, PH - 7, { align: 'center' });
 
     doc.save(`MessKit-Bills-${monthLabel.replace(' ', '-')}.pdf`);
   });
