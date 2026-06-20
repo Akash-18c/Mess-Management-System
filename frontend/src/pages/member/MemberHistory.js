@@ -210,9 +210,21 @@ export default function MemberHistory() {
                                         <span className="text-amber-300">+₹{b.guestCharge?.toFixed(2)}</span>
                                       </div>
                                     )}
+                                    {(b.gasCharge > 0) && (
+                                      <div className="flex justify-between text-slate-400">
+                                        <span>Gas Cylinder</span>
+                                        <span className="text-orange-400">+₹{b.gasCharge?.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    {(b.riceCharge > 0) && (
+                                      <div className="flex justify-between text-slate-400">
+                                        <span>Rice Bag</span>
+                                        <span className="text-lime-400">+₹{b.riceCharge?.toFixed(2)}</span>
+                                      </div>
+                                    )}
                                     {(b.otherSharedCharge > 0) && (
                                       <div className="flex justify-between text-slate-400">
-                                        <span>Shared Expenses <span className="text-[10px] text-slate-600">(Gas/Rice/Other ÷ members)</span></span>
+                                        <span>Other Expenses</span>
                                         <span className="text-orange-400">+₹{b.otherSharedCharge?.toFixed(2)}</span>
                                       </div>
                                     )}

@@ -45,6 +45,8 @@ router.get('/dashboard', async (req, res) => {
     const masiPerMember = masiRec?.perMemberAmount || 0;
     // other shared charge = paid other expenses ÷ active members (from summary)
     const otherSharedCharge = summary?.otherPaidPerMember || 0;
+    const gasCharge  = summary?.gasPerMember  || 0;
+    const riceCharge = summary?.ricePerMember || 0;
 
     const estimatedBill = parseFloat(((lunch + dinner + guestMeals) * mealRate).toFixed(2));
 
@@ -66,17 +68,20 @@ router.get('/dashboard', async (req, res) => {
       const totalMeals = mealCount + guestCount;
       const mBill = bills.find(b => b.memberId?._id?.toString() === m._id.toString());
       const mealCost = parseFloat(((mealCount + guestCount) * mealRate).toFixed(2));
+      const mGasCharge  = mBill?.gasCharge  ?? gasCharge;
+      const mRiceCharge = mBill?.riceCharge ?? riceCharge;
+      const mOtherShared = mBill?.otherSharedCharge ?? otherSharedCharge;
       // totalMealCost from generated bill (most accurate)
       const totalMealCost = mBill
         ? parseFloat(mBill.totalBill.toFixed(2))
-        : parseFloat((mealCost + masiPerMember + otherSharedCharge).toFixed(2));
+        : parseFloat((mealCost + masiPerMember + mOtherShared + mGasCharge + mRiceCharge).toFixed(2));
       const mPayments = allPayments.filter(p => p.memberId?.toString() === m._id.toString());
       const moneyGiven = parseFloat(mPayments.reduce((s, p) => s + p.amount, 0).toFixed(2));
       const due = parseFloat((moneyGiven - totalMealCost).toFixed(2));
-      return { _id: m._id, name: rn(m.name), role: m.role, totalMeals, perMealCost: mealRate, mealCost, otherSharedCharge, masiSalary: masiPerMember, totalMealCost, moneyGiven, due };
+      return { _id: m._id, name: rn(m.name), role: m.role, totalMeals, perMealCost: mealRate, mealCost, otherSharedCharge: mOtherShared, gasCharge: mGasCharge, riceCharge: mRiceCharge, masiSalary: masiPerMember, totalMealCost, moneyGiven, due };
     }).filter(m => m.totalMeals > 0 || m.moneyGiven > 0 || m.masiSalary > 0 || m.otherSharedCharge > 0);
 
-    res.json({ lunch, dinner, guestMeals, mealRate, estimatedBill, otherSharedCharge, masiPerMember, advance, todayExpense, totalCollected, memberMealCounts, summary, individualCosts });
+    res.json({ lunch, dinner, guestMeals, mealRate, estimatedBill, otherSharedCharge, gasCharge, riceCharge, masiPerMember, advance, todayExpense, totalCollected, memberMealCounts, summary, individualCosts });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
@@ -95,6 +100,8 @@ router.get('/month-data/:month/:year', async (req, res) => {
     const mealRate = summary?.mealRate || 0;
     const masiPerMember = masiRec?.perMemberAmount || 0;
     const otherSharedCharge = summary?.otherPaidPerMember || 0;
+    const gasCharge  = summary?.gasPerMember  || 0;
+    const riceCharge = summary?.ricePerMember || 0;
 
     const individualCosts = allMembers.map(m => {
       const mMeals = allMeals.filter(ml => ml.memberId?.toString() === m._id.toString());
@@ -103,13 +110,16 @@ router.get('/month-data/:month/:year', async (req, res) => {
       const totalMeals = mealCount + guestCount;
       const mBill = allBills.find(b => b.memberId?._id?.toString() === m._id.toString());
       const mealCost = parseFloat(((mealCount + guestCount) * mealRate).toFixed(2));
+      const mGasCharge  = mBill?.gasCharge  ?? gasCharge;
+      const mRiceCharge = mBill?.riceCharge ?? riceCharge;
+      const mOtherShared = mBill?.otherSharedCharge ?? otherSharedCharge;
       const totalMealCost = mBill
         ? parseFloat(mBill.totalBill.toFixed(2))
-        : parseFloat((mealCost + masiPerMember + otherSharedCharge).toFixed(2));
+        : parseFloat((mealCost + masiPerMember + mOtherShared + mGasCharge + mRiceCharge).toFixed(2));
       const mPays = allPayments.filter(p => p.memberId?.toString() === m._id.toString());
       const moneyGiven = parseFloat(mPays.reduce((s, p) => s + p.amount, 0).toFixed(2));
       const due = parseFloat((moneyGiven - totalMealCost).toFixed(2));
-      return { _id: m._id, name: rn(m.name), role: m.role, totalMeals, perMealCost: mealRate, mealCost, otherSharedCharge, masiSalary: masiPerMember, totalMealCost, moneyGiven, due };
+      return { _id: m._id, name: rn(m.name), role: m.role, totalMeals, perMealCost: mealRate, mealCost, otherSharedCharge: mOtherShared, gasCharge: mGasCharge, riceCharge: mRiceCharge, masiSalary: masiPerMember, totalMealCost, moneyGiven, due };
     }).filter(m => m.totalMeals > 0 || m.moneyGiven > 0 || m.masiSalary > 0 || m.otherSharedCharge > 0);
 
     res.json({ summary, totalCollected, individualCosts });
@@ -143,6 +153,8 @@ router.get('/all-history', async (req, res) => {
       const mealRate = summary?.mealRate || 0;
       const masiPerMember = masiMap[key] || 0;
       const otherSharedCharge = summary?.otherPaidPerMember || 0;
+      const gasCharge  = summary?.gasPerMember  || 0;
+      const riceCharge = summary?.ricePerMember || 0;
 
       const monthMeals    = allMeals.filter(m => m.month === month && m.year === year && !m.isOff);
       const monthPayments = allPayments.filter(p => p.month == month && p.year == year);
@@ -155,22 +167,24 @@ router.get('/all-history', async (req, res) => {
         const totalMeals = mealCount + guestCount;
         const mBill = monthBills.find(b => b.memberId?._id?.toString() === m._id.toString());
         const mealCost = parseFloat(((mealCount + guestCount) * mealRate).toFixed(2));
-        const totalBill = mBill ? mBill.totalBill : parseFloat((mealCost + masiPerMember + otherSharedCharge).toFixed(2));
+        const mGasCharge  = mBill?.gasCharge  ?? gasCharge;
+        const mRiceCharge = mBill?.riceCharge ?? riceCharge;
+        const billOtherShared = mBill ? (mBill.otherSharedCharge || otherSharedCharge) : otherSharedCharge;
+        const totalBill = mBill ? mBill.totalBill : parseFloat((mealCost + masiPerMember + billOtherShared + mGasCharge + mRiceCharge).toFixed(2));
         const lunchCount  = mBill ? mBill.lunchCount  : mMeals.filter(ml => ml.lunch).length;
         const dinnerCount = mBill ? mBill.dinnerCount : mMeals.filter(ml => ml.dinner).length;
         const guestMeals  = mBill ? mBill.guestMeals  : guestCount;
         const guestCharge = mBill ? mBill.guestCharge : parseFloat((guestCount * mealRate).toFixed(2));
-        const billOtherShared = mBill ? (mBill.otherSharedCharge || otherSharedCharge) : otherSharedCharge;
         const mPays = monthPayments.filter(p => p.memberId?.toString() === m._id.toString());
         const advance = parseFloat(mPays.reduce((s, p) => s + p.amount, 0).toFixed(2));
         const dueAmount = parseFloat((totalBill - advance).toFixed(2));
-        if (totalMeals === 0 && advance === 0 && masiPerMember === 0 && otherSharedCharge === 0) return null;
+        if (totalMeals === 0 && advance === 0 && masiPerMember === 0 && otherSharedCharge === 0 && mGasCharge === 0 && mRiceCharge === 0) return null;
         return {
           _id: mBill?._id || m._id,
           memberId: { _id: m._id, name: rn(m.name), room: m.room },
           role: m.role, month, year,
           mealCount: totalMeals, lunchCount, dinnerCount, guestMeals, guestCharge,
-          mealCost, otherSharedCharge: billOtherShared, masiSalary: masiPerMember,
+          mealCost, otherSharedCharge: billOtherShared, gasCharge: mGasCharge, riceCharge: mRiceCharge, masiSalary: masiPerMember,
           mealRate, totalBill, advance, dueAmount,
         };
       }).filter(Boolean);
