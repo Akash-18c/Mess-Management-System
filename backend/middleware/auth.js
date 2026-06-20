@@ -8,6 +8,8 @@ const auth = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.id).select('-password');
     if (!req.user || !req.user.isActive) return res.status(401).json({ message: 'Unauthorized' });
+    // Use role from JWT so manager session stays valid even if DB role changes mid-session
+    req.user.role = decoded.role;
     next();
   } catch {
     res.status(401).json({ message: 'Invalid token' });
