@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, History, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, History, LogOut, Menu } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };

@@ -26,14 +26,6 @@ function buildMonthRange() {
   return list.reverse();
 }
 
-const glass = {
-  background: 'rgba(255,255,255,0.045)',
-  backdropFilter: 'blur(40px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-  border: '1px solid rgba(255,255,255,0.13)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.1)',
-};
-
 const BAR_COLORS = ['#22c55e','#34d399','#4ade80','#86efac','#6ee7b7','#10b981','#059669','#16a34a'];
 
 export default function MemberDashboard() {
@@ -118,7 +110,6 @@ export default function MemberDashboard() {
     ...m,
     name: m.name?.split(' ')[0] ?? m.name,
   }));
-  const barWidth = Math.max(chartData.length * 52, 280);
 
   return (
     <div className="space-y-4 pb-8">

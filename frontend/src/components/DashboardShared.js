@@ -311,10 +311,10 @@ function ExpenseTypeCard({ month, year, canEdit, categoryName, emoji, onStatusCh
 
 // ─── Individual Cost Table ────────────────────────────────────────────────────
 function IndividualCostTable({ individualCosts, mealRate, summary, totalCollected: tcProp, month, year, onRefresh }) {
-  if (!individualCosts?.length) return null;
-
   const [pdfBusy,     setPdfBusy]     = useState(false);
   const [refreshBusy, setRefreshBusy] = useState(false);
+
+  if (!individualCosts?.length) return null;
 
   const grandTotal     = summary?.grandTotal || 0;
   const totalMeals     = summary?.totalMeals || 0;
