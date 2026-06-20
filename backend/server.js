@@ -75,7 +75,12 @@ mongoose
     await seedAdmin();
     await seedCategories();
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`)).on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`\n❌ Port ${PORT} is already in use.\n   Run: netstat -ano | findstr :${PORT}  → then: taskkill /PID <pid> /F\n`);
+        process.exit(1);
+      } else throw err;
+    });
   })
   .catch((err) => console.error('MongoDB error:', err));
 
