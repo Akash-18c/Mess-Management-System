@@ -450,10 +450,11 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
         ))}
       </div>
 
-      {/* ── Gas + Rice Bag ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* ── Gas + Rice Bag + Other Expenses ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Gas Cylinder" emoji="🔥" onStatusChange={refreshSummary} />
         <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Rice Bag"     emoji="🌾" onStatusChange={refreshSummary} />
+        <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Other"        emoji="📦" onStatusChange={refreshSummary} />
       </div>
 
       {/* ── PDF + Stats card ── */}
