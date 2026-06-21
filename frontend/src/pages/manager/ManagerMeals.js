@@ -29,12 +29,14 @@ export default function ManagerMeals() {
   const now = new Date();
   const curMonth = now.getMonth() + 1;
   const curYear  = now.getFullYear();
+  const _pad = n => String(n).padStart(2, '0');
+  const todayLocal = `${now.getFullYear()}-${_pad(now.getMonth()+1)}-${_pad(now.getDate())}`;
   const [month, setMonth] = useState(curMonth);
   const [year,  setYear]  = useState(curYear);
   const isLiveMonth = month === curMonth && year === curYear;
   const [members,      setMembers]      = useState([]);
   const [mealData,     setMealData]     = useState({});
-  const [selectedDate, setSelectedDate] = useState(now.toISOString().slice(0, 10));
+  const [selectedDate, setSelectedDate] = useState(todayLocal);
   const pendingRef = useRef({}); // track in-flight requests per memberId
 
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -147,10 +149,13 @@ export default function ManagerMeals() {
 
   const days = Array.from({ length: daysInMonth }, (_, i) => {
     const d = new Date(year, month - 1, i + 1);
-    return { num: i + 1, dateStr: d.toISOString().slice(0, 10), dayIdx: d.getDay() };
+    const pad = n => String(n).padStart(2, '0');
+    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    return { num: i + 1, dateStr, dayIdx: d.getDay() };
   });
 
-  const todayStr = now.toISOString().slice(0, 10);
+  const pad = n => String(n).padStart(2, '0');
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
   const calendarRef = useRef(null);
 
   // auto-scroll calendar to today on load
@@ -197,8 +202,7 @@ export default function ManagerMeals() {
 
       {/* ── Calendar Date Strip ── */}
       <div className="rounded-2xl p-3" style={calGlass}>
-        {/* Day headers */}
-        <div className="flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }} ref={calendarRef}>
+        <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }} ref={calendarRef}>
           {days.map(({ num, dateStr, dayIdx }) => {
             const isSel   = dateStr === selectedDate;
             const isToday = dateStr === todayStr;

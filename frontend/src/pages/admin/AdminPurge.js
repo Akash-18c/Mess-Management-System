@@ -16,6 +16,7 @@ const DATA_LABELS = [
   { key: 'meals',        label: 'Meal Records',      color: '#34d399' },
   { key: 'groceries',    label: 'Grocery Expenses',  color: '#f97316' },
   { key: 'otherExpenses',label: 'Other Expenses',    color: '#f59e0b' },
+  { key: 'otherCharges', label: 'Other Charges',     color: '#f472b6' },
   { key: 'payments',     label: 'Payments',          color: '#60a5fa' },
   { key: 'bills',        label: 'Bills',             color: '#a78bfa' },
   { key: 'summary',      label: 'Monthly Summary',   color: '#2dd4bf' },

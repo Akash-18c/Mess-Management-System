@@ -185,10 +185,9 @@ export default function MemberHistory() {
     setLoadingPayments(l => ({ ...l, [key]: true }));
     try {
       const res = await api.get(`/member/all-payments/${b.month}/${b.year}`);
+      const memberId = b.memberId?._id?.toString();
       const mp = res.data.filter(p =>
-        p.memberId?._id === b.memberId?._id?.toString() ||
-        p.memberId?._id === b.memberId?._id ||
-        p.memberId === b.memberId?._id?.toString()
+        (p.memberId?._id?.toString() ?? p.memberId?.toString()) === memberId
       );
       setPayments(p => ({ ...p, [key]: mp }));
     } catch {

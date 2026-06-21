@@ -245,12 +245,13 @@ router.delete('/purge-month/:month/:year', async (req, res) => {
   try {
     const month = parseInt(req.params.month);
     const year  = parseInt(req.params.year);
-    const Meal    = require('../models/Meal');
-    const Payment = require('../models/Payment');
-    const RiceBag = require('../models/RiceBag');
+    const Meal       = require('../models/Meal');
+    const Payment    = require('../models/Payment');
+    const RiceBag    = require('../models/RiceBag');
     const GasCylinder = require('../models/GasCylinder');
+    const OtherCharge = require('../models/OtherCharge');
     const filter = { month, year };
-    const [meals, grocery, other, payments, bills, summary, assignment, gas, rice] = await Promise.all([
+    const [meals, grocery, other, payments, bills, summary, assignment, gas, rice, otherCharges] = await Promise.all([
       Meal.deleteMany(filter),
       GroceryExpense.deleteMany(filter),
       OtherExpense.deleteMany(filter),
@@ -260,8 +261,8 @@ router.delete('/purge-month/:month/:year', async (req, res) => {
       MonthAssignment.deleteMany(filter),
       GasCylinder.deleteMany(filter),
       RiceBag.deleteMany(filter),
+      OtherCharge.deleteMany(filter),
     ]);
-    // revert manager role for that month's assignment (already deleted, just ensure)
     res.json({
       message: `All data for ${month}/${year} deleted`,
       deleted: {
@@ -274,6 +275,7 @@ router.delete('/purge-month/:month/:year', async (req, res) => {
         assignment: assignment.deletedCount,
         gasCylinders: gas.deletedCount,
         riceBags: rice.deletedCount,
+        otherCharges: otherCharges.deletedCount,
       }
     });
   } catch (err) { res.status(500).json({ message: err.message }); }

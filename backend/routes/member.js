@@ -99,7 +99,7 @@ router.get('/month-data/:month/:year', async (req, res) => {
       MonthlySummary.findOne({ month, year }),
       Bill.find({ month, year }).populate('memberId', 'name room'),
       Payment.find({ month, year }),
-      User.find({ isActive: true }, 'name _id role'),
+      User.find({}, 'name _id role'),
       Meal.find({ month, year, isOff: false }),
       MasiSalary.findOne({ month, year }),
       OtherCharge.find({ month, year }),
@@ -144,7 +144,7 @@ router.get('/all-history', async (req, res) => {
       MonthlySummary.find().lean(),
       Bill.find().populate('memberId', 'name room').lean(),
       Payment.find().lean(),
-      User.find({ isActive: true }, 'name _id role room').lean(),
+      User.find({}, 'name _id role room isActive').lean(),
       MasiSalary.find().lean(),
       OtherCharge.find({}).lean(),
     ]);
