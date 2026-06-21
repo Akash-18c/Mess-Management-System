@@ -148,7 +148,7 @@ export default function AdminExpensesHistory() {
       </div>
 
       {/* ── Month + Date selectors row ── */}
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
 
         {/* Month picker */}
         <div className="relative flex-1" ref={monthRef}>
@@ -261,49 +261,106 @@ export default function AdminExpensesHistory() {
 
       {/* ── Grocery list ── */}
       {tab === 'grocery' && (
-        <div className="space-y-1.5">
+        <div className="space-y-3">
           {groups.length === 0
             ? <div className="rounded-xl py-10 text-center text-slate-500 text-xs" style={glass}>No grocery entries {selDate !== 'all' ? 'for this date' : 'this month'}</div>
-            : groups.map(group => {
-                const groupTotal = group.items.reduce((s,g) => s+(g.total||g.unitPrice||0), 0);
-                const isLunch = group.meal === 'Lunch';
-                const ac = isLunch ? '#fbbf24' : '#a78bfa';
-                const ab = isLunch ? 'rgba(251,191,36,0.08)' : 'rgba(139,92,246,0.08)';
-                const abr = isLunch ? 'rgba(251,191,36,0.18)' : 'rgba(139,92,246,0.18)';
-                return (
-                  <div key={group.key} className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${abr}` }}>
-                    {/* header */}
-                    <div className="flex items-center justify-between px-3 py-1.5" style={{ background: ab, borderBottom: `1px solid ${abr}` }}>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs">{isLunch ? '☀️' : '🌙'}</span>
-                        <span className="text-[11px] font-bold" style={{ color: ac }}>{isLunch ? 'Lunch' : 'Dinner'}</span>
-                        <span className="text-slate-600 text-[10px]">·</span>
-                        <span className="text-slate-400 text-[10px]">{new Date(group.date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>
-                        {group.items.length > 1 && <span className="text-[9px] font-semibold px-1 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: '#64748b' }}>{group.items.length}</span>}
-                      </div>
-                      <span className="text-[11px] font-bold" style={{ color: ac }}>₹{groupTotal.toFixed(0)}</span>
+            : (() => {
+                // Group by date, then by meal
+                const dateGroups = {};
+                groups.forEach(g => {
+                  const date = g.date;
+                  if (!dateGroups[date]) dateGroups[date] = { date, lunch: [], dinner: [] };
+                  if (g.meal === 'Lunch') dateGroups[date].lunch.push(g);
+                  else dateGroups[date].dinner.push(g);
+                });
+                return Object.values(dateGroups).map(dateGroup => (
+                  <div key={dateGroup.date} className="space-y-2">
+                    {/* Date header */}
+                    <div className="px-1 py-1">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        {new Date(dateGroup.date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
                     </div>
-                    {/* rows */}
-                    {group.items.map((g, idx) => (
-                      <div key={g._id} className="flex items-center gap-2 px-3 py-1.5"
-                        style={{ borderBottom: idx < group.items.length-1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                        <p className="text-slate-200 text-xs font-medium truncate flex-1">{g.item}</p>
-                        {g.buyerName && <span className="text-[9px] text-slate-600 flex-shrink-0 hidden sm:block">{g.buyerName}</span>}
-                        <span className="text-[11px] font-bold text-green-400 flex-shrink-0">₹{(g.total||g.unitPrice||0).toFixed(0)}</span>
-                        <button onClick={() => del(g._id,'grocery')} className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(248,113,113,0.10)', WebkitTapHighlightColor: 'transparent' }}>
-                          <Trash2 size={10} className="text-red-400" />
-                        </button>
-                      </div>
-                    ))}
-                    {group.items.length > 1 && (
-                      <div className="flex items-center justify-between px-3 py-1" style={{ background: 'rgba(255,255,255,0.02)', borderTop: `1px solid ${abr}` }}>
-                        <span className="text-[9px] font-semibold text-slate-600 uppercase tracking-wider">Subtotal</span>
-                        <span className="text-[11px] font-bold" style={{ color: ac }}>₹{groupTotal.toFixed(2)}</span>
-                      </div>
-                    )}
+                    {/* Lunch and Dinner side by side */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {/* Lunch Card */}
+                      {dateGroup.lunch.length > 0 && dateGroup.lunch.map(group => {
+                        const groupTotal = group.items.reduce((s,g) => s+(g.total||g.unitPrice||0), 0);
+                        return (
+                          <div key={group.key} className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(251,191,36,0.18)' }}>
+                            {/* Card header */}
+                            <div className="flex items-center gap-1.5 px-3 py-2" style={{ background: 'rgba(251,191,36,0.08)', borderBottom: '1px solid rgba(251,191,36,0.18)' }}>
+                              <span className="text-sm">☀️</span>
+                              <span className="text-xs font-bold" style={{ color: '#fbbf24' }}>Lunch</span>
+                              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full ml-auto" style={{ background: 'rgba(255,255,255,0.06)', color: '#64748b' }}>{group.items.length}</span>
+                            </div>
+                            {/* Items */}
+                            <div className="divide-y divide-white/5">
+                              {group.items.map((g) => (
+                                <div key={g._id} className="flex items-center gap-2 px-3 py-2 text-[11px]">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-slate-200 font-medium truncate">{g.item}</p>
+                                    {g.buyerName && <p className="text-[9px] text-slate-500 truncate">{g.buyerName}</p>}
+                                  </div>
+                                  <span className="text-green-400 font-bold flex-shrink-0">₹{(g.total || g.unitPrice || 0).toFixed(0)}</span>
+                                  <button onClick={() => { if (window.confirm('Delete?')) { api.delete(`/expenses/grocery/${g._id}`); toast.success('Deleted'); load(); } }} className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(248,113,113,0.10)' }}>
+                                    <Trash2 size={10} className="text-red-400" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            {/* Total */}
+                            <div className="flex items-center justify-between px-3 py-2" style={{ background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(251,191,36,0.18)' }}>
+                              <span className="text-[9px] font-semibold text-slate-600">Total</span>
+                              <span className="text-xs font-bold" style={{ color: '#fbbf24' }}>₹{groupTotal.toFixed(0)}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* Dinner Card */}
+                      {dateGroup.dinner.length > 0 && dateGroup.dinner.map(group => {
+                        const groupTotal = group.items.reduce((s,g) => s+(g.total||g.unitPrice||0), 0);
+                        return (
+                          <div key={group.key} className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(139,92,246,0.18)' }}>
+                            {/* Card header */}
+                            <div className="flex items-center gap-1.5 px-3 py-2" style={{ background: 'rgba(139,92,246,0.08)', borderBottom: '1px solid rgba(139,92,246,0.18)' }}>
+                              <span className="text-sm">🌙</span>
+                              <span className="text-xs font-bold" style={{ color: '#a78bfa' }}>Dinner</span>
+                              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full ml-auto" style={{ background: 'rgba(255,255,255,0.06)', color: '#64748b' }}>{group.items.length}</span>
+                            </div>
+                            {/* Items */}
+                            <div className="divide-y divide-white/5">
+                              {group.items.map((g) => (
+                                <div key={g._id} className="flex items-center gap-2 px-3 py-2 text-[11px]">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-slate-200 font-medium truncate">{g.item}</p>
+                                    {g.buyerName && <p className="text-[9px] text-slate-500 truncate">{g.buyerName}</p>}
+                                  </div>
+                                  <span className="text-green-400 font-bold flex-shrink-0">₹{(g.total || g.unitPrice || 0).toFixed(0)}</span>
+                                  <button onClick={() => { if (window.confirm('Delete?')) { api.delete(`/expenses/grocery/${g._id}`); toast.success('Deleted'); load(); } }} className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(248,113,113,0.10)' }}>
+                                    <Trash2 size={10} className="text-red-400" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            {/* Total */}
+                            <div className="flex items-center justify-between px-3 py-2" style={{ background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(139,92,246,0.18)' }}>
+                              <span className="text-[9px] font-semibold text-slate-600">Total</span>
+                              <span className="text-xs font-bold" style={{ color: '#a78bfa' }}>₹{groupTotal.toFixed(0)}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* Empty state if both are empty */}
+                      {dateGroup.lunch.length === 0 && dateGroup.dinner.length === 0 && (
+                        <div className="rounded-xl py-4 text-center text-slate-500 text-xs col-span-1 sm:col-span-2" style={glass}>No meals</div>
+                      )}
+                    </div>
                   </div>
-                );
-              })
+                ));
+              })()
           }
         </div>
       )}
