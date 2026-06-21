@@ -12,6 +12,7 @@ import AdminReports from './pages/admin/AdminReports';
 import AdminMonths from './pages/admin/AdminMonths';
 import AdminMasiSalary from './pages/admin/AdminMasiSalary';
 import AdminPurge from './pages/admin/AdminPurge';
+import AdminExpensesHistory from './pages/admin/AdminExpensesHistory';
 import ManagerLayout from './pages/manager/ManagerLayout';
 import ManagerDashboard from './pages/manager/ManagerDashboard';
 import ManagerMeals from './pages/manager/ManagerMeals';
@@ -20,11 +21,11 @@ import ManagerPayments from './pages/manager/ManagerPayments';
 import ManagerBills from './pages/manager/ManagerBills';
 import ManagerOtherCharges from './pages/manager/ManagerOtherCharges';
 import MemberLayout from './pages/member/MemberLayout';
-import AdminExpensesHistory from './pages/admin/AdminExpensesHistory';
-import MemberExpensesHistory from './pages/member/MemberExpensesHistory';
 import MemberDashboard from './pages/member/MemberDashboard';
+import MemberHistory from './pages/member/MemberHistory';
+import MemberExpensesHistory from './pages/member/MemberExpensesHistory';
 
-import MemberHistory from './pages/member/MemberHistory';({ children, roles }) {
+function ProtectedRoute({ children, roles }) {
   const { user, token } = useAuthStore();
   if (!token || !user) return <Navigate to="/login" replace />;
   if (roles && !roles.includes(user.role)) return <Navigate to="/login" replace />;
