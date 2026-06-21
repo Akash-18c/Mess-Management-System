@@ -20,10 +20,11 @@ import ManagerPayments from './pages/manager/ManagerPayments';
 import ManagerBills from './pages/manager/ManagerBills';
 import ManagerOtherCharges from './pages/manager/ManagerOtherCharges';
 import MemberLayout from './pages/member/MemberLayout';
+import AdminExpensesHistory from './pages/admin/AdminExpensesHistory';
+import MemberExpensesHistory from './pages/member/MemberExpensesHistory';
 import MemberDashboard from './pages/member/MemberDashboard';
-import MemberHistory from './pages/member/MemberHistory';
 
-function ProtectedRoute({ children, roles }) {
+import MemberHistory from './pages/member/MemberHistory';({ children, roles }) {
   const { user, token } = useAuthStore();
   if (!token || !user) return <Navigate to="/login" replace />;
   if (roles && !roles.includes(user.role)) return <Navigate to="/login" replace />;
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="masi-salary" element={<AdminMasiSalary />} />
+          <Route path="expenses-history" element={<AdminExpensesHistory />} />
           <Route path="purge" element={<AdminPurge />} />
         </Route>
 
@@ -80,6 +82,7 @@ export default function App() {
         <Route path="/member" element={<ProtectedRoute roles={['member', 'manager', 'admin']}><MemberLayout /></ProtectedRoute>}>
           <Route index element={<MemberDashboard />} />
           <Route path="history" element={<MemberHistory />} />
+          <Route path="expenses-history" element={<MemberExpensesHistory />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
