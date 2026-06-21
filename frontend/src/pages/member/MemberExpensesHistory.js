@@ -215,7 +215,7 @@ export default function MemberExpensesHistory() {
                       </p>
                     </div>
                     {/* Lunch and Dinner side by side */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-3">
+                    <div className="grid grid-cols-2 gap-2 md:gap-3">
                       {/* Lunch Card */}
                       {dateGroup.lunch.length > 0 && dateGroup.lunch.map(group => {
                         const groupTotal = group.items.reduce((s,g) => s+(g.total||g.unitPrice||0), 0);

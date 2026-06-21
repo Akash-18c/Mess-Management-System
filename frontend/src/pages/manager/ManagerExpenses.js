@@ -196,7 +196,7 @@ export default function ManagerExpenses() {
           className="flex items-center gap-1 text-[10px] md:text-xs font-semibold text-white px-2 py-1.5 md:px-3 md:py-2 rounded-lg md:rounded-xl active:scale-95 flex-shrink-0"
           style={{ background: 'linear-gradient(135deg,#10b981,#059669)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s' }}
         >
-          <Plus size={12} className="md:block hidden" /> Add
+          <Plus size={11} /> Add
         </button>
       </div>
 
@@ -334,7 +334,7 @@ export default function ManagerExpenses() {
                     </p>
                   </div>
                   {/* Lunch and Dinner side by side */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-3">
+                  <div className="grid grid-cols-2 gap-2 md:gap-3">
                     {/* Lunch Card */}
                     {dateGroup.lunch.length > 0 && (
                       <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: 'rgba(251,191,36,0.18)' }}>
