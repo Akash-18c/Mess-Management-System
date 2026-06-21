@@ -131,6 +131,8 @@ export default function ManagerExpenses() {
 
   const gTotal = filteredGroceries.reduce((s,g) => s + (g.total||g.unitPrice||0), 0);
   const oTotal = filteredOthers.reduce((s,o) => s + o.amount, 0);
+
+  const openAdd = () => {
     setEditId(null);
     setForm(tab === 'grocery' ? EMPTY_G : EMPTY_O);
     setModal(true);
@@ -180,9 +182,6 @@ export default function ManagerExpenses() {
     load();
   };
 
-  const gTotal = groceries.reduce((s,g) => s + (g.total || g.unitPrice || 0), 0);
-  const oTotal = others.reduce((s,o) => s + o.amount, 0);
-
   return (
     <div className="space-y-4 pb-8">
 
@@ -193,7 +192,7 @@ export default function ManagerExpenses() {
           <p className="text-[10px] text-slate-500 mt-0.5">Grocery &amp; other expenses</p>
         </div>
         <button
-          onClick={() => { setEditId(null); setForm(tab === 'grocery' ? EMPTY_G : EMPTY_O); setModal(true); }}
+          onClick={openAdd}
           className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95 w-full sm:w-auto justify-center"
           style={{ background: 'linear-gradient(135deg,#10b981,#059669)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s' }}
         >
