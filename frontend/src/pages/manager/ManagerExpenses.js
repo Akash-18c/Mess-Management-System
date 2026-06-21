@@ -176,12 +176,11 @@ export default function ManagerExpenses() {
       </div>
 
       {/* ── List ── */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {tab === 'grocery' ? (
           groceries.length === 0
-            ? <div className="rounded-2xl py-12 text-center text-slate-500 text-sm" style={glass}>No grocery entries yet</div>
+            ? <div className="rounded-xl py-10 text-center text-slate-500 text-sm" style={glass}>No grocery entries yet</div>
             : (() => {
-                // Group by date + meal
                 const groups = [];
                 const seen = {};
                 groceries.forEach(g => {
@@ -192,52 +191,39 @@ export default function ManagerExpenses() {
                 return groups.map(group => {
                   const groupTotal = group.items.reduce((s, g) => s + (g.total || g.unitPrice || 0), 0);
                   const isLunch = group.meal === 'Lunch';
-                  const accentColor = isLunch ? '#fbbf24' : '#a78bfa';
-                  const accentBg    = isLunch ? 'rgba(251,191,36,0.10)'  : 'rgba(139,92,246,0.10)';
-                  const accentBorder= isLunch ? 'rgba(251,191,36,0.22)'  : 'rgba(139,92,246,0.22)';
+                  const ac = isLunch ? '#fbbf24' : '#a78bfa';
+                  const ab = isLunch ? 'rgba(251,191,36,0.08)' : 'rgba(139,92,246,0.08)';
+                  const abr = isLunch ? 'rgba(251,191,36,0.18)' : 'rgba(139,92,246,0.18)';
                   return (
-                    <div key={group.key} className="rounded-2xl overflow-hidden" style={{ ...glass, border: `1px solid ${accentBorder}` }}>
-                      {/* Group header */}
-                      <div className="flex items-center justify-between px-4 py-2.5" style={{ background: accentBg, borderBottom: `1px solid ${accentBorder}` }}>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">{isLunch ? '☀️' : '🌙'}</span>
-                          <span className="text-xs font-bold" style={{ color: accentColor }}>{isLunch ? 'Lunch' : 'Dinner'}</span>
-                          <span className="text-slate-500 text-xs">·</span>
-                          <span className="text-slate-400 text-xs">
-                            {new Date(group.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </span>
-                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.10)' }}>
-                            {group.items.length} item{group.items.length > 1 ? 's' : ''}
-                          </span>
+                    <div key={group.key} className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${abr}` }}>
+                      {/* Group header — compact */}
+                      <div className="flex items-center justify-between px-3 py-1.5" style={{ background: ab, borderBottom: `1px solid ${abr}` }}>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs">{isLunch ? '☀️' : '🌙'}</span>
+                          <span className="text-[11px] font-bold" style={{ color: ac }}>{isLunch ? 'Lunch' : 'Dinner'}</span>
+                          <span className="text-slate-600 text-[10px]">·</span>
+                          <span className="text-slate-400 text-[10px]">{new Date(group.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                          {group.items.length > 1 && <span className="text-[9px] font-semibold px-1 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: '#64748b' }}>{group.items.length}</span>}
                         </div>
-                        <span className="text-sm font-bold" style={{ color: accentColor }}>₹{groupTotal.toFixed(0)}</span>
+                        <span className="text-[11px] font-bold" style={{ color: ac }}>₹{groupTotal.toFixed(0)}</span>
                       </div>
-                      {/* Items */}
+                      {/* Item rows — very compact */}
                       {group.items.map((g, idx) => (
-                        <div key={g._id}
-                          className="flex items-center justify-between gap-2 px-4 py-2.5"
-                          style={{ borderBottom: idx < group.items.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-white text-sm font-medium truncate">{g.item}</p>
-                            <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                              {g.quantity && <span className="text-[10px] text-slate-500">Qty: {g.quantity}</span>}
-                              <span className="text-[10px] text-slate-500">₹{g.unitPrice}/unit</span>
-                              {g.buyerName && <span className="text-[10px] text-slate-500">· {g.buyerName}</span>}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="text-sm font-bold text-green-400">₹{(g.total || g.unitPrice || 0).toFixed(0)}</span>
-                            <button onClick={() => del(g._id,'grocery')} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(248,113,113,0.10)', WebkitTapHighlightColor: 'transparent' }}>
-                              <Trash2 size={12} className="text-red-400" />
-                            </button>
-                          </div>
+                        <div key={g._id} className="flex items-center gap-2 px-3 py-1.5"
+                          style={{ borderBottom: idx < group.items.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                          <p className="text-slate-200 text-xs font-medium truncate flex-1">{g.item}</p>
+                          {g.buyerName && <span className="text-[9px] text-slate-600 flex-shrink-0 hidden sm:block">{g.buyerName}</span>}
+                          <span className="text-[11px] font-bold text-green-400 flex-shrink-0">₹{(g.total || g.unitPrice || 0).toFixed(0)}</span>
+                          <button onClick={() => del(g._id,'grocery')} className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(248,113,113,0.10)', WebkitTapHighlightColor: 'transparent' }}>
+                            <Trash2 size={10} className="text-red-400" />
+                          </button>
                         </div>
                       ))}
-                      {/* Subtotal footer (only when >1 item) */}
+                      {/* Subtotal — only when >1 item */}
                       {group.items.length > 1 && (
-                        <div className="flex items-center justify-between px-4 py-2" style={{ background: 'rgba(255,255,255,0.02)', borderTop: `1px solid ${accentBorder}` }}>
-                          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Subtotal</span>
-                          <span className="text-sm font-bold" style={{ color: accentColor }}>₹{groupTotal.toFixed(2)}</span>
+                        <div className="flex items-center justify-between px-3 py-1" style={{ background: 'rgba(255,255,255,0.02)', borderTop: `1px solid ${abr}` }}>
+                          <span className="text-[9px] font-semibold text-slate-600 uppercase tracking-wider">Subtotal</span>
+                          <span className="text-[11px] font-bold" style={{ color: ac }}>₹{groupTotal.toFixed(2)}</span>
                         </div>
                       )}
                     </div>
@@ -246,34 +232,30 @@ export default function ManagerExpenses() {
               })()
         ) : (
           others.length === 0
-            ? <div className="rounded-2xl py-12 text-center text-slate-500 text-sm" style={glass}>No other expenses yet</div>
+            ? <div className="rounded-xl py-10 text-center text-slate-500 text-sm" style={glass}>No other expenses yet</div>
             : others.map(o => {
               const cat = OTHER_CATS.find(c => c.id === o.categoryName) || OTHER_CATS[2];
               return (
-                <div key={o._id} className="rounded-2xl p-3" style={glass}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-sm">{cat.emoji}</span>
-                        <span className="text-white font-semibold text-sm">{cat.label}</span>
-                        <StatusBadge status={o.status || 'Due'} onClick={() => toggleStatus(o)} />
-                      </div>
-                      {o.description && <p className="text-[10px] text-slate-400 truncate">{o.description}</p>}
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        {o.paidBy && <span className="text-[10px] text-slate-500">By: {o.paidBy}</span>}
-                        <span className="text-[10px] text-slate-600">{new Date(o.date).toLocaleDateString('en-IN', { day:'numeric', month:'short' })}</span>
-                      </div>
+                <div key={o._id} className="flex items-center gap-2 px-3 py-2 rounded-xl" style={glass}>
+                  <span className="text-sm flex-shrink-0">{cat.emoji}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-200 text-xs font-semibold truncate">{cat.label}</span>
+                      {o.description && <span className="text-[9px] text-slate-500 truncate hidden sm:block">· {o.description}</span>}
                     </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <span className="text-sm font-bold text-amber-400">₹{o.amount.toFixed(0)}</span>
-                      <button onClick={() => openEdit(o)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(96,165,250,0.10)', WebkitTapHighlightColor: 'transparent' }}>
-                        <Pencil size={12} className="text-blue-400" />
-                      </button>
-                      <button onClick={() => del(o._id,'other')} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(248,113,113,0.10)', WebkitTapHighlightColor: 'transparent' }}>
-                        <Trash2 size={12} className="text-red-400" />
-                      </button>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[9px] text-slate-600">{new Date(o.date).toLocaleDateString('en-IN', { day:'numeric', month:'short' })}</span>
+                      {o.paidBy && <span className="text-[9px] text-slate-600">· {o.paidBy}</span>}
                     </div>
                   </div>
+                  <StatusBadge status={o.status || 'Due'} onClick={() => toggleStatus(o)} />
+                  <span className="text-xs font-bold text-amber-400 flex-shrink-0">₹{o.amount.toFixed(0)}</span>
+                  <button onClick={() => openEdit(o)} className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(96,165,250,0.10)', WebkitTapHighlightColor: 'transparent' }}>
+                    <Pencil size={11} className="text-blue-400" />
+                  </button>
+                  <button onClick={() => del(o._id,'other')} className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(248,113,113,0.10)', WebkitTapHighlightColor: 'transparent' }}>
+                    <Trash2 size={11} className="text-red-400" />
+                  </button>
                 </div>
               );
             })
