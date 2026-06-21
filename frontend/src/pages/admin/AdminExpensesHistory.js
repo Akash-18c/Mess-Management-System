@@ -148,18 +148,18 @@ export default function AdminExpensesHistory() {
       </div>
 
       {/* ── Month + Date selectors row ── */}
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex gap-1.5 md:gap-2">
 
         {/* Month picker */}
         <div className="relative flex-1" ref={monthRef}>
           <button onClick={() => { setMonthOpen(o => !o); setDateOpen(false); }}
-            className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs font-semibold"
+            className="w-full flex items-center justify-between gap-1 md:gap-2 px-2 py-1.5 md:px-3 md:py-2 rounded-lg md:rounded-xl text-[10px] md:text-xs font-semibold"
             style={{ ...glass, WebkitTapHighlightColor: 'transparent' }}>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <Calendar size={12} style={{ color: '#2dd4bf', flexShrink: 0 }} />
-              <span className="text-white truncate">{MONTHS_FULL[month-1].slice(0,3)} {year}</span>
+            <div className="flex items-center gap-1 md:gap-1.5 min-w-0">
+              <Calendar size={10} className="md:block hidden" style={{ color: '#2dd4bf', flexShrink: 0 }} />
+              <span className="text-white truncate text-[10px] md:text-xs">{MONTHS_FULL[month-1].slice(0,3)}</span>
             </div>
-            <ChevronDown size={11} className={`text-slate-500 flex-shrink-0 transition-transform ${monthOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={9} className={`text-slate-500 flex-shrink-0 transition-transform hidden md:block ${monthOpen ? 'rotate-180' : ''}`} />
           </button>
           {monthOpen && (
             <div className="absolute left-0 top-full mt-1.5 z-[100] rounded-xl overflow-hidden w-44"
@@ -188,13 +188,13 @@ export default function AdminExpensesHistory() {
         {/* Date picker */}
         <div className="relative flex-1" ref={dateRef}>
           <button onClick={() => { setDateOpen(o => !o); setMonthOpen(false); }}
-            className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs font-semibold"
+            className="w-full flex items-center justify-between gap-1 md:gap-2 px-2 py-1.5 md:px-3 md:py-2 rounded-lg md:rounded-xl text-[10px] md:text-xs font-semibold"
             style={{ ...glass, WebkitTapHighlightColor: 'transparent' }}>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <Search size={12} className="text-slate-400 flex-shrink-0" />
-              <span className="text-white truncate">{selectedDateLabel}</span>
+            <div className="flex items-center gap-1 md:gap-1.5 min-w-0">
+              <Search size={10} className="text-slate-400 flex-shrink-0 hidden md:block" />
+              <span className="text-white truncate text-[10px] md:text-xs">{selDate === 'all' ? 'All' : new Date(selDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>
             </div>
-            <ChevronDown size={11} className={`text-slate-500 flex-shrink-0 transition-transform ${dateOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={9} className={`text-slate-500 flex-shrink-0 transition-transform hidden md:block ${dateOpen ? 'rotate-180' : ''}`} />
           </button>
           {dateOpen && (
             <div className="absolute right-0 top-full mt-1.5 z-[100] rounded-xl overflow-hidden w-48"
@@ -232,15 +232,15 @@ export default function AdminExpensesHistory() {
       </div>
 
       {/* ── Totals strip ── */}
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-3 gap-1.5 md:gap-2">
         {[
           { label: 'Grocery', val: gTotal, c: '#34d399' },
           { label: 'Other',   val: oTotal, c: '#fbbf24' },
           { label: 'Total',   val: gTotal + oTotal, c: '#60a5fa' },
         ].map(({ label, val, c }) => (
-          <div key={label} className="rounded-xl px-3 py-2" style={glass}>
-            <p className="text-[9px] text-slate-500 mb-0.5">{label}</p>
-            <p className="text-xs font-bold truncate" style={{ color: c }}>₹{val.toFixed(0)}</p>
+          <div key={label} className="rounded-lg md:rounded-xl px-2 md:px-3 py-1.5 md:py-2" style={glass}>
+            <p className="text-[8px] md:text-[9px] text-slate-500 mb-0.5">{label}</p>
+            <p className="text-xs md:text-sm font-bold truncate" style={{ color: c }}>₹{val.toFixed(0)}</p>
           </div>
         ))}
       </div>
@@ -282,7 +282,7 @@ export default function AdminExpensesHistory() {
                       </p>
                     </div>
                     {/* Lunch and Dinner side by side */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-3">
                       {/* Lunch Card */}
                       {dateGroup.lunch.length > 0 && dateGroup.lunch.map(group => {
                         const groupTotal = group.items.reduce((s,g) => s+(g.total||g.unitPrice||0), 0);
