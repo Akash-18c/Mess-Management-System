@@ -180,30 +180,70 @@ export default function ManagerExpenses() {
         {tab === 'grocery' ? (
           groceries.length === 0
             ? <div className="rounded-2xl py-12 text-center text-slate-500 text-sm" style={glass}>No grocery entries yet</div>
-            : groceries.map(g => (
-              <div key={g._id} className="rounded-2xl p-3" style={glass}>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-white font-semibold text-sm truncate">{g.item}</p>
-                      {g.meal && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: g.meal==='Lunch'?'rgba(251,191,36,0.15)':'rgba(139,92,246,0.15)', color: g.meal==='Lunch'?'#fbbf24':'#a78bfa', border: g.meal==='Lunch'?'1px solid rgba(251,191,36,0.3)':'1px solid rgba(139,92,246,0.3)' }}>{g.meal==='Lunch'?'☀️ Lunch':'🌙 Dinner'}</span>}
+            : (() => {
+                // Group by date + meal
+                const groups = [];
+                const seen = {};
+                groceries.forEach(g => {
+                  const key = `${g.date?.slice(0,10)}_${g.meal || 'Lunch'}`;
+                  if (!seen[key]) { seen[key] = { key, date: g.date?.slice(0,10), meal: g.meal || 'Lunch', items: [] }; groups.push(seen[key]); }
+                  seen[key].items.push(g);
+                });
+                return groups.map(group => {
+                  const groupTotal = group.items.reduce((s, g) => s + (g.total || g.unitPrice || 0), 0);
+                  const isLunch = group.meal === 'Lunch';
+                  const accentColor = isLunch ? '#fbbf24' : '#a78bfa';
+                  const accentBg    = isLunch ? 'rgba(251,191,36,0.10)'  : 'rgba(139,92,246,0.10)';
+                  const accentBorder= isLunch ? 'rgba(251,191,36,0.22)'  : 'rgba(139,92,246,0.22)';
+                  return (
+                    <div key={group.key} className="rounded-2xl overflow-hidden" style={{ ...glass, border: `1px solid ${accentBorder}` }}>
+                      {/* Group header */}
+                      <div className="flex items-center justify-between px-4 py-2.5" style={{ background: accentBg, borderBottom: `1px solid ${accentBorder}` }}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{isLunch ? '☀️' : '🌙'}</span>
+                          <span className="text-xs font-bold" style={{ color: accentColor }}>{isLunch ? 'Lunch' : 'Dinner'}</span>
+                          <span className="text-slate-500 text-xs">·</span>
+                          <span className="text-slate-400 text-xs">
+                            {new Date(group.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.10)' }}>
+                            {group.items.length} item{group.items.length > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <span className="text-sm font-bold" style={{ color: accentColor }}>₹{groupTotal.toFixed(0)}</span>
+                      </div>
+                      {/* Items */}
+                      {group.items.map((g, idx) => (
+                        <div key={g._id}
+                          className="flex items-center justify-between gap-2 px-4 py-2.5"
+                          style={{ borderBottom: idx < group.items.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-white text-sm font-medium truncate">{g.item}</p>
+                            <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                              {g.quantity && <span className="text-[10px] text-slate-500">Qty: {g.quantity}</span>}
+                              <span className="text-[10px] text-slate-500">₹{g.unitPrice}/unit</span>
+                              {g.buyerName && <span className="text-[10px] text-slate-500">· {g.buyerName}</span>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-sm font-bold text-green-400">₹{(g.total || g.unitPrice || 0).toFixed(0)}</span>
+                            <button onClick={() => del(g._id,'grocery')} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(248,113,113,0.10)', WebkitTapHighlightColor: 'transparent' }}>
+                              <Trash2 size={12} className="text-red-400" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      {/* Subtotal footer (only when >1 item) */}
+                      {group.items.length > 1 && (
+                        <div className="flex items-center justify-between px-4 py-2" style={{ background: 'rgba(255,255,255,0.02)', borderTop: `1px solid ${accentBorder}` }}>
+                          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Subtotal</span>
+                          <span className="text-sm font-bold" style={{ color: accentColor }}>₹{groupTotal.toFixed(2)}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      {g.quantity && <span className="text-[10px] text-slate-500">Qty: {g.quantity}</span>}
-                      <span className="text-[10px] text-slate-500">₹{g.unitPrice}/unit</span>
-                      {g.buyerName && <span className="text-[10px] text-slate-500">· {g.buyerName}</span>}
-                      <span className="text-[10px] text-slate-600">{new Date(g.date).toLocaleDateString('en-IN', { day:'numeric', month:'short' })}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-sm font-bold text-green-400">₹{(g.total || g.unitPrice || 0).toFixed(0)}</span>
-                    <button onClick={() => del(g._id,'grocery')} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(248,113,113,0.10)', WebkitTapHighlightColor: 'transparent' }}>
-                      <Trash2 size={13} className="text-red-400" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
+                  );
+                });
+              })()
         ) : (
           others.length === 0
             ? <div className="rounded-2xl py-12 text-center text-slate-500 text-sm" style={glass}>No other expenses yet</div>
