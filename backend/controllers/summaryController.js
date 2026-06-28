@@ -26,8 +26,8 @@ async function recalcSummary(month, year) {
   const ricePaidTotal   = parseFloat(paidRice.reduce((s, e) => s + e.amount, 0).toFixed(2));
   const otherOnlyPaid   = parseFloat(paidOtherOnly.reduce((s, e) => s + e.amount, 0).toFixed(2));
 
-  // mealRate is based on grocery ONLY — other expenses split separately per member
-  const grandTotal = groceryTotal;
+  // mealRate includes grocery + paid rice bag — rice bag folded into grocery pool
+  const grandTotal = parseFloat((groceryTotal + ricePaidTotal).toFixed(2));
 
   let totalMeals = 0;
   meals.forEach((m) => {
@@ -38,7 +38,7 @@ async function recalcSummary(month, year) {
 
   const mealRate = totalMeals > 0 ? parseFloat((grandTotal / totalMeals).toFixed(2)) : 0;
   const gasPerMember        = activeMembers > 0 ? parseFloat((gasPaidTotal  / activeMembers).toFixed(2)) : 0;
-  const ricePerMember       = activeMembers > 0 ? parseFloat((ricePaidTotal / activeMembers).toFixed(2)) : 0;
+  const ricePerMember       = 0; // folded into mealRate via grandTotal
   const otherPaidPerMember  = activeMembers > 0 ? parseFloat((otherOnlyPaid / activeMembers).toFixed(2)) : 0;
 
   const totalCollected = parseFloat(payments.reduce((s, p) => s + p.amount, 0).toFixed(2));

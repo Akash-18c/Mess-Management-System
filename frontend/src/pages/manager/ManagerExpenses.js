@@ -186,33 +186,33 @@ export default function ManagerExpenses() {
     <div className="space-y-4 pb-8">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between gap-2 rounded-2xl p-2 px-3" style={glass}>
+      <div className="flex items-center justify-between gap-3 rounded-2xl p-4" style={glass}>
         <div className="min-w-0">
-          <h1 className="text-sm md:text-base font-bold text-white leading-tight">Expenses</h1>
-          <p className="text-[8px] md:text-[10px] text-slate-500 mt-0.5">Grocery &amp; other</p>
+          <h1 className="text-base md:text-lg font-bold text-white leading-tight">Expenses</h1>
+          <p className="text-[11px] text-slate-500 mt-0.5">Grocery &amp; other expenses</p>
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1 text-[10px] md:text-xs font-semibold text-white px-2 py-1.5 md:px-3 md:py-2 rounded-lg md:rounded-xl active:scale-95 flex-shrink-0"
-          style={{ background: 'linear-gradient(135deg,#10b981,#059669)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s' }}
+          className="flex items-center gap-2 text-sm font-semibold text-white px-4 py-2.5 rounded-xl active:scale-95 flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg,#10b981,#059669)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s', boxShadow: '0 4px 14px rgba(16,185,129,0.35)' }}
         >
-          <Plus size={11} /> Add
+          <Plus size={15} /> Add Expense
         </button>
       </div>
 
       {/* ── Month + Date selectors row ── */}
-      <div className="flex gap-1.5 md:gap-2">
+      <div className="flex gap-2">
 
         {/* Month picker */}
         <div className="relative flex-1" ref={monthRef}>
           <button onClick={() => { setMonthOpen(o => !o); setDateOpen(false); }}
-            className="w-full flex items-center justify-between gap-1 md:gap-2 px-2 py-1.5 md:px-3 md:py-2 rounded-lg md:rounded-xl text-[10px] md:text-xs font-semibold"
+            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold"
             style={{ ...glass, WebkitTapHighlightColor: 'transparent' }}>
-            <div className="flex items-center gap-1 md:gap-1.5 min-w-0">
-              <Calendar size={10} className="md:block hidden" style={{ color: '#10b981', flexShrink: 0 }} />
-              <span className="text-white truncate text-[10px] md:text-xs">{MONTHS_FULL[month-1].slice(0,3)}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Calendar size={13} style={{ color: '#10b981', flexShrink: 0 }} />
+              <span className="text-white truncate">{MONTHS_FULL[month-1]} {year}</span>
             </div>
-            <ChevronDown size={9} className={`text-slate-500 flex-shrink-0 transition-transform md:block hidden ${monthOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={12} className={`text-slate-500 flex-shrink-0 transition-transform ${monthOpen ? 'rotate-180' : ''}`} />
           </button>
           {monthOpen && (
             <div className="absolute left-0 top-full mt-1.5 z-[100] rounded-xl overflow-hidden w-44"
@@ -241,13 +241,13 @@ export default function ManagerExpenses() {
         {/* Date picker */}
         <div className="relative flex-1" ref={dateRef}>
           <button onClick={() => { setDateOpen(o => !o); setMonthOpen(false); }}
-            className="w-full flex items-center justify-between gap-1 md:gap-2 px-2 py-1.5 md:px-3 md:py-2 rounded-lg md:rounded-xl text-[10px] md:text-xs font-semibold"
+            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold"
             style={{ ...glass, WebkitTapHighlightColor: 'transparent' }}>
-            <div className="flex items-center gap-1 md:gap-1.5 min-w-0">
-              <Search size={10} className="text-slate-400 flex-shrink-0 hidden md:block" />
-              <span className="text-white truncate text-[10px] md:text-xs">{selDate === 'all' ? 'All' : new Date(selDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Search size={13} className="text-slate-400 flex-shrink-0" />
+              <span className="text-white truncate">{selDate === 'all' ? 'All Dates' : new Date(selDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</span>
             </div>
-            <ChevronDown size={9} className={`text-slate-500 flex-shrink-0 transition-transform hidden md:block ${dateOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={12} className={`text-slate-500 flex-shrink-0 transition-transform ${dateOpen ? 'rotate-180' : ''}`} />
           </button>
           {dateOpen && (
             <div className="absolute right-0 top-full mt-1.5 z-[100] rounded-xl overflow-hidden w-48"
@@ -285,15 +285,18 @@ export default function ManagerExpenses() {
       </div>
 
       {/* ── Summary Cards ── */}
-      <div className="grid grid-cols-3 gap-1.5 md:gap-2">
+      <div className="grid grid-cols-3 gap-2">
         {[
-          { label: 'Grocery', value: gTotal, color: '#34d399' },
-          { label: 'Other',   value: oTotal, color: '#fbbf24' },
-          { label: 'Total',   value: gTotal + oTotal, color: '#60a5fa' },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="rounded-lg md:rounded-2xl p-2 md:p-3" style={glass}>
-            <p className="text-[8px] md:text-[10px] text-slate-500 mb-0.5 md:mb-1">{label}</p>
-            <p className="text-xs md:text-sm font-bold truncate" style={{ color }}>₹{value.toFixed(0)}</p>
+          { label: 'Grocery', value: gTotal, color: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.20)', icon: '🛒' },
+          { label: 'Other',   value: oTotal, color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.20)', icon: '📦' },
+          { label: 'Total',   value: gTotal + oTotal, color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.20)', icon: '💰' },
+        ].map(({ label, value, color, bg, border, icon }) => (
+          <div key={label} className="rounded-2xl p-3" style={{ background: bg, border: `1px solid ${border}`, backdropFilter: 'blur(40px)' }}>
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-base">{icon}</span>
+              <p className="text-[11px] font-medium text-slate-400">{label}</p>
+            </div>
+            <p className="text-lg font-bold" style={{ color }}>₹{value.toFixed(0)}</p>
           </div>
         ))}
       </div>
