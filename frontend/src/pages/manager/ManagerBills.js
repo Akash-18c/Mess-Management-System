@@ -103,7 +103,6 @@ export default function ManagerBills() {
                     { h: 'Per Meal',       cls: 'text-right' },
                     { h: 'Meal Cost',      cls: 'text-right' },
                     { h: 'Gas',            cls: 'text-right' },
-                    { h: 'Rice',           cls: 'text-right' },
                     { h: 'Other Exp',      cls: 'text-right' },
                     { h: 'Other Chg',      cls: 'text-right' },
                     { h: 'Masi',           cls: 'text-right' },
@@ -146,8 +145,6 @@ export default function ManagerBills() {
                       <td className="py-2.5 px-2 text-right text-slate-200">₹{(b.mealCost ?? (b.mealCount * mealRate)).toFixed(2)}</td>
                       {/* Gas */}
                       <td className="py-2.5 px-2 text-right" style={{ color: (b.gasCharge || 0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.gasCharge || 0).toFixed(2)}</td>
-                      {/* Rice */}
-                      <td className="py-2.5 px-2 text-right" style={{ color: (b.riceCharge || 0) > 0 ? '#a3e635' : '#475569' }}>₹{(b.riceCharge || 0).toFixed(2)}</td>
                       {/* Other Shared */}
                       <td className="py-2.5 px-2 text-right" style={{ color: (b.otherSharedCharge || 0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.otherSharedCharge || 0).toFixed(2)}</td>
                       {/* Individual Other Charges */}
