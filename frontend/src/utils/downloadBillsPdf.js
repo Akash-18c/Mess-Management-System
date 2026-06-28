@@ -96,13 +96,14 @@ function generate({ bills, summary, month, year }) {
 
     const tableRows = bills.map((b) => {
       const due = b.dueAmount ?? 0;
-      // Use stored mealCost if available, fallback to mealCount × rate
       const mealCost = (b.mealCost ?? (b.mealCount || 0) * mealRate).toFixed(2);
       return [
         rn(b.memberId?.name),
         String(b.mealCount || 0),
         `Rs ${mealRate.toFixed(2)}`,
         `Rs ${mealCost}`,
+        `Rs ${(b.gasCharge || 0).toFixed(2)}`,
+        `Rs ${(b.otherSharedCharge || 0).toFixed(2)}`,
         `Rs ${(b.otherCharges || 0).toFixed(2)}`,
         `Rs ${(b.masiSalary || 0).toFixed(2)}`,
         `Rs ${(b.advance || 0).toFixed(2)}`,
@@ -112,7 +113,7 @@ function generate({ bills, summary, month, year }) {
 
     autoTable(doc, {
       startY: cardY + 24,
-      head: [['Member', 'Meals', 'Per Meal', 'Meal Cost', 'Other', 'Masi', 'Advance', 'Due / Refund']],
+      head: [['Member', 'Meals', 'Per Meal', 'Meal Cost', 'Gas', 'Other Exp', 'Other Chg', 'Masi', 'Advance', 'Due / Refund']],
       body: tableRows,
       theme: 'plain',
       styles: { font: 'helvetica', fontSize: 8.5, textColor: [226, 232, 240], cellPadding: { top: 3.5, bottom: 3.5, left: 3, right: 3 }, lineColor: [30, 45, 80], lineWidth: 0.25 },
@@ -123,14 +124,16 @@ function generate({ bills, summary, month, year }) {
         2: { halign: 'right', textColor: [251, 191, 36] },
         3: { halign: 'right' },
         4: { halign: 'right', textColor: [251, 146, 60] },
-        5: { halign: 'right', textColor: [148, 163, 184] },
-        6: { halign: 'right', textColor: [74, 222, 128] },
-        7: { halign: 'right' },
+        5: { halign: 'right', textColor: [251, 146, 60] },
+        6: { halign: 'right', textColor: [244, 114, 182] },
+        7: { halign: 'right', textColor: [148, 163, 184] },
+        8: { halign: 'right', textColor: [74, 222, 128] },
+        9: { halign: 'right' },
       },
       alternateRowStyles: { fillColor: [14, 22, 44] },
       bodyStyles: { fillColor: [10, 16, 34] },
       didParseCell(data) {
-        if (data.section === 'body' && data.column.index === 7) {
+        if (data.section === 'body' && data.column.index === 9) {
           const v = String(data.cell.raw);
           data.cell.styles.textColor = v.startsWith('-') ? [52, 211, 153] : [248, 113, 113];
           data.cell.styles.fontStyle = 'bold';

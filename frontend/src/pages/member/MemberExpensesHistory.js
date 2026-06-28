@@ -171,16 +171,13 @@ export default function MemberExpensesHistory() {
       {/* ── Totals ── */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label:'Grocery', val:gTotal,          color:'#34d399', bg:'rgba(52,211,153,0.08)',  border:'rgba(52,211,153,0.20)',  icon:'🛒' },
-          { label:'Other',   val:oTotal,          color:'#fbbf24', bg:'rgba(251,191,36,0.08)',  border:'rgba(251,191,36,0.20)',  icon:'📦' },
-          { label:'Total',   val:gTotal+oTotal,   color:'#60a5fa', bg:'rgba(96,165,250,0.08)',  border:'rgba(96,165,250,0.20)',  icon:'💰' },
-        ].map(({label,val,color,bg,border,icon})=>(
-          <div key={label} className="rounded-2xl p-3" style={{ background:bg, border:`1px solid ${border}`, backdropFilter:'blur(40px)' }}>
-            <div className="flex items-center gap-1.5 mb-2">
-              <span className="text-base">{icon}</span>
-              <p className="text-[11px] font-medium text-slate-400">{label}</p>
-            </div>
-            <p className="text-lg font-bold" style={{ color }}>₹{val.toFixed(0)}</p>
+          { label:'Grocery', val:gTotal,        color:'#34d399', border:'rgba(52,211,153,0.18)'  },
+          { label:'Other',   val:oTotal,        color:'#fbbf24', border:'rgba(251,191,36,0.18)'  },
+          { label:'Total',   val:gTotal+oTotal, color:'#60a5fa', border:'rgba(96,165,250,0.18)'  },
+        ].map(({label,val,color,border})=>(
+          <div key={label} className="rounded-2xl p-3" style={{ background:'rgba(255,255,255,0.05)', backdropFilter:'blur(40px)', WebkitBackdropFilter:'blur(40px)', border:`1px solid ${border}`, boxShadow:'0 4px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.07)' }}>
+            <p className="text-[10px] font-medium text-slate-500 mb-1.5 uppercase tracking-wide">{label}</p>
+            <p className="text-xl font-bold" style={{ color }}>₹{val.toFixed(0)}</p>
           </div>
         ))}
       </div>
