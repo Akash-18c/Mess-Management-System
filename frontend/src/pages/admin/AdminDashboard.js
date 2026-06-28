@@ -29,11 +29,11 @@ function buildMonthRange() {
 const BAR_COLORS = ['#2dd4bf','#34d399','#22c55e','#4ade80','#14b8a6','#06b6d4','#38bdf8','#60a5fa'];
 
 const glass = {
-  background: 'rgba(255,255,255,0.03)',
-  backdropFilter: 'blur(24px)',
-  WebkitBackdropFilter: 'blur(24px)',
-  border: '1px solid rgba(255,255,255,0.07)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+  background: 'rgba(255,255,255,0.04)',
+  backdropFilter: 'blur(32px)',
+  WebkitBackdropFilter: 'blur(32px)',
+  border: '1px solid rgba(255,255,255,0.10)',
+  boxShadow: '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)',
 };
 
 const tooltipStyle = {
@@ -132,59 +132,72 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* ── Background Orbs ── */}
+      <div aria-hidden="true" style={{ pointerEvents: 'none', position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '45vw', height: '45vw', maxWidth: 520, maxHeight: 520, background: 'radial-gradient(circle, rgba(20,184,166,0.09) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', bottom: '5%', right: '-8%', width: '40vw', height: '40vw', maxWidth: 480, maxHeight: 480, background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(48px)' }} />
+        <div style={{ position: 'absolute', top: '40%', left: '35%', width: '30vw', height: '30vw', maxWidth: 360, maxHeight: 360, background: 'radial-gradient(circle, rgba(45,212,191,0.05) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(60px)' }} />
+      </div>
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <Sparkles size={18} style={{ color: '#2dd4bf' }} />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg,rgba(20,184,166,0.25),rgba(45,212,191,0.12))', border: '1px solid rgba(45,212,191,0.30)', boxShadow: '0 0 20px rgba(20,184,166,0.18)' }}>
+              <Sparkles size={16} style={{ color: '#2dd4bf' }} />
+            </div>
             <h1 style={{
               fontFamily: "'Dancing Script', cursive",
-              fontSize: '2rem', fontWeight: 700,
+              fontSize: 'clamp(1.5rem,5vw,2.1rem)', fontWeight: 700,
               background: 'linear-gradient(135deg,#ffffff 0%,#99f6e4 40%,#2dd4bf 75%,#0d9488 100%)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}>Admin Dashboard</h1>
           </div>
-          <p className="text-slate-500 text-xs mt-0.5 pl-6">Viewing · {selectedLabel}</p>
+          <p className="text-slate-500 text-xs mt-1 pl-11">Viewing · <span style={{ color: '#5eead4' }}>{selectedLabel}</span></p>
         </div>
 
         {/* ── Month Dropdown ── */}
-        <div className="relative" ref={dropRef}>
+        <div className="relative w-full sm:w-auto" ref={dropRef}>
           <button
             onClick={() => setDropdownOpen(o => !o)}
-            className="flex items-center gap-2.5 text-sm font-semibold text-white transition-all duration-200"
+            className="flex items-center gap-2.5 text-sm font-semibold text-white transition-all duration-200 w-full sm:w-auto"
             style={{
               background: 'rgba(20,184,166,0.10)',
               backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(20,184,166,0.28)',
-              borderRadius: '14px', padding: '10px 16px', minWidth: '215px',
+              border: dropdownOpen ? '1px solid rgba(20,184,166,0.50)' : '1px solid rgba(20,184,166,0.28)',
+              borderRadius: '14px', padding: '11px 16px',
+              minWidth: '215px', width: '100%',
               justifyContent: 'space-between',
-              boxShadow: '0 4px 20px rgba(20,184,166,0.12)',
+              boxShadow: dropdownOpen ? '0 0 0 3px rgba(20,184,166,0.12), 0 4px 20px rgba(20,184,166,0.18)' : '0 4px 20px rgba(20,184,166,0.10)',
             }}
           >
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(20,184,166,0.18)' }}>
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(20,184,166,0.20)', border: '1px solid rgba(20,184,166,0.25)' }}>
                 <Calendar size={14} style={{ color: '#2dd4bf' }} />
               </div>
-              <span>{selectedLabel}</span>
+              <span className="truncate">{selectedLabel}</span>
             </div>
-            <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={15} className={`text-teal-400 transition-transform duration-300 flex-shrink-0 ml-2 ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden" style={{
-              minWidth: '244px',
-              background: 'rgba(8,14,28,0.97)',
-              backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(20,184,166,0.20)',
-              boxShadow: '0 24px 60px rgba(0,0,0,0.8)',
-            }}>
-              <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(20,184,166,0.07)' }}>
+            <div
+              className="absolute left-0 right-0 sm:left-auto sm:right-0 top-full mt-2 z-[9999] rounded-2xl overflow-hidden"
+              style={{
+                minWidth: '244px',
+                background: 'rgba(6,10,22,0.98)',
+                backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)',
+                border: '1px solid rgba(20,184,166,0.25)',
+                boxShadow: '0 24px 60px rgba(0,0,0,0.85), 0 0 0 1px rgba(20,184,166,0.08)',
+              }}
+            >
+              <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(20,184,166,0.08)' }}>
                 <Calendar size={13} style={{ color: '#2dd4bf' }} />
                 <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#2dd4bf' }}>Select Month</p>
               </div>
-              <div className="max-h-72 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+              <div className="overflow-y-auto" style={{ maxHeight: '60vh', scrollbarWidth: 'thin' }}>
                 {monthOptions.map(o => {
                   const isSel = o.month === selectedMonth && o.year === selectedYear;
                   return (
@@ -193,36 +206,37 @@ export default function AdminDashboard() {
                       onClick={() => { setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
                       className="w-full text-left flex items-center justify-between"
                       style={{
-                        padding: '10px 16px',
-                        background: isSel ? 'rgba(20,184,166,0.12)' : 'transparent',
-                        borderLeft: isSel ? '2px solid #14b8a6' : '2px solid transparent',
+                        padding: '11px 16px',
+                        background: isSel ? 'rgba(20,184,166,0.14)' : 'transparent',
+                        borderLeft: isSel ? '3px solid #14b8a6' : '3px solid transparent',
                         borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        transition: 'background 0.15s',
                         WebkitTapHighlightColor: 'transparent',
                       }}
-                      onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                      onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
                       onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
                     >
                       <div className="flex items-center gap-2.5">
-                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                          style={{ background: o.hasData ? (o.isClosed ? '#f87171' : '#34d399') : '#334155' }} />
+                        <div className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ background: o.hasData ? (o.isClosed ? '#f87171' : '#34d399') : '#334155', boxShadow: o.hasData ? `0 0 6px ${o.isClosed ? '#f87171' : '#34d399'}` : 'none' }} />
                         <span className="text-sm font-medium" style={{ color: isSel ? '#2dd4bf' : '#cbd5e1' }}>
                           {MONTHS_FULL[o.month - 1].slice(0,3)} {o.year}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
                         {o.isCurrent && (
-                          <span style={{ fontSize: '9px', background: 'rgba(20,184,166,0.20)', color: '#2dd4bf', border: '1px solid rgba(20,184,166,0.35)', padding: '2px 7px', borderRadius: '999px', fontWeight: 700 }}>LIVE</span>
+                          <span style={{ fontSize: '9px', background: 'rgba(20,184,166,0.22)', color: '#2dd4bf', border: '1px solid rgba(20,184,166,0.40)', padding: '2px 7px', borderRadius: '999px', fontWeight: 700, letterSpacing: '0.05em' }}>LIVE</span>
                         )}
                         {o.hasData && (o.isClosed
-                          ? <span style={{ fontSize: '9px', background: 'rgba(248,113,113,0.12)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)', padding: '2px 7px', borderRadius: '999px' }}>Closed</span>
-                          : <span style={{ fontSize: '9px', background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.25)', padding: '2px 7px', borderRadius: '999px' }}>Open</span>
+                          ? <span style={{ fontSize: '9px', background: 'rgba(248,113,113,0.14)', color: '#f87171', border: '1px solid rgba(248,113,113,0.28)', padding: '2px 7px', borderRadius: '999px' }}>Closed</span>
+                          : <span style={{ fontSize: '9px', background: 'rgba(52,211,153,0.14)', color: '#34d399', border: '1px solid rgba(52,211,153,0.28)', padding: '2px 7px', borderRadius: '999px' }}>Open</span>
                         )}
                       </div>
                     </button>
                   );
                 })}
               </div>
-              <div className="flex items-center gap-4 px-4 py-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
+              <div className="flex items-center gap-4 px-4 py-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.20)' }}>
                 {[['#34d399','Open'],['#f87171','Closed'],['#334155','No data']].map(([c,l]) => (
                   <span key={l} className="flex items-center gap-1.5 text-[9px] text-slate-500">
                     <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: c }} />{l}
@@ -235,19 +249,32 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {statCards.map(({ label, value, icon: Icon, truncate }) => (
-          <div key={label} className="rounded-2xl p-5" style={glass}>
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.09)' }}>
-                <Icon size={18} className="text-slate-300" />
+      <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {statCards.map(({ label, value, icon: Icon, truncate }, idx) => {
+          const accents = [
+            { from: 'rgba(45,212,191,0.22)', to: 'rgba(20,184,166,0.08)', glow: 'rgba(45,212,191,0.18)', iconBg: 'rgba(45,212,191,0.18)', iconBorder: 'rgba(45,212,191,0.30)', iconColor: '#2dd4bf' },
+            { from: 'rgba(99,102,241,0.20)', to: 'rgba(79,70,229,0.08)',  glow: 'rgba(99,102,241,0.18)', iconBg: 'rgba(99,102,241,0.18)', iconBorder: 'rgba(99,102,241,0.30)', iconColor: '#a78bfa' },
+            { from: 'rgba(249,115,22,0.18)', to: 'rgba(234,88,12,0.06)',  glow: 'rgba(249,115,22,0.15)', iconBg: 'rgba(249,115,22,0.18)', iconBorder: 'rgba(249,115,22,0.30)', iconColor: '#fb923c' },
+          ];
+          const ac = accents[idx] || accents[0];
+          return (
+            <div key={label} className="rounded-2xl p-5 relative overflow-hidden" style={{
+              ...glass,
+              background: `linear-gradient(135deg, ${ac.from} 0%, rgba(255,255,255,0.03) 60%, ${ac.to} 100%)`,
+              boxShadow: `0 8px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.10)`,
+            }}>
+              <div aria-hidden="true" style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: `radial-gradient(circle, ${ac.glow} 0%, transparent 70%)`, borderRadius: '50%', pointerEvents: 'none' }} />
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center"
+                  style={{ background: ac.iconBg, border: `1px solid ${ac.iconBorder}`, boxShadow: `0 4px 16px ${ac.glow}` }}>
+                  <Icon size={19} style={{ color: ac.iconColor }} />
+                </div>
               </div>
+              <p className={`font-bold text-white mb-1 ${truncate ? 'text-base truncate' : 'text-2xl'}`}>{value}</p>
+              <p className="text-xs font-medium" style={{ color: '#64748b' }}>{label}</p>
             </div>
-            <p className={`font-bold text-white mb-1 ${truncate ? 'text-base truncate' : 'text-2xl'}`}>{value}</p>
-            <p className="text-xs text-slate-500 font-medium">{label}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── Shared Dashboard ── */}
@@ -330,9 +357,9 @@ export default function AdminDashboard() {
       )}
 
       {/* ── Charts ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 rounded-2xl p-5" style={glass}>
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div>
               <h3 className="font-semibold text-white flex items-center gap-2">
                 <Activity size={15} style={{ color: '#2dd4bf' }} /> Expense Trend
@@ -340,8 +367,8 @@ export default function AdminDashboard() {
               <p className="text-slate-500 text-xs mt-0.5">All months overview</p>
             </div>
             <div className="flex items-center gap-3 text-xs text-slate-500">
-              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full inline-block bg-teal-400" />Expense</span>
-              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full inline-block bg-orange-400" />Rate</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: '#14b8a6', boxShadow: '0 0 6px #14b8a6' }} />Expense</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: '#f97316', boxShadow: '0 0 6px #f97316' }} />Rate</span>
             </div>
           </div>
           {chartData.length > 0 ? (
@@ -398,13 +425,13 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── All Months Table ── */}
-      <div className="rounded-2xl overflow-hidden" style={glass}>
-        <div className="p-5 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="relative rounded-2xl overflow-hidden" style={glass}>
+        <div className="p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div>
             <h3 className="font-semibold text-white">All Months</h3>
-            <p className="text-slate-500 text-xs mt-0.5">{allSummaries.length} months recorded — click to view</p>
+            <p className="text-slate-500 text-xs mt-0.5">{allSummaries.length} months recorded — tap to view</p>
           </div>
-          <button onClick={() => navigate('/admin/assignments')} className="btn-primary text-sm px-4 py-2">Assign Manager</button>
+          <button onClick={() => navigate('/admin/assignments')} className="btn-primary text-sm px-4 py-2 self-start sm:self-auto">Assign Manager</button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

@@ -4,28 +4,39 @@
 
 @layer base {
   body {
-    background: #0a0f1e;
+    background: #070c1a;
     @apply text-white font-sans;
   }
   * {
     scrollbar-width: thin;
-    scrollbar-color: #2d3a5c #0d1528;
+    scrollbar-color: #1e2d4a #0a1020;
   }
-  *::-webkit-scrollbar { width: 6px; height: 6px; }
-  *::-webkit-scrollbar-track { background: #0d1528; }
-  *::-webkit-scrollbar-thumb { background: #2d3a5c; border-radius: 3px; }
+  *::-webkit-scrollbar { width: 5px; height: 5px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: #1e2d4a; border-radius: 4px; }
+  *::-webkit-scrollbar-thumb:hover { background: #2d3f5c; }
 }
 
 @layer components {
   .card {
     background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.09);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07);
     @apply rounded-2xl p-5;
+  }
+  .glass-dropdown {
+    background: rgba(6,10,22,0.97);
+    border: 1px solid rgba(255,255,255,0.10);
+    backdrop-filter: blur(48px);
+    -webkit-backdrop-filter: blur(48px);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.85);
+    @apply rounded-2xl overflow-hidden;
   }
   .btn-primary {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 4px 16px rgba(16,185,129,0.25);
     @apply text-white font-semibold px-4 py-2 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 hover:shadow-lg;
   }
   .btn-secondary {

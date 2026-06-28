@@ -81,30 +81,39 @@ export default function AdminLayout() {
   );
 
   const sidebarStyle = {
-    background: 'linear-gradient(180deg, #0d1528 0%, #0a1020 100%)',
-    borderRight: '1px solid rgba(255,255,255,0.07)',
+    background: 'rgba(8,13,28,0.92)',
+    backdropFilter: 'blur(40px)',
+    WebkitBackdropFilter: 'blur(40px)',
+    borderRight: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '4px 0 40px rgba(0,0,0,0.5)',
   };
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #0a0f1e 0%, #060d1a 50%, #0a0f1e 100%)' }}>
-      <aside className="hidden lg:flex flex-col w-64" style={sidebarStyle}>
+    <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #070c1a 0%, #050b16 50%, #070c1a 100%)' }}>
+      {/* Ambient background */}
+      <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '-15%', left: '10%', width: '50vw', height: '50vw', maxWidth: 600, maxHeight: 600, background: 'radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 65%)', borderRadius: '50%', filter: 'blur(60px)' }} />
+        <div style={{ position: 'absolute', bottom: '-10%', right: '5%', width: '40vw', height: '40vw', maxWidth: 480, maxHeight: 480, background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 65%)', borderRadius: '50%', filter: 'blur(60px)' }} />
+      </div>
+
+      <aside className="hidden lg:flex flex-col w-64 relative z-10 flex-shrink-0" style={sidebarStyle}>
         <SidebarContent />
       </aside>
 
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-64 flex flex-col" style={sidebarStyle}>
+          <div className="absolute inset-0 bg-black/75 backdrop-blur-md" onClick={() => setOpen(false)} />
+          <aside className="absolute left-0 top-0 h-full w-64 flex flex-col z-10" style={sidebarStyle}>
             <SidebarContent />
           </aside>
         </div>
       )}
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="lg:hidden flex items-center justify-between px-4 py-3" style={{ background: 'rgba(13,21,40,0.95)', borderBottom: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(20px)' }}>
-          <button onClick={() => setOpen(true)} className="text-slate-400 hover:text-white"><Menu size={22} /></button>
+      <div className="flex-1 flex flex-col overflow-hidden relative z-10">
+        <header className="lg:hidden flex items-center justify-between px-4 py-3" style={{ background: 'rgba(6,10,22,0.90)', borderBottom: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', boxShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>
+          <button onClick={() => setOpen(true)} className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors" style={{ color: '#94a3b8', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)' }}><Menu size={20} /></button>
           <div className="flex items-center gap-2">
-            <img src="/messy-logo.png" alt="logo" className="w-7 h-7 object-contain" />
+            <img src="/messy-logo.png" alt="logo" className="w-7 h-7 object-contain" style={{ filter: 'drop-shadow(0 0 6px rgba(16,185,129,0.5))' }} />
             <span style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.1rem', fontWeight: 700, background: 'linear-gradient(135deg,#34d399,#059669)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>The Messy Kitchen</span>
           </div>
           <span className="badge-admin">Admin</span>
