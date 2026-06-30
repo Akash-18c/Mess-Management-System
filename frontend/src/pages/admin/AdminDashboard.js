@@ -162,24 +162,24 @@ export default function AdminDashboard() {
         <div className="relative w-full sm:w-auto" ref={dropRef}>
           <button
             onClick={() => setDropdownOpen(o => !o)}
-            className="flex items-center gap-2.5 text-sm font-semibold text-white transition-all duration-200 w-full sm:w-auto"
+            className="flex items-center gap-2 text-sm font-semibold text-white transition-all duration-150 w-full sm:w-auto"
             style={{
-              background: 'rgba(20,184,166,0.10)',
-              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-              border: dropdownOpen ? '1px solid rgba(20,184,166,0.50)' : '1px solid rgba(20,184,166,0.28)',
-              borderRadius: '14px', padding: '11px 16px',
-              minWidth: '215px', width: '100%',
+              background: 'rgba(15,23,42,0.65)',
+              backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+              border: dropdownOpen ? '1px solid rgba(99,102,241,0.22)' : '1px solid rgba(148,163,184,0.06)',
+              borderRadius: '10px', padding: '8px 12px',
+              minWidth: '160px', width: '100%',
               justifyContent: 'space-between',
-              boxShadow: dropdownOpen ? '0 0 0 3px rgba(20,184,166,0.12), 0 4px 20px rgba(20,184,166,0.18)' : '0 4px 20px rgba(20,184,166,0.10)',
+              boxShadow: dropdownOpen ? '0 8px 28px rgba(15,23,42,0.6)' : '0 6px 18px rgba(2,6,23,0.6)',
             }}
           >
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(20,184,166,0.20)', border: '1px solid rgba(20,184,166,0.25)' }}>
-                <Calendar size={14} style={{ color: '#2dd4bf' }} />
+              <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.14)' }}>
+                <Calendar size={13} style={{ color: '#7c3aed' }} />
               </div>
               <span className="truncate">{selectedLabel}</span>
             </div>
-            <ChevronDown size={15} className={`text-teal-400 transition-transform duration-300 flex-shrink-0 ml-2 ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={15} className={`text-slate-300 transition-transform duration-200 flex-shrink-0 ml-2 ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {dropdownOpen && (
@@ -258,20 +258,20 @@ export default function AdminDashboard() {
           ];
           const ac = accents[idx] || accents[0];
           return (
-            <div key={label} className="rounded-2xl p-5 relative overflow-hidden" style={{
+            <div key={label} className="rounded-2xl p-3 relative overflow-hidden" style={{
               ...glass,
-              background: `linear-gradient(135deg, ${ac.from} 0%, rgba(255,255,255,0.03) 60%, ${ac.to} 100%)`,
-              boxShadow: `0 8px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.10)`,
+                background: `linear-gradient(135deg, ${ac.from} 0%, rgba(255,255,255,0.02) 60%, ${ac.to} 100%)`,
+                boxShadow: `0 6px 20px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04)`,
             }}>
               <div aria-hidden="true" style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: `radial-gradient(circle, ${ac.glow} 0%, transparent 70%)`, borderRadius: '50%', pointerEvents: 'none' }} />
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center"
-                  style={{ background: ac.iconBg, border: `1px solid ${ac.iconBorder}`, boxShadow: `0 4px 16px ${ac.glow}` }}>
-                  <Icon size={19} style={{ color: ac.iconColor }} />
+                <div className="flex items-start justify-between mb-2">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+                    style={{ background: ac.iconBg, border: `1px solid ${ac.iconBorder}`, boxShadow: `0 3px 12px ${ac.glow}` }}>
+                    <Icon size={16} style={{ color: ac.iconColor }} />
+                  </div>
                 </div>
-              </div>
-              <p className={`font-bold text-white mb-1 ${truncate ? 'text-base truncate' : 'text-2xl'}`}>{value}</p>
-              <p className="text-xs font-medium" style={{ color: '#64748b' }}>{label}</p>
+                <p className={`font-bold text-white mb-1 ${truncate ? 'text-sm truncate' : 'text-lg'}`}>{value}</p>
+                <p className="text-[12px] font-medium" style={{ color: '#94a3b8' }}>{label}</p>
             </div>
           );
         })}
@@ -436,9 +436,9 @@ export default function AdminDashboard() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                 {['Month','Manager','Expense','Rate','Status'].map((h, i) => (
-                  <th key={h} className={`py-3 px-4 text-slate-500 font-semibold text-xs uppercase tracking-wider ${i >= 2 ? 'text-right' : ''} ${i === 4 ? 'text-center' : ''}`}>{h}</th>
+                  <th key={h} className={`py-2 px-3 text-slate-400 font-semibold text-[11px] uppercase tracking-wider ${i >= 2 ? 'text-right' : ''} ${i === 4 ? 'text-center' : ''}`}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -459,14 +459,14 @@ export default function AdminDashboard() {
                     onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = 'rgba(255,255,255,0.025)'; }}
                     onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
                   >
-                    <td className="py-3 px-4 font-semibold" style={{ color: isSel ? '#2dd4bf' : '#f1f5f9' }}>
+                    <td className="py-2 px-3 font-semibold" style={{ color: isSel ? '#7c3aed' : '#e6eef8' }}>
                       {isSel && <span className="inline-block w-1.5 h-1.5 rounded-full mr-2 mb-0.5 animate-pulse" style={{ background: '#2dd4bf' }} />}
                       {MONTHS_FULL[s.month - 1]} {s.year}
                     </td>
-                    <td className="py-3 px-4 text-slate-400">{mgr?.managerId?.name || <span className="text-slate-600">—</span>}</td>
-                    <td className="py-3 px-4 text-right text-white font-medium">₹{s.grandTotal.toFixed(2)}</td>
-                    <td className="py-3 px-4 text-right font-medium" style={{ color: '#f97316' }}>₹{s.mealRate.toFixed(2)}</td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-2 px-3 text-slate-400">{mgr?.managerId?.name || <span className="text-slate-500">—</span>}</td>
+                    <td className="py-2 px-3 text-right text-white font-medium">₹{s.grandTotal.toFixed(2)}</td>
+                    <td className="py-2 px-3 text-right font-medium" style={{ color: '#f59e0b' }}>₹{s.mealRate.toFixed(2)}</td>
+                    <td className="py-2 px-3 text-center">
                       {s.isClosed
                         ? <span className="badge-closed inline-flex items-center gap-1"><Lock size={9} />Closed</span>
                         : <span className="badge-open  inline-flex items-center gap-1"><Unlock size={9} />Open</span>

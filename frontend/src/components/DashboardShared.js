@@ -367,15 +367,15 @@ function IndividualCostTable({ individualCosts, mealRate, summary, totalCollecte
         </div>
       </div>
       {/* stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px" style={{ background: 'rgba(255,255,255,0.06)' }}>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px" style={{ background: 'rgba(255,255,255,0.04)' }}>
         {[
-          { label: 'Total Spent',     value: `₹${grandTotal.toFixed(2)}`,     color: '#fbbf24' },
+          { label: 'Total Spent',     value: `₹${grandTotal.toFixed(2)}`,     color: '#f59e0b' },
           { label: 'Total Meals',     value: totalMeals,                        color: '#34d399' },
-          { label: 'Per Meal Cost',   value: `₹${(mealRate||0).toFixed(2)}`,  color: '#a78bfa' },
+          { label: 'Per Meal Cost',   value: `₹${(mealRate||0).toFixed(2)}`,  color: '#8b5cf6' },
           { label: 'Total Collected', value: `₹${totalCollected.toFixed(2)}`, color: '#60a5fa' },
         ].map(s => (
-          <div key={s.label} className="flex flex-col items-center justify-center py-4 px-2"
-            style={{ background: 'rgba(10,15,30,0.5)' }}>
+          <div key={s.label} className="flex flex-col items-center justify-center py-3 px-2"
+            style={{ background: 'rgba(8,12,20,0.45)' }}>
             <p className="font-bold text-sm tabular-nums" style={{ color: s.color }}>{s.value}</p>
             <p className="text-slate-500 text-[10px] mt-0.5 text-center leading-tight">{s.label}</p>
           </div>
@@ -473,13 +473,13 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
       {/* ── Financial + Meal Summary Cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {summaryCards.map(({ label, value, icon: Icon, iconColor, sub, valueColor }) => (
-          <div key={label} className="rounded-2xl p-3.5 flex flex-col gap-1" style={glass}>
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-1"
-              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.09)' }}>
-              <Icon size={15} style={{ color: iconColor }} />
+          <div key={label} className="rounded-2xl p-2.5 flex flex-col gap-1" style={glass}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-1"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <Icon size={14} style={{ color: iconColor }} />
             </div>
-            <p className="text-lg font-bold text-white leading-tight tabular-nums" style={valueColor ? { color: valueColor } : {}}>{value}</p>
-            <p className="text-slate-300 text-xs font-semibold leading-tight">{label}</p>
+            <p className="text-base font-bold text-white leading-tight tabular-nums" style={valueColor ? { color: valueColor } : {}}>{value}</p>
+            <p className="text-slate-300 text-[12px] font-semibold leading-tight">{label}</p>
             <p className="text-slate-600 text-[10px] leading-tight">{sub}</p>
           </div>
         ))}
