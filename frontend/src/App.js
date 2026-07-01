@@ -23,6 +23,7 @@ import MemberLayout from './pages/member/MemberLayout';
 import MemberDashboard from './pages/member/MemberDashboard';
 import MemberHistory from './pages/member/MemberHistory';
 import MemberExpensesHistory from './pages/member/MemberExpensesHistory';
+import MemberMeals from './pages/member/MemberMeals';
 
 function ProtectedRoute({ children, roles }) {
   const { user, token } = useAuthStore();
@@ -80,6 +81,7 @@ export default function App() {
 
         <Route path="/member" element={<ProtectedRoute roles={['member', 'manager', 'admin']}><MemberLayout /></ProtectedRoute>}>
           <Route index element={<MemberDashboard />} />
+          <Route path="meals" element={<MemberMeals />} />
           <Route path="history" element={<MemberHistory />} />
           <Route path="expenses-history" element={<MemberExpensesHistory />} />
         </Route>

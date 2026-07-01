@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, History, LogOut, Menu, Receipt } from 'lucide-react';
+import { LayoutDashboard, History, LogOut, Menu, Receipt, UtensilsCrossed } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
 const links = [
-  { to: '/member',                  icon: LayoutDashboard, label: 'Dashboard',        end: true },
-  { to: '/member/history',          icon: History,         label: 'History' },
-  { to: '/member/expenses-history', icon: Receipt,         label: 'Expenses History' },
+  { to: '/member',                  icon: LayoutDashboard,  label: 'Dashboard',        end: true },
+  { to: '/member/meals',            icon: UtensilsCrossed,  label: 'Meals' },
+  { to: '/member/history',          icon: History,          label: 'History' },
+  { to: '/member/expenses-history', icon: Receipt,          label: 'Expenses History' },
 ];
 
 export default function MemberLayout() {
