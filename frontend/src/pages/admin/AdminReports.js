@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Search, Lock, Unlock, ChevronDown, ChevronUp, TrendingUp, Users, Utensils, HandCoins, ShoppingCart, Receipt, CreditCard, AlertCircle } from 'lucide-react';
+import { Search, Lock, Unlock, ChevronDown, ChevronUp, TrendingUp, Users, Utensils, HandCoins, ShoppingCart, Receipt, CreditCard, AlertCircle, Calendar } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import api from '../../api';
 
@@ -54,6 +54,23 @@ export default function AdminReports() {
   const [loading, setLoading] = useState(false);
   const [locking, setLocking] = useState(false);
   const [expanded, setExpanded] = useState(null);
+  const [dropOpen, setDropOpen] = useState(false);
+  const dropRef = useRef(null);
+
+  useEffect(() => {
+    const h = (e) => { if (dropRef.current && !dropRef.current.contains(e.target)) setDropOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+
+  const selectedLabel = `${MONTHS[month - 1]} ${year}`;
+  const monthYearOptions = [];
+  for (let y = now.getFullYear() + 1; y >= 2023; y--) {
+    for (let m = 12; m >= 1; m--) {
+      if (y === now.getFullYear() + 1 && m > now.getMonth() + 2) continue;
+      monthYearOptions.push({ month: m, year: y });
+    }
+  }
 
   const fetchReport = async () => {
     setLoading(true);
@@ -105,15 +122,53 @@ export default function AdminReports() {
       {/* Selector */}
       <div className="card">
         <div className="flex flex-wrap gap-3 items-end">
-          <div>
-            <label className="label">Month</label>
-            <select className="input w-36 sm:w-40" value={month} onChange={e => setMonth(+e.target.value)}>
-              {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="label">Year</label>
-            <input className="input w-24 sm:w-28" type="number" value={year} onChange={e => setYear(+e.target.value)} min="2020" max="2035" />
+          <div className="relative" ref={dropRef}>
+            <label className="label">Month &amp; Year</label>
+            <button
+              onClick={() => setDropOpen(o => !o)}
+              className="flex items-center gap-2 text-sm font-semibold text-white"
+              style={{
+                background: 'rgba(20,184,166,0.10)',
+                border: '1px solid rgba(20,184,166,0.30)',
+                borderRadius: '12px', padding: '9px 14px',
+                minWidth: '180px',
+              }}
+            >
+              <Calendar size={14} style={{ color: '#2dd4bf' }} />
+              <span className="flex-1 text-left">{selectedLabel}</span>
+              <ChevronDown size={13} className={`text-slate-400 transition-transform duration-200 ${dropOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {dropOpen && (
+              <div className="absolute left-0 top-full mt-2 z-50 rounded-2xl overflow-hidden"
+                style={{ minWidth: '200px', background: 'rgba(6,10,22,0.98)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)', border: '1px solid rgba(20,184,166,0.25)', boxShadow: '0 24px 60px rgba(0,0,0,0.85)' }}>
+                <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(20,184,166,0.08)' }}>
+                  <Calendar size={11} style={{ color: '#2dd4bf' }} />
+                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#2dd4bf' }}>Select Month</p>
+                </div>
+                <div className="overflow-y-auto" style={{ maxHeight: '260px', scrollbarWidth: 'thin' }}>
+                  {monthYearOptions.map(o => {
+                    const isSel = o.month === month && o.year === year;
+                    return (
+                      <button key={`${o.month}-${o.year}`}
+                        onClick={() => { setMonth(o.month); setYear(o.year); setDropOpen(false); setReport(null); }}
+                        className="w-full text-left flex items-center gap-2.5"
+                        style={{
+                          padding: '9px 14px',
+                          background: isSel ? 'rgba(20,184,166,0.12)' : 'transparent',
+                          borderLeft: isSel ? '2px solid #14b8a6' : '2px solid transparent',
+                          borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: isSel ? '#14b8a6' : '#334155' }} />
+                        <span className="text-sm font-medium" style={{ color: isSel ? '#2dd4bf' : '#cbd5e1' }}>
+                          {MONTHS[o.month - 1]} {o.year}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
           <button onClick={fetchReport} disabled={loading} className="btn-primary flex items-center gap-2">
             <Search size={15} />{loading ? 'Loading…' : 'Load Report'}

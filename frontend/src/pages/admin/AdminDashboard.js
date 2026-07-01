@@ -113,9 +113,14 @@ export default function AdminDashboard() {
     rate: s.mealRate,
   }));
 
-  const pieData = activeSummary
-    ? [{ name: 'Grocery', value: activeSummary.groceryTotal }, { name: 'Other', value: activeSummary.otherTotal }].filter(p => p.value > 0)
-    : [];
+  const groceryTotal = activeSummary?.groceryTotal || 0;
+  const otherPaid    = activeSummary?.otherPaidTotal || activeSummary?.otherTotal || 0;
+  const otherDue     = activeSummary?.otherDueTotal  || 0;
+  const pieData = [
+    { name: 'Grocery',    value: groceryTotal, color: '#14b8a6' },
+    { name: 'Other Paid', value: otherPaid,    color: '#f97316' },
+    { name: 'Other Due',  value: otherDue,     color: '#f43f5e' },
+  ].filter(p => p.value > 0);
 
   return (
     <div className="space-y-6 relative">
@@ -328,32 +333,42 @@ export default function AdminDashboard() {
             </div>
           </div>
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+            <ResponsiveContainer width="100%" height={240}>
+              <AreaChart data={chartData} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gExpense" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#14b8a6" stopOpacity={0.30} />
-                    <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+                    <stop offset="0%"  stopColor="#14b8a6" stopOpacity={0.5} />
+                    <stop offset="100%" stopColor="#14b8a6" stopOpacity={0.02} />
                   </linearGradient>
                   <linearGradient id="gRate" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#f97316" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                    <stop offset="0%"  stopColor="#f97316" stopOpacity={0.45} />
+                    <stop offset="100%" stopColor="#f97316" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} dy={6} />
-                <YAxis tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} width={48} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v} />
+                <CartesianGrid strokeDasharray="4 4" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} dy={8} />
+                <YAxis tick={{ fill: '#475569', fontSize: 10 }} axisLine={false} tickLine={false} width={50}
+                  tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v} />
                 <Tooltip
-                  contentStyle={tooltipStyle}
-                  cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }}
+                  contentStyle={{ background: 'rgba(6,10,22,0.97)', border: '1px solid rgba(20,184,166,0.25)', borderRadius: '14px', color: '#fff', fontSize: '12px', padding: '10px 14px', boxShadow: '0 12px 32px rgba(0,0,0,0.6)' }}
+                  cursor={{ stroke: 'rgba(255,255,255,0.06)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  labelStyle={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}
                   formatter={(v, name) => [`₹${v.toFixed(2)}`, name]}
                 />
-                <Area type="monotone" dataKey="expense" stroke="#14b8a6" strokeWidth={2.5} fill="url(#gExpense)" dot={{ fill: '#14b8a6', r: 3, strokeWidth: 0 }} activeDot={{ r: 5, fill: '#14b8a6' }} name="Total Expense" />
-                <Area type="monotone" dataKey="rate"    stroke="#f97316" strokeWidth={2.5} fill="url(#gRate)"    dot={{ fill: '#f97316', r: 3, strokeWidth: 0 }} activeDot={{ r: 5, fill: '#f97316' }} name="Meal Rate" />
+                <Area type="monotone" dataKey="expense" stroke="#14b8a6" strokeWidth={3}
+                  fill="url(#gExpense)"
+                  dot={{ fill: '#14b8a6', r: 4, strokeWidth: 2, stroke: 'rgba(20,184,166,0.35)' }}
+                  activeDot={{ r: 6, fill: '#14b8a6', stroke: 'rgba(20,184,166,0.5)', strokeWidth: 3 }}
+                  name="Total Expense" />
+                <Area type="monotone" dataKey="rate" stroke="#f97316" strokeWidth={3}
+                  fill="url(#gRate)"
+                  dot={{ fill: '#f97316', r: 4, strokeWidth: 2, stroke: 'rgba(249,115,22,0.35)' }}
+                  activeDot={{ r: 6, fill: '#f97316', stroke: 'rgba(249,115,22,0.5)', strokeWidth: 3 }}
+                  name="Meal Rate" />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[220px] flex flex-col items-center justify-center gap-2 text-slate-600 text-sm">
+            <div className="h-[240px] flex flex-col items-center justify-center gap-2 text-slate-600 text-sm">
               <Activity size={28} className="text-slate-700" />
               No expense data yet
             </div>
@@ -361,19 +376,39 @@ export default function AdminDashboard() {
         </div>
 
         <div className="rounded-2xl p-5" style={glass}>
-          <h3 className="font-semibold text-white mb-1">{MONTHS[selectedMonth - 1]} Breakdown</h3>
-          <p className="text-slate-500 text-xs mb-3">Grocery vs Other expenses</p>
+          <h3 className="font-semibold text-white mb-0.5">{MONTHS[selectedMonth - 1]} Breakdown</h3>
+          <p className="text-slate-500 text-xs mb-3">Grocery · Other Paid · Other Due</p>
           {pieData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={210}>
-              <PieChart>
-                <Pie data={pieData} cx="50%" cy="44%" innerRadius={52} outerRadius={78} paddingAngle={5} dataKey="value" strokeWidth={0}>
-                  <Cell fill="#14b8a6" />
-                  <Cell fill="#f97316" />
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} formatter={v => `₹${v.toFixed(2)}`} />
-                <Legend formatter={v => <span className="text-slate-400 text-xs">{v}</span>} />
-              </PieChart>
-            </ResponsiveContainer>
+            <>
+              <ResponsiveContainer width="100%" height={175}>
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={48} outerRadius={72} paddingAngle={4} dataKey="value" strokeWidth={0}>
+                    {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} formatter={v => `₹${Number(v).toFixed(2)}`} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="space-y-2.5 mt-3">
+                {pieData.map(({ name, value, color }) => {
+                  const total = pieData.reduce((s, p) => s + p.value, 0);
+                  const pct   = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                  return (
+                    <div key={name}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="flex items-center gap-1.5 text-xs text-slate-400">
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
+                          {name}
+                        </span>
+                        <span className="text-xs font-bold text-white">₹{value.toFixed(0)} <span className="text-slate-500 font-normal">({pct}%)</span></span>
+                      </div>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color, transition: 'width 0.7s ease' }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           ) : (
             <div className="h-[210px] flex items-center justify-center text-slate-600 text-sm">No data yet</div>
           )}
