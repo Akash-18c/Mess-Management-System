@@ -243,7 +243,6 @@ export default function AdminReports() {
                             <div className="flex justify-between"><span className="text-slate-400">Meal Cost</span><span className="text-white">{fmt(b.mealCost || b.mealCount * b.mealRate)}</span></div>
                             {b.guestMeals > 0 && <div className="flex justify-between"><span className="text-slate-400">Guest Charges</span><span className="text-amber-400">+{fmt(b.guestCharge)}</span></div>}
                             {b.gasCharge > 0 && <div className="flex justify-between"><span className="text-slate-400">Gas Charge</span><span className="text-orange-400">+{fmt(b.gasCharge)}</span></div>}
-                            {b.riceCharge > 0 && <div className="flex justify-between"><span className="text-slate-400">Rice Charge</span><span className="text-yellow-400">+{fmt(b.riceCharge)}</span></div>}
                             {b.otherSharedCharge > 0 && <div className="flex justify-between"><span className="text-slate-400">Other Shared</span><span className="text-purple-400">+{fmt(b.otherSharedCharge)}</span></div>}
                             {b.otherCharges > 0 && <div className="flex justify-between"><span className="text-slate-400">Other Charges</span><span className="text-purple-400">+{fmt(b.otherCharges)}</span></div>}
                             {b.masiSalary > 0 && <div className="flex justify-between"><span className="text-slate-400">Masi Salary</span><span className="text-pink-400">+{fmt(b.masiSalary)}</span></div>}

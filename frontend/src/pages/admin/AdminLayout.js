@@ -28,7 +28,7 @@ export default function AdminLayout() {
         <div className="flex items-center gap-3">
           <img src="/messy-logo.png" alt="logo" className="w-14 h-14 object-contain" style={{ filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.6))' }} />
           <div>
-            <p style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.35rem', fontWeight: 700, background: 'linear-gradient(135deg,#34d399 0%,#059669 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.2 }}>The Messy Kitchen</p>
+            <p style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.35rem', fontWeight: 700, background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 40%,#6ee7b7 70%,#fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.2 }}>The Messy Kitchen</p>
             <span className="badge-admin">Admin</span>
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function AdminLayout() {
           <button onClick={() => setOpen(true)} className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors" style={{ color: '#94a3b8', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)' }}><Menu size={20} /></button>
           <div className="flex items-center gap-2">
             <img src="/messy-logo.png" alt="logo" className="w-7 h-7 object-contain" style={{ filter: 'drop-shadow(0 0 6px rgba(16,185,129,0.5))' }} />
-            <span style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.1rem', fontWeight: 700, background: 'linear-gradient(135deg,#34d399,#059669)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>The Messy Kitchen</span>
+            <span style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.1rem', fontWeight: 700, background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 40%,#6ee7b7 70%,#fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>The Messy Kitchen</span>
           </div>
           <span className="badge-admin">Admin</span>
         </header>

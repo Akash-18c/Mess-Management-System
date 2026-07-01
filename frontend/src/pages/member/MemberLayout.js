@@ -34,7 +34,7 @@ export default function MemberLayout() {
         <div className="flex items-center gap-3">
           <img src="/messy-logo.png" alt="logo" className="w-14 h-14 object-contain" style={{ filter: 'drop-shadow(0 0 6px rgba(16,185,129,0.5))' }} />
           <div>
-            <p style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.35rem', fontWeight: 700, background: 'linear-gradient(135deg,#34d399 0%,#059669 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.2 }}>The Messy Kitchen</p>
+            <p style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.35rem', fontWeight: 700, background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 40%,#6ee7b7 70%,#fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.2 }}>The Messy Kitchen</p>
             <span className="badge-member">Member</span>
           </div>
         </div>
@@ -109,8 +109,7 @@ export default function MemberLayout() {
               style={{ filter: 'drop-shadow(0 0 6px rgba(34,197,94,0.5))' }} />
             <span style={{
               fontFamily: "'Dancing Script', cursive", fontSize: '1.1rem', fontWeight: 700,
-              background: 'linear-gradient(135deg,#ffffff 0%,#bbf7d0 50%,#34d399 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 40%,#6ee7b7 70%,#fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}>The Messy Kitchen</span>
           </div>
           <span className="badge-member">Member</span>
