@@ -192,15 +192,16 @@ router.get('/reports/:month/:year', async (req, res) => {
   try {
     const { month, year } = req.params;
     const Payment = require('../models/Payment');
-    const [summary, groceries, others, assignment, bills, payments] = await Promise.all([
+    const [summary, groceries, others, assignment, bills, payments, masiSalary] = await Promise.all([
       MonthlySummary.findOne({ month, year }),
       GroceryExpense.find({ month, year }).sort({ date: 1 }),
       OtherExpense.find({ month, year }).sort({ date: 1 }),
       MonthAssignment.findOne({ month, year }).populate('managerId', 'name email'),
       Bill.find({ month, year }).populate('memberId', 'name room email'),
       Payment.find({ month, year }).populate('memberId', 'name'),
+      MasiSalary.findOne({ month, year }),
     ]);
-    res.json({ summary, groceries, others, assignment, bills, payments });
+    res.json({ summary, groceries, others, assignment, bills, payments, masiSalary });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
