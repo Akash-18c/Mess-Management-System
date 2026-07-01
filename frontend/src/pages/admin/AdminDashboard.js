@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, TrendingUp, Crown, Lock, Unlock, ChevronDown, Calendar, Sparkles, Activity, UtensilsCrossed } from 'lucide-react';
+import { Lock, Unlock, ChevronDown, Calendar, Sparkles, Activity, UtensilsCrossed } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar } from 'recharts';
 import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
@@ -25,8 +25,6 @@ function buildMonthRange() {
   }
   return list.reverse();
 }
-
-const BAR_COLORS = ['#2dd4bf','#34d399','#22c55e','#4ade80','#14b8a6','#06b6d4','#38bdf8','#60a5fa'];
 
 const glass = {
   background: 'rgba(255,255,255,0.04)',
@@ -125,12 +123,6 @@ export default function AdminDashboard() {
     ? [{ name: 'Grocery', value: activeSummary.groceryTotal }, { name: 'Other', value: activeSummary.otherTotal }].filter(p => p.value > 0)
     : [];
 
-  const statCards = [
-    { label: 'Total Members',   value: totalMembers,                                           icon: Users },
-    { label: 'Meal Rate',       value: `₹${activeSummary?.mealRate?.toFixed(2) || '0.00'}`,   icon: TrendingUp },
-    { label: 'Current Manager', value: currentManager?.managerId?.name || 'Unassigned',        icon: Crown, truncate: true },
-  ];
-
   return (
     <div className="space-y-6 relative">
       {/* ── Background Orbs ── */}
@@ -141,140 +133,110 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Header ── */}
-      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg,rgba(20,184,166,0.25),rgba(45,212,191,0.12))', border: '1px solid rgba(45,212,191,0.30)', boxShadow: '0 0 20px rgba(20,184,166,0.18)' }}>
-              <Sparkles size={16} style={{ color: '#2dd4bf' }} />
+      <div className="relative" ref={dropRef}>
+        <div className="flex items-start justify-between gap-3 rounded-2xl p-3 px-4" style={glass}>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <Sparkles size={15} style={{ color: '#2dd4bf' }} className="flex-shrink-0" />
+              <h1 style={{
+                fontFamily: "'Dancing Script', cursive",
+                fontSize: 'clamp(1.3rem,5vw,1.8rem)', fontWeight: 700,
+                background: 'linear-gradient(135deg,#ffffff 0%,#99f6e4 40%,#2dd4bf 75%,#0d9488 100%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                lineHeight: 1.2,
+              }}>Admin Dashboard</h1>
             </div>
-            <h1 style={{
-              fontFamily: "'Dancing Script', cursive",
-              fontSize: 'clamp(1.5rem,5vw,2.1rem)', fontWeight: 700,
-              background: 'linear-gradient(135deg,#ffffff 0%,#99f6e4 40%,#2dd4bf 75%,#0d9488 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>Admin Dashboard</h1>
+            <p className="text-slate-500 text-[10px] mt-0.5 pl-5">Viewing · <span style={{ color: '#5eead4' }}>{selectedLabel}</span></p>
           </div>
-          <p className="text-slate-500 text-xs mt-1 pl-11">Viewing · <span style={{ color: '#5eead4' }}>{selectedLabel}</span></p>
-        </div>
-
-        {/* ── Month Dropdown ── */}
-        <div className="relative w-full sm:w-auto" ref={dropRef}>
           <button
             onClick={() => setDropdownOpen(o => !o)}
-            className="flex items-center gap-2 text-sm font-semibold text-white transition-all duration-150 w-full sm:w-auto"
+            className="flex items-center gap-2 text-xs font-semibold text-white flex-shrink-0"
             style={{
-              background: 'rgba(15,23,42,0.65)',
-              backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-              border: dropdownOpen ? '1px solid rgba(99,102,241,0.22)' : '1px solid rgba(148,163,184,0.06)',
-              borderRadius: '10px', padding: '8px 12px',
-              minWidth: '160px', width: '100%',
-              justifyContent: 'space-between',
-              boxShadow: dropdownOpen ? '0 8px 28px rgba(15,23,42,0.6)' : '0 6px 18px rgba(2,6,23,0.6)',
+              background: 'rgba(20,184,166,0.12)',
+              border: '1px solid rgba(20,184,166,0.30)',
+              borderRadius: '12px', padding: '8px 10px',
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.14)' }}>
-                <Calendar size={13} style={{ color: '#7c3aed' }} />
-              </div>
-              <span className="truncate">{selectedLabel}</span>
-            </div>
-            <ChevronDown size={15} className={`text-slate-300 transition-transform duration-200 flex-shrink-0 ml-2 ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <Calendar size={13} style={{ color: '#2dd4bf' }} />
+            <span>{selectedLabel}</span>
+            <ChevronDown size={12} className={`text-slate-400 ml-1 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
-
-          {dropdownOpen && (
-            <div
-              className="absolute left-0 right-0 sm:left-auto sm:right-0 top-full mt-2 z-[9999] rounded-2xl overflow-hidden"
-              style={{
-                minWidth: '244px',
-                background: 'rgba(6,10,22,0.98)',
-                backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)',
-                border: '1px solid rgba(20,184,166,0.25)',
-                boxShadow: '0 24px 60px rgba(0,0,0,0.85), 0 0 0 1px rgba(20,184,166,0.08)',
-              }}
-            >
-              <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(20,184,166,0.08)' }}>
-                <Calendar size={13} style={{ color: '#2dd4bf' }} />
-                <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#2dd4bf' }}>Select Month</p>
-              </div>
-              <div className="overflow-y-auto" style={{ maxHeight: '60vh', scrollbarWidth: 'thin' }}>
-                {monthOptions.map(o => {
-                  const isSel = o.month === selectedMonth && o.year === selectedYear;
-                  return (
-                    <button
-                      key={`${o.month}-${o.year}`}
-                      onClick={() => { setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
-                      className="w-full text-left flex items-center justify-between"
-                      style={{
-                        padding: '11px 16px',
-                        background: isSel ? 'rgba(20,184,166,0.14)' : 'transparent',
-                        borderLeft: isSel ? '3px solid #14b8a6' : '3px solid transparent',
-                        borderBottom: '1px solid rgba(255,255,255,0.04)',
-                        transition: 'background 0.15s',
-                        WebkitTapHighlightColor: 'transparent',
-                      }}
-                      onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-                      onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-2 h-2 rounded-full flex-shrink-0"
-                          style={{ background: o.hasData ? (o.isClosed ? '#f87171' : '#34d399') : '#334155', boxShadow: o.hasData ? `0 0 6px ${o.isClosed ? '#f87171' : '#34d399'}` : 'none' }} />
-                        <span className="text-sm font-medium" style={{ color: isSel ? '#2dd4bf' : '#cbd5e1' }}>
-                          {MONTHS_FULL[o.month - 1].slice(0,3)} {o.year}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                        {o.isCurrent && (
-                          <span style={{ fontSize: '9px', background: 'rgba(20,184,166,0.22)', color: '#2dd4bf', border: '1px solid rgba(20,184,166,0.40)', padding: '2px 7px', borderRadius: '999px', fontWeight: 700, letterSpacing: '0.05em' }}>LIVE</span>
-                        )}
-                        {o.hasData && (o.isClosed
-                          ? <span style={{ fontSize: '9px', background: 'rgba(248,113,113,0.14)', color: '#f87171', border: '1px solid rgba(248,113,113,0.28)', padding: '2px 7px', borderRadius: '999px' }}>Closed</span>
-                          : <span style={{ fontSize: '9px', background: 'rgba(52,211,153,0.14)', color: '#34d399', border: '1px solid rgba(52,211,153,0.28)', padding: '2px 7px', borderRadius: '999px' }}>Open</span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="flex items-center gap-4 px-4 py-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.20)' }}>
-                {[['#34d399','Open'],['#f87171','Closed'],['#334155','No data']].map(([c,l]) => (
-                  <span key={l} className="flex items-center gap-1.5 text-[9px] text-slate-500">
-                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: c }} />{l}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
+
+        {dropdownOpen && (
+          <div className="absolute right-0 top-full mt-2 z-[9999] rounded-2xl overflow-hidden" style={{
+            minWidth: '220px',
+            background: 'rgba(6,10,22,0.98)',
+            backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)',
+            border: '1px solid rgba(20,184,166,0.25)',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.85)',
+          }}>
+            <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(20,184,166,0.08)' }}>
+              <Calendar size={12} style={{ color: '#2dd4bf' }} />
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#2dd4bf' }}>Select Month</p>
+            </div>
+            <div className="overflow-y-auto" style={{ maxHeight: '260px', scrollbarWidth: 'thin' }}>
+              {monthOptions.map(o => {
+                const isSel = o.month === selectedMonth && o.year === selectedYear;
+                return (
+                  <button
+                    key={`${o.month}-${o.year}`}
+                    onClick={() => { setSelectedMonth(o.month); setSelectedYear(o.year); setDropdownOpen(false); }}
+                    className="w-full text-left flex items-center justify-between"
+                    style={{
+                      padding: '10px 14px',
+                      background: isSel ? 'rgba(20,184,166,0.12)' : 'transparent',
+                      borderLeft: isSel ? '2px solid #14b8a6' : '2px solid transparent',
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                        style={{ background: o.hasData ? (o.isClosed ? '#f87171' : '#34d399') : '#334155' }} />
+                      <span className="text-sm font-medium" style={{ color: isSel ? '#2dd4bf' : '#cbd5e1' }}>
+                        {MONTHS_FULL[o.month - 1].slice(0,3)} {o.year}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                      {o.isCurrent && <span style={{ fontSize: '9px', background: 'rgba(20,184,166,0.22)', color: '#2dd4bf', border: '1px solid rgba(20,184,166,0.40)', padding: '2px 6px', borderRadius: '999px', fontWeight: 700 }}>LIVE</span>}
+                      {o.hasData && (o.isClosed
+                        ? <span style={{ fontSize: '9px', background: 'rgba(248,113,113,0.12)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.25)', padding: '2px 6px', borderRadius: '999px' }}>Closed</span>
+                        : <span style={{ fontSize: '9px', background: 'rgba(52,211,153,0.12)', color: '#86efac', border: '1px solid rgba(52,211,153,0.25)', padding: '2px 6px', borderRadius: '999px' }}>Open</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-4 px-4 py-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
+              {[['#34d399','Open'],['#f87171','Closed'],['#334155','No data']].map(([c,l]) => (
+                <span key={l} className="flex items-center gap-1.5 text-[9px] text-slate-500">
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: c }} />{l}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Stat Cards ── */}
-      <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {statCards.map(({ label, value, icon: Icon, truncate }, idx) => {
-          const accents = [
-            { from: 'rgba(45,212,191,0.22)', to: 'rgba(20,184,166,0.08)', glow: 'rgba(45,212,191,0.18)', iconBg: 'rgba(45,212,191,0.18)', iconBorder: 'rgba(45,212,191,0.30)', iconColor: '#2dd4bf' },
-            { from: 'rgba(99,102,241,0.20)', to: 'rgba(79,70,229,0.08)',  glow: 'rgba(99,102,241,0.18)', iconBg: 'rgba(99,102,241,0.18)', iconBorder: 'rgba(99,102,241,0.30)', iconColor: '#a78bfa' },
-            { from: 'rgba(249,115,22,0.18)', to: 'rgba(234,88,12,0.06)',  glow: 'rgba(249,115,22,0.15)', iconBg: 'rgba(249,115,22,0.18)', iconBorder: 'rgba(249,115,22,0.30)', iconColor: '#fb923c' },
-          ];
-          const ac = accents[idx] || accents[0];
-          return (
-            <div key={label} className="rounded-2xl p-3 relative overflow-hidden" style={{
-              ...glass,
-                background: `linear-gradient(135deg, ${ac.from} 0%, rgba(255,255,255,0.02) 60%, ${ac.to} 100%)`,
-                boxShadow: `0 6px 20px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04)`,
-            }}>
-              <div aria-hidden="true" style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: `radial-gradient(circle, ${ac.glow} 0%, transparent 70%)`, borderRadius: '50%', pointerEvents: 'none' }} />
-                <div className="flex items-start justify-between mb-2">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center"
-                    style={{ background: ac.iconBg, border: `1px solid ${ac.iconBorder}`, boxShadow: `0 3px 12px ${ac.glow}` }}>
-                    <Icon size={16} style={{ color: ac.iconColor }} />
-                  </div>
-                </div>
-                <p className={`font-bold text-white mb-1 ${truncate ? 'text-sm truncate' : 'text-lg'}`}>{value}</p>
-                <p className="text-[12px] font-medium" style={{ color: '#94a3b8' }}>{label}</p>
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Total Members', value: totalMembers,                                         emoji: '👥', accent: 'rgba(20,184,166,0.10)',  border: 'rgba(20,184,166,0.20)'  },
+          { label: 'Meal Rate',     value: `₹${activeSummary?.mealRate?.toFixed(2) || '0.00'}`, emoji: '📊', accent: 'rgba(99,102,241,0.10)',  border: 'rgba(99,102,241,0.20)'  },
+          { label: 'Manager',       value: currentManager?.managerId?.name || 'None',            emoji: '👑', accent: 'rgba(249,115,22,0.10)',  border: 'rgba(249,115,22,0.20)'  },
+        ].map(({ label, value, emoji, accent, border }) => (
+          <div key={label} className="rounded-2xl overflow-hidden"
+            style={{ background: accent, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: `1px solid ${border}`, boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+            <div className="px-3 pt-3 pb-2.5">
+              <div className="text-2xl mb-2 leading-none">{emoji}</div>
+              <p className="text-base font-bold text-white leading-none tabular-nums truncate">{value}</p>
+              <p className="text-[10px] text-slate-400 mt-1.5 leading-tight font-medium">{label}</p>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
 
       {/* ── Shared Dashboard ── */}
@@ -424,63 +386,67 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── All Months Table ── */}
+      {/* ── All Months Cards ── */}
       <div className="relative rounded-2xl overflow-hidden" style={glass}>
-        <div className="p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div className="px-4 pt-4 pb-3 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div>
-            <h3 className="font-semibold text-white">All Months</h3>
-            <p className="text-slate-500 text-xs mt-0.5">{allSummaries.length} months recorded — tap to view</p>
+            <h3 className="font-semibold text-white text-sm">All Months</h3>
+            <p className="text-slate-500 text-[11px] mt-0.5">{allSummaries.length} months recorded</p>
           </div>
-          <button onClick={() => navigate('/admin/assignments')} className="btn-primary text-sm px-4 py-2 self-start sm:self-auto">Assign Manager</button>
+          <button onClick={() => navigate('/admin/assignments')} className="btn-primary text-xs px-3 py-1.5">Assign Manager</button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                {['Month','Manager','Expense','Rate','Status'].map((h, i) => (
-                  <th key={h} className={`py-2 px-3 text-slate-400 font-semibold text-[11px] uppercase tracking-wider ${i >= 2 ? 'text-right' : ''} ${i === 4 ? 'text-center' : ''}`}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {allSummaries.map(s => {
-                const mgr   = allAssignments.find(a => a.month === s.month && a.year === s.year);
-                const isSel = s.month === selectedMonth && s.year === selectedYear;
-                return (
-                  <tr
-                    key={s._id}
-                    onClick={() => { setSelectedMonth(s.month); setSelectedYear(s.year); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    className="cursor-pointer transition-colors"
-                    style={{
-                      borderBottom: '1px solid rgba(255,255,255,0.04)',
-                      background: isSel ? 'rgba(20,184,166,0.07)' : 'transparent',
-                      borderLeft: isSel ? '2px solid #14b8a6' : '2px solid transparent',
-                    }}
-                    onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = 'rgba(255,255,255,0.025)'; }}
-                    onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
-                  >
-                    <td className="py-2 px-3 font-semibold" style={{ color: isSel ? '#7c3aed' : '#e6eef8' }}>
-                      {isSel && <span className="inline-block w-1.5 h-1.5 rounded-full mr-2 mb-0.5 animate-pulse" style={{ background: '#2dd4bf' }} />}
-                      {MONTHS_FULL[s.month - 1]} {s.year}
-                    </td>
-                    <td className="py-2 px-3 text-slate-400">{mgr?.managerId?.name || <span className="text-slate-500">—</span>}</td>
-                    <td className="py-2 px-3 text-right text-white font-medium">₹{s.grandTotal.toFixed(2)}</td>
-                    <td className="py-2 px-3 text-right font-medium" style={{ color: '#f59e0b' }}>₹{s.mealRate.toFixed(2)}</td>
-                    <td className="py-2 px-3 text-center">
-                      {s.isClosed
-                        ? <span className="badge-closed inline-flex items-center gap-1"><Lock size={9} />Closed</span>
-                        : <span className="badge-open  inline-flex items-center gap-1"><Unlock size={9} />Open</span>
-                      }
-                    </td>
-                  </tr>
-                );
-              })}
-              {allSummaries.length === 0 && (
-                <tr><td colSpan={5} className="py-12 text-center text-slate-600 text-sm">No months recorded yet</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        {allSummaries.length === 0 ? (
+          <p className="py-10 text-center text-slate-600 text-sm">No months recorded yet</p>
+        ) : (
+          <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {allSummaries.map(s => {
+              const mgr   = allAssignments.find(a => a.month === s.month && a.year === s.year);
+              const isSel = s.month === selectedMonth && s.year === selectedYear;
+              return (
+                <button
+                  key={s._id}
+                  onClick={() => { setSelectedMonth(s.month); setSelectedYear(s.year); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="text-left rounded-xl p-3 transition-all w-full"
+                  style={{
+                    background: isSel ? 'rgba(20,184,166,0.12)' : 'rgba(255,255,255,0.03)',
+                    border: isSel ? '1px solid rgba(20,184,166,0.35)' : '1px solid rgba(255,255,255,0.07)',
+                    boxShadow: isSel ? '0 0 0 1px rgba(20,184,166,0.15)' : 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  {/* Top row: month + status badge */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      {isSel && <span className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0" style={{ background: '#2dd4bf' }} />}
+                      <span className="text-sm font-bold" style={{ color: isSel ? '#2dd4bf' : '#e2e8f0' }}>
+                        {MONTHS_FULL[s.month - 1].slice(0,3)} {s.year}
+                      </span>
+                    </div>
+                    {s.isClosed
+                      ? <span className="badge-closed inline-flex items-center gap-1 text-[10px]"><Lock size={8} />Closed</span>
+                      : <span className="badge-open  inline-flex items-center gap-1 text-[10px]"><Unlock size={8} />Open</span>
+                    }
+                  </div>
+                  {/* Stats row */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] text-slate-500 mb-0.5">Expense</p>
+                      <p className="text-sm font-bold text-white tabular-nums">₹{s.grandTotal.toFixed(0)}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[10px] text-slate-500 mb-0.5">Rate</p>
+                      <p className="text-sm font-bold tabular-nums" style={{ color: '#fbbf24' }}>₹{s.mealRate.toFixed(2)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-slate-500 mb-0.5">Manager</p>
+                      <p className="text-[11px] font-semibold text-slate-300 truncate max-w-[80px]">{mgr?.managerId?.name || '—'}</p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
