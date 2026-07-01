@@ -252,7 +252,7 @@ router.delete('/purge-month/:month/:year', async (req, res) => {
     const GasCylinder = require('../models/GasCylinder');
     const OtherCharge = require('../models/OtherCharge');
     const filter = { month, year };
-    const [meals, grocery, other, payments, bills, summary, assignment, gas, rice, otherCharges] = await Promise.all([
+    const [meals, grocery, other, payments, bills, summary, assignment, gas, rice, otherCharges, masi] = await Promise.all([
       Meal.deleteMany(filter),
       GroceryExpense.deleteMany(filter),
       OtherExpense.deleteMany(filter),
@@ -263,6 +263,7 @@ router.delete('/purge-month/:month/:year', async (req, res) => {
       GasCylinder.deleteMany(filter),
       RiceBag.deleteMany(filter),
       OtherCharge.deleteMany(filter),
+      MasiSalary.deleteMany(filter),
     ]);
     res.json({
       message: `All data for ${month}/${year} deleted`,
@@ -277,6 +278,7 @@ router.delete('/purge-month/:month/:year', async (req, res) => {
         gasCylinders: gas.deletedCount,
         riceBags: rice.deletedCount,
         otherCharges: otherCharges.deletedCount,
+        masiSalary: masi.deletedCount,
       }
     });
   } catch (err) { res.status(500).json({ message: err.message }); }
