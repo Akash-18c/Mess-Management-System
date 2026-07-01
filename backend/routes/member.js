@@ -15,6 +15,13 @@ router.use(auth, requireRole('member', 'manager', 'admin'));
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
+router.get('/members-list', async (req, res) => {
+  try {
+    const members = await User.find({ isActive: true }).select('-password').sort({ name: 1 });
+    res.json(members);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 router.get('/dashboard', async (req, res) => {
   try {
     const now = new Date();

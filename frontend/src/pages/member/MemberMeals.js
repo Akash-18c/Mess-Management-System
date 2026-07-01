@@ -40,7 +40,7 @@ export default function MemberMeals() {
 
   const loadData = useCallback(async () => {
     const [memsRes, mealsRes] = await Promise.all([
-      api.get('/members'),
+      api.get('/member/members-list'),
       api.get(`/meals/${month}/${year}`),
     ]);
     setMembers(memsRes.data);
