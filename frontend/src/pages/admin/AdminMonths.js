@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Lock, Unlock, Plus, X, CalendarDays, Sparkles } from 'lucide-react';
+import { Lock, Unlock, Plus, X, CalendarDays, Sparkles, Pencil, Trash2, UserCog } from 'lucide-react';
 import api from '../../api';
 
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -14,14 +14,24 @@ const glass = {
   boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07)',
 };
 
+const modalGlass = {
+  background: 'rgba(10,15,30,0.96)',
+  backdropFilter: 'blur(48px)',
+  WebkitBackdropFilter: 'blur(48px)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  boxShadow: '0 24px 64px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.08)',
+};
+
 const now = new Date();
 
 export default function AdminMonths() {
   const [months,  setMonths]  = useState([]);
   const [members, setMembers] = useState([]);
-  const [modal,   setModal]   = useState(false);
+  const [modal,   setModal]   = useState(false);   // 'add' | 'edit' | false
+  const [editTarget, setEditTarget] = useState(null); // month object being edited
   const [loading, setLoading] = useState(false);
-  const [form,    setForm]    = useState({ month: now.getMonth() + 1, year: now.getFullYear(), managerId: '' });
+  const [delConfirm, setDelConfirm] = useState(null);
+  const [form, setForm] = useState({ month: now.getMonth() + 1, year: now.getFullYear(), managerId: '' });
 
   const load = () => {
     api.get('/admin/months').then(r => setMonths(r.data)).catch(() => {});
@@ -29,12 +39,30 @@ export default function AdminMonths() {
   };
   useEffect(() => { load(); }, []);
 
-  const openMonth = async (e) => {
+  const openAdd = () => {
+    setEditTarget(null);
+    setForm({ month: now.getMonth() + 1, year: now.getFullYear(), managerId: '' });
+    setModal('add');
+  };
+
+  const openEdit = (m) => {
+    setEditTarget(m);
+    setForm({ month: m.month, year: m.year, managerId: m.manager?._id || '' });
+    setModal('edit');
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post(`/admin/open-month/${form.month}/${form.year}`, { managerId: form.managerId || undefined });
-      toast.success(`${MONTHS_FULL[form.month - 1]} ${form.year} opened`);
+      if (modal === 'edit') {
+        // reassign manager on existing open month
+        await api.post(`/admin/open-month/${editTarget.month}/${editTarget.year}`, { managerId: form.managerId || undefined });
+        toast.success('Manager updated');
+      } else {
+        await api.post(`/admin/open-month/${form.month}/${form.year}`, { managerId: form.managerId || undefined });
+        toast.success(`${MONTHS_FULL[form.month - 1]} ${form.year} opened`);
+      }
       setModal(false); load();
     } catch (err) { toast.error(err.response?.data?.message || 'Error'); }
     finally { setLoading(false); }
@@ -52,6 +80,14 @@ export default function AdminMonths() {
       await api.post(`/admin/open-month/${month}/${year}`, {});
       toast.success('Month re-opened'); load();
     } catch { toast.error('Error'); }
+  };
+
+  const deleteMonth = async (m) => {
+    try {
+      await api.delete(`/admin/months/${m.month}/${m.year}`);
+      toast.success('Month deleted');
+      setDelConfirm(null); load();
+    } catch (err) { toast.error(err.response?.data?.message || 'Cannot delete'); }
   };
 
   const openMonths   = months.filter(m => m.isOpen && !m.isClosed);
@@ -76,7 +112,7 @@ export default function AdminMonths() {
           <p className="text-slate-500 text-[11px] mt-0.5 pl-5">Open months for manager access · Lock to finalize</p>
         </div>
         <button
-          onClick={() => { setForm({ month: now.getMonth() + 1, year: now.getFullYear(), managerId: '' }); setModal(true); }}
+          onClick={openAdd}
           className="btn-primary flex items-center gap-1.5 text-xs px-3 py-2 flex-shrink-0"
         >
           <Plus size={14} /> Open Month
@@ -111,89 +147,186 @@ export default function AdminMonths() {
                   </p>
                 </div>
               </div>
-              <button onClick={() => closeMonth(m.month, m.year)}
-                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl flex-shrink-0"
-                style={{ background: 'rgba(248,113,113,0.10)', color: '#f87171', border: '1px solid rgba(248,113,113,0.22)' }}>
-                <Lock size={12} /> Lock
-              </button>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button onClick={() => openEdit(m)}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center"
+                  style={{ background: 'rgba(96,165,250,0.10)', border: '1px solid rgba(96,165,250,0.20)', WebkitTapHighlightColor: 'transparent' }}
+                  title="Edit / Reassign Manager">
+                  <Pencil size={13} className="text-blue-400" />
+                </button>
+                <button onClick={() => closeMonth(m.month, m.year)}
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl"
+                  style={{ background: 'rgba(248,113,113,0.10)', color: '#f87171', border: '1px solid rgba(248,113,113,0.22)' }}>
+                  <Lock size={12} /> Lock
+                </button>
+                <button onClick={() => setDelConfirm(m)}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center"
+                  style={{ background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.20)', WebkitTapHighlightColor: 'transparent' }}>
+                  <Trash2 size={13} className="text-red-400" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Locked Months ── */}
+      {/* ── Locked Months — Table ── */}
       {closedMonths.length > 0 && (
         <div>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2.5 pl-1">Locked</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-            {closedMonths.map(m => (
-              <div key={`${m.month}-${m.year}`} className="rounded-2xl p-4" style={glass}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.20)' }}>
-                      <Lock size={13} style={{ color: '#f87171' }} />
-                    </div>
-                    <div>
-                      <p className="text-white font-semibold text-sm">{MONTHS_FULL[m.month - 1].slice(0,3)} {m.year}</p>
-                      <span className="badge-closed text-[10px]">Closed</span>
-                    </div>
-                  </div>
-                  <button onClick={() => reopenMonth(m.month, m.year)}
-                    className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-xl flex-shrink-0"
-                    style={{ background: 'rgba(52,211,153,0.08)', color: '#34d399', border: '1px solid rgba(52,211,153,0.20)' }}>
-                    <Unlock size={11} /> Re-open
-                  </button>
-                </div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <div>
-                    <p className="text-slate-600 mb-0.5">Manager</p>
-                    <p className="text-slate-300 font-medium truncate max-w-[100px]">{m.manager ? rn(m.manager.name) : '—'}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-slate-600 mb-0.5">Locked On</p>
-                    <p className="text-slate-400">{m.closedAt ? new Date(m.closedAt).toLocaleDateString('en-IN') : '—'}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="rounded-2xl overflow-hidden" style={glass}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                    <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Month</th>
+                    <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Manager</th>
+                    <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Locked On</th>
+                    <th className="text-right py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {closedMonths.map(m => (
+                    <tr key={`${m.month}-${m.year}`}
+                      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.20)' }}>
+                            <Lock size={11} style={{ color: '#f87171' }} />
+                          </div>
+                          <div>
+                            <p className="text-white font-semibold text-sm">{MONTHS_FULL[m.month - 1]} {m.year}</p>
+                            <span className="badge-closed text-[10px]">Closed</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        {m.manager ? (
+                          <div className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                              {rn(m.manager.name)?.[0]?.toUpperCase()}
+                            </span>
+                            <span className="text-slate-300 text-sm">{rn(m.manager.name)}</span>
+                          </div>
+                        ) : <span className="text-slate-600 text-sm">—</span>}
+                      </td>
+                      <td className="py-3 px-4 text-slate-400 text-sm hidden sm:table-cell">
+                        {m.closedAt ? new Date(m.closedAt).toLocaleDateString('en-IN') : '—'}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button onClick={() => reopenMonth(m.month, m.year)}
+                            className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-xl"
+                            style={{ background: 'rgba(52,211,153,0.08)', color: '#34d399', border: '1px solid rgba(52,211,153,0.20)' }}>
+                            <Unlock size={11} /> Re-open
+                          </button>
+                          <button onClick={() => setDelConfirm(m)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center"
+                            style={{ background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.18)', WebkitTapHighlightColor: 'transparent' }}>
+                            <Trash2 size={12} className="text-red-400" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── Modal ── */}
+      {/* ── Add / Edit Modal ── */}
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
-          <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg,#0d1528,#0a1020)', border: '1px solid rgba(255,255,255,0.10)', boxShadow: '0 32px 80px rgba(0,0,0,0.8)' }}>
-            <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-              <h2 className="font-semibold text-white">Open Month for Manager</h2>
-              <button onClick={() => setModal(false)} className="text-slate-400 hover:text-white"><X size={18} /></button>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
+          <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl overflow-hidden" style={modalGlass}>
+
+            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="flex items-center gap-2">
+                {modal === 'edit' ? <UserCog size={16} className="text-blue-400" /> : <CalendarDays size={16} className="text-teal-400" />}
+                <h2 className="font-bold text-white text-sm">
+                  {modal === 'edit' ? `Edit — ${MONTHS_FULL[editTarget.month - 1]} ${editTarget.year}` : 'Open Month'}
+                </h2>
+              </div>
+              <button onClick={() => setModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400"
+                style={{ background: 'rgba(255,255,255,0.06)', WebkitTapHighlightColor: 'transparent' }}>
+                <X size={16} />
+              </button>
             </div>
-            <form onSubmit={openMonth} className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="label">Month</label>
-                  <select className="input" value={form.month} onChange={e => setForm({ ...form, month: +e.target.value })}>
-                    {MONTHS_FULL.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-                  </select>
+
+            <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
+              {modal === 'add' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="label text-xs">Month</label>
+                    <div className="relative">
+                      <select className="input appearance-none pr-8 cursor-pointer" value={form.month}
+                        onChange={e => setForm({ ...form, month: +e.target.value })}>
+                        {MONTHS_FULL.map((mn, i) => <option key={i} value={i + 1}>{mn}</option>)}
+                      </select>
+                      <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">▾</div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="label text-xs">Year</label>
+                    <input className="input" type="number" value={form.year}
+                      onChange={e => setForm({ ...form, year: +e.target.value })} min="2020" max="2030" />
+                  </div>
                 </div>
-                <div>
-                  <label className="label">Year</label>
-                  <input className="input" type="number" value={form.year} onChange={e => setForm({ ...form, year: +e.target.value })} min="2020" max="2030" />
-                </div>
-              </div>
+              )}
+
               <div>
-                <label className="label">Assign Manager <span className="text-slate-600">(optional)</span></label>
-                <select className="input" value={form.managerId} onChange={e => setForm({ ...form, managerId: e.target.value })}>
-                  <option value="">-- Select Member --</option>
-                  {members.map(m => <option key={m._id} value={m._id}>{rn(m.name)} (Room: {m.room})</option>)}
-                </select>
+                <label className="label text-xs">
+                  {modal === 'edit' ? 'Reassign Manager' : 'Assign Manager'}
+                  <span className="text-slate-600 font-normal ml-1">(optional)</span>
+                </label>
+                <div className="relative">
+                  <select className="input appearance-none pr-8 cursor-pointer" value={form.managerId}
+                    onChange={e => setForm({ ...form, managerId: e.target.value })}>
+                    <option value="">— No Manager —</option>
+                    {members.map(m => (
+                      <option key={m._id} value={m._id}>
+                        {rn(m.name)}{m.room ? ` · Room ${m.room}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">▾</div>
+                </div>
+                {members.length === 0 && (
+                  <p className="text-[11px] text-slate-600 mt-1">No active members found</p>
+                )}
               </div>
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setModal(false)} className="btn-secondary flex-1">Cancel</button>
-                <button type="submit" className="btn-primary flex-1" disabled={loading}>{loading ? 'Opening…' : 'Open Month'}</button>
+
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setModal(false)} className="btn-secondary flex-1 text-sm">Cancel</button>
+                <button type="submit" className="btn-primary flex-1 text-sm" disabled={loading}>
+                  {loading ? 'Saving…' : modal === 'edit' ? 'Update' : 'Open Month'}
+                </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirm ── */}
+      {delConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
+          <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl p-5 space-y-4" style={modalGlass}>
+            <h2 className="font-bold text-white">Delete Month?</h2>
+            <p className="text-slate-400 text-sm">
+              Permanently delete <span className="text-white font-medium">{MONTHS_FULL[delConfirm.month - 1]} {delConfirm.year}</span>?
+              This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setDelConfirm(null)} className="btn-secondary flex-1">Cancel</button>
+              <button onClick={() => deleteMonth(delConfirm)} className="btn-danger flex-1">Delete</button>
+            </div>
           </div>
         </div>
       )}

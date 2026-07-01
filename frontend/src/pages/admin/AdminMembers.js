@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Pencil, UserCheck, UserX, Trash2, X, ShieldCheck, Users, Sparkles } from 'lucide-react';
+import { Plus, Pencil, UserCheck, UserX, Trash2, X, ShieldCheck, Sparkles, KeyRound } from 'lucide-react';
 import api from '../../api';
 
 const EMPTY = { name: '', email: '', password: '', phone: '', room: '', joinDate: '', role: 'member' };
@@ -13,12 +13,20 @@ const glass = {
   boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07)',
 };
 
+const modalGlass = {
+  background: 'rgba(10,15,30,0.96)',
+  backdropFilter: 'blur(48px)',
+  WebkitBackdropFilter: 'blur(48px)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  boxShadow: '0 24px 64px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.08)',
+};
+
 const realName = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
 const roleAccent = {
-  admin:   { bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.25)',   text: '#f87171',  avatarBg: 'rgba(239,68,68,0.15)'   },
-  manager: { bg: 'rgba(245,158,11,0.10)',  border: 'rgba(245,158,11,0.22)',  text: '#fbbf24',  avatarBg: 'rgba(245,158,11,0.15)'  },
-  member:  { bg: 'rgba(20,184,166,0.08)',  border: 'rgba(20,184,166,0.18)',  text: '#2dd4bf',  avatarBg: 'rgba(20,184,166,0.15)'  },
+  admin:   { avatarBg: 'rgba(239,68,68,0.15)',  border: 'rgba(239,68,68,0.25)',   text: '#f87171' },
+  manager: { avatarBg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.22)',  text: '#fbbf24' },
+  member:  { avatarBg: 'rgba(20,184,166,0.15)', border: 'rgba(20,184,166,0.18)',  text: '#2dd4bf' },
 };
 
 export default function AdminMembers() {
@@ -74,61 +82,87 @@ export default function AdminMembers() {
   const active   = members.filter(m => m.isActive);
   const inactive = members.filter(m => !m.isActive);
 
-  const MemberCard = ({ m }) => {
-    const ac = roleAccent[m.role] || roleAccent.member;
-    return (
-      <div className="rounded-2xl p-4 transition-all" style={{ ...glass, opacity: m.isActive ? 1 : 0.55 }}>
-        {/* Top row */}
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
-              style={{ background: ac.avatarBg, border: `1px solid ${ac.border}`, color: ac.text }}>
-              {realName(m.name)?.[0]?.toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <p className="text-white font-semibold text-sm truncate">{realName(m.name)}</p>
-              <p className="text-slate-500 text-[11px] truncate">{m.email}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            {m.role === 'admin'   && <span className="badge-admin   text-[10px]">Admin</span>}
-            {m.role === 'manager' && <span className="badge-manager text-[10px]">Manager</span>}
-            {m.role === 'member'  && <span className="badge-member  text-[10px]">Member</span>}
-          </div>
-        </div>
-
-        {/* Info row */}
-        <div className="flex items-center gap-3 mb-3 text-[11px] text-slate-500">
-          {m.room && <span className="flex items-center gap-1">🚪 Room {m.room}</span>}
-          {m.phone && <span className="flex items-center gap-1">📞 {m.phone}</span>}
-          <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-semibold ${m.isActive ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-            {m.isActive ? 'Active' : 'Disabled'}
-          </span>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 pt-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <button onClick={() => openEdit(m)}
-            className="flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-xl flex-1 justify-center"
-            style={{ background: 'rgba(99,102,241,0.10)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.20)' }}>
-            <Pencil size={12} /> Edit
-          </button>
-          <button onClick={() => toggleActive(m)}
-            className="flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-xl flex-1 justify-center"
-            style={{ background: m.isActive ? 'rgba(245,158,11,0.10)' : 'rgba(52,211,153,0.10)', color: m.isActive ? '#fbbf24' : '#34d399', border: `1px solid ${m.isActive ? 'rgba(245,158,11,0.20)' : 'rgba(52,211,153,0.20)'}` }}>
-            {m.isActive ? <><UserX size={12} /> Disable</> : <><UserCheck size={12} /> Enable</>}
-          </button>
-          {m.role !== 'admin' && (
-            <button onClick={() => setDeleteConfirm(m)}
-              className="flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-xl"
-              style={{ background: 'rgba(248,113,113,0.10)', color: '#f87171', border: '1px solid rgba(248,113,113,0.20)' }}>
-              <Trash2 size={12} />
-            </button>
-          )}
+  const MemberTable = ({ rows, label, labelColor }) => (
+    <div>
+      <p className={`text-[10px] font-bold uppercase tracking-widest mb-2.5 pl-1`} style={{ color: labelColor }}>{label}</p>
+      <div className="rounded-2xl overflow-hidden" style={glass}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Member</th>
+                <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Room</th>
+                <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Phone</th>
+                <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Role</th>
+                <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+                <th className="text-right py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(m => {
+                const ac = roleAccent[m.role] || roleAccent.member;
+                return (
+                  <tr key={m._id}
+                    style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: m.isActive ? 1 : 0.55 }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0"
+                          style={{ background: ac.avatarBg, border: `1px solid ${ac.border}`, color: ac.text }}>
+                          {realName(m.name)?.[0]?.toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-white font-semibold text-sm truncate">{realName(m.name)}</p>
+                          <p className="text-slate-500 text-[11px] truncate">{m.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-slate-400 text-sm hidden sm:table-cell">{m.room || '—'}</td>
+                    <td className="py-3 px-4 text-slate-400 text-sm hidden md:table-cell">{m.phone || '—'}</td>
+                    <td className="py-3 px-4">
+                      {m.role === 'admin'   && <span className="badge-admin   text-[10px]">Admin</span>}
+                      {m.role === 'manager' && <span className="badge-manager text-[10px]">Manager</span>}
+                      {m.role === 'member'  && <span className="badge-member  text-[10px]">Member</span>}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${m.isActive ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                        {m.isActive ? 'Active' : 'Disabled'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button onClick={() => openEdit(m)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center"
+                          style={{ background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.20)', WebkitTapHighlightColor: 'transparent' }}
+                          title="Edit">
+                          <Pencil size={12} className="text-violet-400" />
+                        </button>
+                        <button onClick={() => toggleActive(m)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center"
+                          style={{ background: m.isActive ? 'rgba(245,158,11,0.10)' : 'rgba(52,211,153,0.10)', border: `1px solid ${m.isActive ? 'rgba(245,158,11,0.20)' : 'rgba(52,211,153,0.20)'}`, WebkitTapHighlightColor: 'transparent' }}
+                          title={m.isActive ? 'Disable' : 'Enable'}>
+                          {m.isActive ? <UserX size={12} className="text-amber-400" /> : <UserCheck size={12} className="text-teal-400" />}
+                        </button>
+                        {m.role !== 'admin' && (
+                          <button onClick={() => setDeleteConfirm(m)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center"
+                            style={{ background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.20)', WebkitTapHighlightColor: 'transparent' }}
+                            title="Delete">
+                            <Trash2 size={12} className="text-red-400" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <div className="space-y-5">
@@ -155,90 +189,97 @@ export default function AdminMembers() {
         </button>
       </div>
 
-      {/* ── Active Members ── */}
-      {active.length > 0 && (
-        <div>
-          <p className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mb-2.5 pl-1 flex items-center gap-1.5">
-            <Users size={11} /> Active Members
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {active.map(m => <MemberCard key={m._id} m={m} />)}
-          </div>
-        </div>
-      )}
-
-      {/* ── Disabled Members ── */}
-      {inactive.length > 0 && (
-        <div>
-          <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-2.5 pl-1">Disabled</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {inactive.map(m => <MemberCard key={m._id} m={m} />)}
-          </div>
-        </div>
-      )}
-
       {members.length === 0 && (
         <div className="rounded-2xl py-12 text-center text-slate-600 text-sm" style={glass}>No members yet</div>
       )}
 
+      {active.length > 0 && <MemberTable rows={active} label="Active Members" labelColor="#2dd4bf" />}
+      {inactive.length > 0 && <MemberTable rows={inactive} label="Disabled" labelColor="#475569" />}
+
       {/* ── Add / Edit Modal ── */}
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
-          <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg,#0d1528,#0a1020)', border: '1px solid rgba(255,255,255,0.10)', boxShadow: '0 32px 80px rgba(0,0,0,0.8)' }}>
-            <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-              <h2 className="font-semibold text-white">{editing ? 'Edit Member' : 'Add Member'}</h2>
-              <button onClick={() => setModal(false)} className="text-slate-400 hover:text-white"><X size={18} /></button>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
+          <div className="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl overflow-hidden" style={modalGlass}>
+
+            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <h2 className="font-bold text-white text-sm">{editing ? '✏️ Edit Member' : '👤 Add Member'}</h2>
+              <button onClick={() => setModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400"
+                style={{ background: 'rgba(255,255,255,0.06)', WebkitTapHighlightColor: 'transparent' }}>
+                <X size={16} />
+              </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+
+            <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3 max-h-[80vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="label">Name</label>
+                  <label className="label text-xs">Name</label>
                   <input className="input" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
                 </div>
                 <div>
-                  <label className="label">Email</label>
+                  <label className="label text-xs">Email</label>
                   <input className="input" type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
                 </div>
                 <div>
-                  <label className="label">{editing ? 'New Password' : 'Password'}</label>
-                  <input className="input" type="password" placeholder={editing ? 'Leave blank to keep' : 'mess1234'} value={form.password} onChange={e => setForm({...form, password: e.target.value})} required={!editing} />
-                </div>
-                <div>
-                  <label className="label">Phone</label>
-                  <input className="input" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
-                </div>
-                <div>
-                  <label className="label">Room</label>
+                  <label className="label text-xs">Room</label>
                   <input className="input" value={form.room} onChange={e => setForm({...form, room: e.target.value})} />
                 </div>
                 <div>
-                  <label className="label">Join Date</label>
+                  <label className="label text-xs">Phone</label>
+                  <input className="input" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label text-xs">Join Date</label>
                   <input className="input" type="date" value={form.joinDate} onChange={e => setForm({...form, joinDate: e.target.value})} />
                 </div>
-                <div className="col-span-2">
-                  <label className="label flex items-center gap-1.5"><ShieldCheck size={13} />Role</label>
-                  <select className="input" value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
-                    <option value="member">Member</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                  </select>
+                <div>
+                  <label className="label text-xs flex items-center gap-1"><ShieldCheck size={12} />Role</label>
+                  <div className="relative">
+                    <select className="input appearance-none pr-8 cursor-pointer" value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
+                      <option value="member">Member</option>
+                      <option value="manager">Manager</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">▾</div>
+                  </div>
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setModal(false)} className="btn-secondary flex-1">Cancel</button>
-                <button type="submit" className="btn-primary flex-1" disabled={loading}>{loading ? 'Saving…' : 'Save'}</button>
+
+              {/* Password section */}
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '12px' }}>
+                <label className="label text-xs flex items-center gap-1.5">
+                  <KeyRound size={12} className="text-amber-400" />
+                  {editing ? 'Change Password' : 'Password'}
+                  {editing && <span className="text-slate-600 font-normal">(leave blank to keep)</span>}
+                </label>
+                <input className="input" type="password"
+                  placeholder={editing ? 'Enter new password…' : 'mess1234'}
+                  value={form.password}
+                  onChange={e => setForm({...form, password: e.target.value})}
+                  required={!editing} />
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setModal(false)} className="btn-secondary flex-1 text-sm">Cancel</button>
+                <button type="submit" className="btn-primary flex-1 text-sm" disabled={loading}>
+                  {loading ? 'Saving…' : editing ? 'Update' : 'Add Member'}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* ── Delete Confirm Modal ── */}
+      {/* ── Delete Confirm ── */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
-          <div className="w-full max-w-sm p-6 space-y-4 rounded-2xl" style={{ background: 'linear-gradient(135deg,#0d1528,#0a1020)', border: '1px solid rgba(239,68,68,0.25)', boxShadow: '0 32px 80px rgba(0,0,0,0.8)' }}>
-            <h2 className="font-semibold text-white">Delete Member</h2>
-            <p className="text-slate-400 text-sm">Permanently delete <span className="text-white font-medium">{realName(deleteConfirm.name)}</span>? This cannot be undone.</p>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
+          <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl p-5 space-y-4" style={modalGlass}>
+            <h2 className="font-bold text-white">Delete Member?</h2>
+            <p className="text-slate-400 text-sm">
+              Permanently delete <span className="text-white font-medium">{realName(deleteConfirm.name)}</span>? This cannot be undone.
+            </p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteConfirm(null)} className="btn-secondary flex-1">Cancel</button>
               <button onClick={() => hardDelete(deleteConfirm._id)} className="btn-danger flex-1">Delete</button>

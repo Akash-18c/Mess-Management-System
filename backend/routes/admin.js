@@ -46,9 +46,9 @@ router.get('/members', async (req, res) => {
 
 router.post('/members', async (req, res) => {
   try {
-    const { name, email, password, phone, room, joinDate } = req.body;
+    const { name, email, password, phone, room, joinDate, role } = req.body;
     const hashed = await bcrypt.hash(password || 'mess1234', 10);
-    const user = await User.create({ name, email, password: hashed, phone, room, joinDate, role: 'member' });
+    const user = await User.create({ name, email, password: hashed, phone, room, joinDate, role: role || 'member' });
     res.status(201).json({ ...user.toObject(), password: undefined });
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
@@ -323,6 +323,25 @@ router.post('/open-month/:month/:year', async (req, res) => {
       await User.findByIdAndUpdate(managerId, { role: 'manager' });
     }
     res.json(summary);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Delete a month record (summary + assignment only, no data purge)
+router.delete('/months/:month/:year', async (req, res) => {
+  try {
+    const month = parseInt(req.params.month);
+    const year  = parseInt(req.params.year);
+    const summary = await MonthlySummary.findOne({ month, year });
+    if (summary?.isClosed === false && summary?.isOpen) {
+      return res.status(400).json({ message: 'Cannot delete an open month — lock it first' });
+    }
+    const assignment = await MonthAssignment.findOne({ month, year });
+    if (assignment) await User.findByIdAndUpdate(assignment.managerId, { role: 'member' });
+    await Promise.all([
+      MonthlySummary.deleteOne({ month, year }),
+      MonthAssignment.deleteOne({ month, year }),
+    ]);
+    res.json({ message: 'Month deleted' });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
