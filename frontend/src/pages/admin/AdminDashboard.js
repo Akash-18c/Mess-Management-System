@@ -4,6 +4,7 @@ import { Lock, Unlock, ChevronDown, Calendar, Sparkles, Activity, UtensilsCrosse
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar } from 'recharts';
 import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
+import PageLoader from '../../components/PageLoader';
 
 const MONTHS      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -81,14 +82,7 @@ export default function AdminDashboard() {
       .then(r => setMonthData(r.data)).catch(() => setMonthData(null));
   }, [selectedMonth, selectedYear, isCurrentMonth]);
 
-  if (!data) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-10 h-10 border-2 border-teal-500/30 border-t-teal-400 rounded-full animate-spin" />
-        <span className="text-slate-400 text-sm">Loading dashboard…</span>
-      </div>
-    </div>
-  );
+  if (!data) return <PageLoader />;
 
   const { totalMembers, currentSummary, currentManager, allAssignments, totalCollected, individualCosts } = data;
 
