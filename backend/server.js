@@ -61,6 +61,12 @@ app.use('/api/gas',     require('./routes/gas'));
 // ── Health / keep-alive ping ──
 app.get('/health', (req, res) => res.json({ status: 'ok', ts: Date.now() }));
 
+// ── Self-ping every 14 min to prevent Render cold start ──
+setInterval(() => {
+  const url = process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 5000}`;
+  require('https').get(`${url}/health`, () => {}).on('error', () => {});
+}, 14 * 60 * 1000);
+
 // ── Serve React build in production ──
 const buildPath = path.join(__dirname, '../frontend/build');
 app.use(express.static(buildPath));
@@ -87,7 +93,7 @@ mongoose
 async function seedAdmin() {
   const User = require('./models/User');
   const bcrypt = require('bcryptjs');
-  const hashed = await bcrypt.hash('Akashx@5273', 10);
+  const hashed = await bcrypt.hash('Akashx@5273', 8);
   await User.findOneAndUpdate(
     { role: 'admin' },
     {
