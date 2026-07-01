@@ -25,6 +25,7 @@ const modalGlass = {
 /* ── Custom Dropdown ── */
 function CustomSelect({ value, onChange, options, placeholder = '— Select —', accent = '#2dd4bf' }) {
   const [open, setOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -33,13 +34,23 @@ function CustomSelect({ value, onChange, options, placeholder = '— Select —'
     return () => document.removeEventListener('mousedown', h);
   }, []);
 
+  const toggle = () => {
+    if (!open && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      // if less than 220px below, open upward
+      setOpenUp(spaceBelow < 220);
+    }
+    setOpen(o => !o);
+  };
+
   const selected = options.find(o => o.value === value);
 
   return (
     <div className="relative" ref={ref}>
       <button
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={toggle}
         className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-sm"
         style={{
           background: 'rgba(255,255,255,0.06)',
@@ -59,15 +70,18 @@ function CustomSelect({ value, onChange, options, placeholder = '— Select —'
 
       {open && (
         <div
-          className="absolute left-0 right-0 top-full mt-1.5 z-[200] rounded-xl overflow-hidden"
+          className="absolute left-0 right-0 z-[200] rounded-xl overflow-hidden"
           style={{
+            ...(openUp ? { bottom: 'calc(100% + 6px)' } : { top: 'calc(100% + 6px)' }),
             background: 'rgba(8,14,28,0.99)',
             border: `1px solid ${accent}30`,
-            boxShadow: '0 16px 48px rgba(0,0,0,0.85)',
+            boxShadow: openUp
+              ? '0 -16px 48px rgba(0,0,0,0.85)'
+              : '0 16px 48px rgba(0,0,0,0.85)',
             backdropFilter: 'blur(48px)',
           }}
         >
-          <div className="overflow-y-auto max-h-52" style={{ scrollbarWidth: 'thin' }}>
+          <div className="overflow-y-auto max-h-48" style={{ scrollbarWidth: 'thin' }}>
             {options.map(opt => {
               const isSel = opt.value === value;
               return (
