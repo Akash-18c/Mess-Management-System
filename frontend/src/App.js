@@ -7,7 +7,6 @@ import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminMembers from './pages/admin/AdminMembers';
 import AdminAssignments from './pages/admin/AdminAssignments';
-import AdminCategories from './pages/admin/AdminCategories';
 import AdminReports from './pages/admin/AdminReports';
 import AdminMonths from './pages/admin/AdminMonths';
 import AdminMasiSalary from './pages/admin/AdminMasiSalary';
@@ -64,7 +63,6 @@ export default function App() {
           <Route path="members" element={<AdminMembers />} />
           <Route path="assignments" element={<AdminAssignments />} />
           <Route path="months" element={<AdminMonths />} />
-          <Route path="categories" element={<AdminCategories />} />
           <Route path="reports" element={<AdminReports />} />
           <Route path="masi-salary" element={<AdminMasiSalary />} />
           <Route path="expenses-history" element={<AdminExpensesHistory />} />
