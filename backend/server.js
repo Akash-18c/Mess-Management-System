@@ -98,7 +98,7 @@ async function seedAdmin() {
     { role: 'admin' },
     {
       name: 'Admin (Akash Chakraborty)',
-      email: 'akashadmin@mess1',
+      email: 'Akashadmin@mess1',
       password: hashed,
       phone: '0000000000',
       room: 'N/A',

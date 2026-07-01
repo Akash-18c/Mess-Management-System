@@ -249,7 +249,7 @@ router.delete('/purge-all-members', async (req, res) => {
     const RiceBag     = require('../models/RiceBag');
     const GasCylinder = require('../models/GasCylinder');
     const OtherCharge = require('../models/OtherCharge');
-    const [members, meals, grocery, other, payments, bills, summaries, assignments, gas, rice, otherCharges, masi] = await Promise.all([
+    const [members, meals, grocery, other, payments, bills, summaries, assignments, gas, rice, otherCharges, masi, categories] = await Promise.all([
       User.deleteMany({ role: { $ne: 'admin' } }),
       Meal.deleteMany({}),
       GroceryExpense.deleteMany({}),
@@ -262,10 +262,14 @@ router.delete('/purge-all-members', async (req, res) => {
       RiceBag.deleteMany({}),
       OtherCharge.deleteMany({}),
       MasiSalary.deleteMany({}),
+      ExpenseCategory.deleteMany({}),
     ]);
+    // Re-seed default categories after purge
+    const defaults = ['Rice Bag','Gas Cylinder','Fuel','Utensils','Maintenance','Miscellaneous','Internet','Water','Electricity'];
+    await Promise.all(defaults.map(name => ExpenseCategory.create({ name, type: 'other', isActive: true })));
     res.json({
-      message: 'All members and their data deleted. Admin account preserved.',
-      deleted: { members: members.deletedCount, meals: meals.deletedCount, groceries: grocery.deletedCount, otherExpenses: other.deletedCount, payments: payments.deletedCount, bills: bills.deletedCount, summaries: summaries.deletedCount, assignments: assignments.deletedCount, gasCylinders: gas.deletedCount, riceBags: rice.deletedCount, otherCharges: otherCharges.deletedCount, masiSalary: masi.deletedCount },
+      message: 'All data deleted. Admin account and default categories preserved.',
+      deleted: { members: members.deletedCount, meals: meals.deletedCount, groceries: grocery.deletedCount, otherExpenses: other.deletedCount, payments: payments.deletedCount, bills: bills.deletedCount, summaries: summaries.deletedCount, assignments: assignments.deletedCount, gasCylinders: gas.deletedCount, riceBags: rice.deletedCount, otherCharges: otherCharges.deletedCount, masiSalary: masi.deletedCount, categories: categories.deletedCount },
     });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
