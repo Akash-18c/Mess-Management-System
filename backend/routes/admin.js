@@ -241,6 +241,35 @@ router.get('/month-data/:month/:year', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// --- Purge All Members ---
+router.delete('/purge-all-members', async (req, res) => {
+  try {
+    const Meal        = require('../models/Meal');
+    const Payment     = require('../models/Payment');
+    const RiceBag     = require('../models/RiceBag');
+    const GasCylinder = require('../models/GasCylinder');
+    const OtherCharge = require('../models/OtherCharge');
+    const [members, meals, grocery, other, payments, bills, summaries, assignments, gas, rice, otherCharges, masi] = await Promise.all([
+      User.deleteMany({ role: { $ne: 'admin' } }),
+      Meal.deleteMany({}),
+      GroceryExpense.deleteMany({}),
+      OtherExpense.deleteMany({}),
+      Payment.deleteMany({}),
+      Bill.deleteMany({}),
+      MonthlySummary.deleteMany({}),
+      MonthAssignment.deleteMany({}),
+      GasCylinder.deleteMany({}),
+      RiceBag.deleteMany({}),
+      OtherCharge.deleteMany({}),
+      MasiSalary.deleteMany({}),
+    ]);
+    res.json({
+      message: 'All members and their data deleted. Admin account preserved.',
+      deleted: { members: members.deletedCount, meals: meals.deletedCount, groceries: grocery.deletedCount, otherExpenses: other.deletedCount, payments: payments.deletedCount, bills: bills.deletedCount, summaries: summaries.deletedCount, assignments: assignments.deletedCount, gasCylinders: gas.deletedCount, riceBags: rice.deletedCount, otherCharges: otherCharges.deletedCount, masiSalary: masi.deletedCount },
+    });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 // --- Purge Month Data ---
 router.delete('/purge-month/:month/:year', async (req, res) => {
   try {

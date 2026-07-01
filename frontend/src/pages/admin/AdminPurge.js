@@ -77,6 +77,28 @@ export default function AdminPurge() {
   const [loading, setLoading] = useState(false);
   const [result,  setResult]  = useState(null);
 
+  const [allModal,   setAllModal]   = useState(false);
+  const [allConfirm, setAllConfirm] = useState('');
+  const [allLoading, setAllLoading] = useState(false);
+  const [allResult,  setAllResult]  = useState(null);
+  const ALL_PHRASE = 'DELETE ALL MEMBERS';
+  const allMatch   = allConfirm.trim() === ALL_PHRASE;
+
+  const handlePurgeAll = async () => {
+    if (!allMatch) return toast.error('Confirmation text does not match');
+    setAllLoading(true);
+    try {
+      const { data } = await api.delete('/admin/purge-all-members');
+      setAllResult(data.deleted);
+      toast.success(data.message);
+      setAllModal(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Purge failed');
+    } finally {
+      setAllLoading(false);
+    }
+  };
+
   const selectedLabel = `${MONTHS[month - 1]} ${year}`;
   const confirmPhrase = `DELETE ${selectedLabel.toUpperCase()}`;
   const isMatch       = confirm.trim() === confirmPhrase;
@@ -186,6 +208,96 @@ export default function AdminPurge() {
           </button>
         </div>
       </div>
+
+      {/* ── Purge All Members ── */}
+      <div className="rounded-2xl p-4 sm:p-5 space-y-3" style={{ ...glass, border: '1px solid rgba(239,68,68,0.20)' }}>
+        <div className="flex items-center gap-2">
+          <ShieldAlert size={14} className="text-red-400" />
+          <p className="text-sm font-semibold text-white">Purge All Members</p>
+        </div>
+        <p className="text-xs text-slate-400 leading-relaxed">
+          Deletes <span className="text-white font-medium">all members</span> and every record across all months.
+          The admin account is preserved.
+        </p>
+        <button
+          onClick={() => { setAllConfirm(''); setAllResult(null); setAllModal(true); }}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white transition-opacity hover:opacity-80"
+          style={{ background: 'linear-gradient(135deg,#7f1d1d,#ef4444)', border: '1px solid rgba(239,68,68,0.3)' }}
+        >
+          <Trash2 size={14} /> Delete All Members &amp; Data
+        </button>
+        {allResult && (
+          <div className="rounded-xl p-3" style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.20)' }}>
+            <p className="text-xs font-semibold text-emerald-400 mb-2 flex items-center gap-1.5"><CheckCircle2 size={12} /> Purge Complete</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+              {Object.entries(allResult).map(([k, v]) => (
+                <div key={k} className="rounded-lg px-2.5 py-1.5 flex items-center justify-between gap-2"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <span className="text-xs text-slate-400 truncate capitalize">{k}</span>
+                  <span className="text-sm font-bold text-emerald-400">{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── All Members Confirm Modal ── */}
+      {allModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ background: 'rgba(0,0,0,0.80)', backdropFilter: 'blur(10px)' }}
+          onClick={e => e.target === e.currentTarget && setAllModal(false)}>
+          <div className="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl overflow-hidden"
+            style={{ background: 'linear-gradient(160deg,#130a0a 0%,#0a0f1e 100%)', border: '1px solid rgba(239,68,68,0.25)', boxShadow: '0 -4px 40px rgba(0,0,0,0.7)' }}>
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }} />
+            </div>
+            <div className="px-5 pt-4 pb-4 flex items-start gap-3" style={{ borderBottom: '1px solid rgba(239,68,68,0.12)' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                <AlertTriangle size={16} className="text-red-400" />
+              </div>
+              <div>
+                <p className="font-bold text-white">Delete All Members &amp; Data</p>
+                <p className="text-xs text-red-400 mt-0.5">Admin account will be preserved</p>
+              </div>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-slate-400 leading-relaxed">Type the phrase below exactly to confirm:</p>
+              <div className="rounded-xl px-4 py-3 text-center"
+                style={{ background: 'rgba(239,68,68,0.07)', border: '1px dashed rgba(239,68,68,0.30)' }}>
+                <span className="font-mono font-bold text-sm text-red-300 tracking-wide select-all">{ALL_PHRASE}</span>
+              </div>
+              <input
+                className="input font-mono text-sm w-full"
+                placeholder={ALL_PHRASE}
+                value={allConfirm}
+                onChange={e => setAllConfirm(e.target.value)}
+                autoFocus
+                style={{ borderColor: allConfirm.length > 0 ? (allMatch ? 'rgba(52,211,153,0.5)' : 'rgba(239,68,68,0.4)') : undefined }}
+              />
+              {allConfirm.length > 0 && (
+                <p className="text-xs font-medium flex items-center gap-1.5" style={{ color: allMatch ? '#34d399' : '#f87171' }}>
+                  {allMatch ? <><CheckCircle2 size={12} /> Ready to delete</> : <><AlertTriangle size={12} /> Phrase does not match</>}
+                </p>
+              )}
+              <div className="flex gap-3 pt-1">
+                <button onClick={() => setAllModal(false)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-300"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  Cancel
+                </button>
+                <button onClick={handlePurgeAll} disabled={allLoading || !allMatch}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-80"
+                  style={{ background: 'linear-gradient(135deg,#ef4444,#b91c1c)', border: '1px solid rgba(239,68,68,0.3)' }}>
+                  <Trash2 size={14} />
+                  {allLoading ? 'Deleting…' : 'Delete Forever'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Result ── */}
       {result && (
