@@ -1,35 +1,38 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, X, Pencil } from 'lucide-react';
+import { Plus, Trash2, X, Pencil, ChevronDown, ChevronUp, CreditCard } from 'lucide-react';
 import api from '../../api';
 
-const now = new Date();
+const now   = new Date();
 const MONTH = now.getMonth() + 1;
 const YEAR  = now.getFullYear();
 const EMPTY = { memberId: '', amount: '', method: 'Cash', date: now.toISOString().slice(0, 10), note: '' };
-const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
+const rn    = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
 const glass = {
   background: 'rgba(255,255,255,0.04)',
   backdropFilter: 'blur(40px)',
   WebkitBackdropFilter: 'blur(40px)',
   border: '1px solid rgba(255,255,255,0.10)',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)',
 };
 
 const modalGlass = {
-  background: 'rgba(10,15,30,0.92)',
+  background: 'rgba(10,15,30,0.95)',
   backdropFilter: 'blur(48px)',
   WebkitBackdropFilter: 'blur(48px)',
   border: '1px solid rgba(255,255,255,0.12)',
-  boxShadow: '0 24px 64px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08)',
 };
 
 const METHOD_STYLE = {
-  Cash: { bg: 'rgba(52,211,153,0.12)', color: '#34d399', border: 'rgba(52,211,153,0.25)' },
-  UPI:  { bg: 'rgba(96,165,250,0.12)', color: '#60a5fa', border: 'rgba(96,165,250,0.25)' },
-  Bank: { bg: 'rgba(167,139,250,0.12)',color: '#a78bfa', border: 'rgba(167,139,250,0.25)' },
+  Cash: { bg: 'rgba(52,211,153,0.12)',  color: '#34d399', border: 'rgba(52,211,153,0.25)' },
+  UPI:  { bg: 'rgba(96,165,250,0.12)',  color: '#60a5fa', border: 'rgba(96,165,250,0.25)' },
+  Bank: { bg: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: 'rgba(167,139,250,0.25)' },
 };
+
+const AVATAR_COLORS = [
+  'rgba(16,185,129,0.25)', 'rgba(96,165,250,0.25)', 'rgba(167,139,250,0.25)',
+  'rgba(251,146,60,0.25)', 'rgba(244,114,182,0.25)', 'rgba(45,212,191,0.25)',
+];
 
 export default function ManagerPayments() {
   const [payments, setPayments] = useState([]);
@@ -38,6 +41,7 @@ export default function ManagerPayments() {
   const [editId,   setEditId]   = useState(null);
   const [form,     setForm]     = useState(EMPTY);
   const [loading,  setLoading]  = useState(false);
+  const [expanded, setExpanded] = useState({});
 
   const f = v => setForm(p => ({ ...p, ...v }));
 
@@ -47,23 +51,36 @@ export default function ManagerPayments() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { const t = setInterval(load, 30000); return () => clearInterval(t); }, [load]);
 
-  // auto-refresh every 30s
-  useEffect(() => {
-    const t = setInterval(load, 30000);
-    return () => clearInterval(t);
-  }, [load]);
+  // Group payments by member
+  const grouped = payments.reduce((acc, p) => {
+    const id = p.memberId?._id || p.memberId;
+    if (!acc[id]) acc[id] = { member: p.memberId, payments: [] };
+    acc[id].payments.push(p);
+    return acc;
+  }, {});
 
-  const openAdd = () => { setEditId(null); setForm(EMPTY); setModal(true); };
+  const groups = Object.values(grouped).sort((a, b) =>
+    rn(a.member?.name).localeCompare(rn(b.member?.name))
+  );
+
+  const total = payments.reduce((s, p) => s + p.amount, 0);
+
+  const openAdd = (memberId = '') => {
+    setEditId(null);
+    setForm({ ...EMPTY, memberId });
+    setModal(true);
+  };
 
   const openEdit = (p) => {
     setEditId(p._id);
     setForm({
       memberId: p.memberId?._id || '',
-      amount: p.amount,
-      method: p.method || 'Cash',
-      date: p.date?.slice(0, 10) || now.toISOString().slice(0, 10),
-      note: p.note || '',
+      amount:   p.amount,
+      method:   p.method || 'Cash',
+      date:     p.date?.slice(0, 10) || now.toISOString().slice(0, 10),
+      note:     p.note || '',
     });
     setModal(true);
   };
@@ -71,7 +88,7 @@ export default function ManagerPayments() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setModal(false); // close instantly
+    setModal(false);
     try {
       if (editId) {
         await api.put(`/payments/${editId}`, { ...form, amount: +form.amount, month: MONTH, year: YEAR });
@@ -79,6 +96,8 @@ export default function ManagerPayments() {
       } else {
         await api.post('/payments', { ...form, amount: +form.amount, month: MONTH, year: YEAR });
         toast.success('Payment recorded');
+        // auto-expand the member's card
+        setExpanded(prev => ({ ...prev, [form.memberId]: true }));
       }
       load();
     } catch (err) {
@@ -96,7 +115,7 @@ export default function ManagerPayments() {
     load();
   };
 
-  const total = payments.reduce((s, p) => s + p.amount, 0);
+  const toggleExpand = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
     <div className="space-y-4">
@@ -108,73 +127,144 @@ export default function ManagerPayments() {
           <p className="text-[10px] text-slate-500 mt-0.5">Advance payments from members</p>
         </div>
         <button
-          onClick={openAdd}
-          className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95"
-          style={{ background: 'linear-gradient(135deg,#10b981,#059669)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s' }}
+          onClick={() => openAdd()}
+          className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl"
+          style={{ background: 'linear-gradient(135deg,#10b981,#059669)', WebkitTapHighlightColor: 'transparent' }}
         >
           <Plus size={14} /> Record
         </button>
       </div>
 
-      {/* ── Total Card ── */}
+      {/* ── Total ── */}
       <div className="rounded-2xl p-4" style={{ ...glass, border: '1px solid rgba(52,211,153,0.20)' }}>
         <p className="text-[10px] text-slate-500 mb-1 uppercase tracking-wide">Total Collected</p>
         <p className="text-2xl font-bold text-green-400">₹{total.toFixed(2)}</p>
-        <p className="text-[10px] text-slate-600 mt-0.5">{payments.length} payment{payments.length !== 1 ? 's' : ''} this month</p>
+        <p className="text-[10px] text-slate-600 mt-0.5">
+          {payments.length} payment{payments.length !== 1 ? 's' : ''} · {groups.length} member{groups.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
-      {/* ── Payment Cards ── */}
-      <div className="space-y-2">
-        {payments.length === 0 ? (
-          <div className="rounded-2xl py-12 text-center text-slate-500 text-sm" style={glass}>
-            No payments recorded yet
-          </div>
-        ) : (
-          payments.map(p => {
-            const ms = METHOD_STYLE[p.method] || METHOD_STYLE.Cash;
-            const name = rn(p.memberId?.name);
+      {/* ── Member Payment Groups ── */}
+      {groups.length === 0 ? (
+        <div className="rounded-2xl py-12 text-center text-slate-500 text-sm" style={glass}>
+          No payments recorded yet
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {groups.map(({ member, payments: mPayments }, idx) => {
+            const id       = member?._id;
+            const name     = rn(member?.name);
+            const mTotal   = mPayments.reduce((s, p) => s + p.amount, 0);
+            const isOpen   = !!expanded[id];
+            const avatarBg = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+
             return (
-              <div key={p._id} className="rounded-2xl p-3" style={glass}>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    {/* Avatar */}
+              <div key={id} className="rounded-2xl overflow-hidden" style={glass}>
+
+                {/* Member row — click to expand */}
+                <div
+                  className="flex items-center justify-between gap-2 px-4 py-3 cursor-pointer"
+                  style={{ background: isOpen ? 'rgba(255,255,255,0.03)' : 'transparent' }}
+                  onClick={() => toggleExpand(id)}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                      style={{ background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.25)' }}>
+                      style={{ background: avatarBg, border: '1px solid rgba(255,255,255,0.12)' }}>
                       {name?.[0]?.toUpperCase()}
                     </div>
                     <div className="min-w-0">
                       <p className="text-white font-semibold text-sm leading-tight truncate">{name}</p>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                          style={{ background: ms.bg, color: ms.color, border: `1px solid ${ms.border}` }}>
-                          {p.method}
-                        </span>
-                        <span className="text-[10px] text-slate-500">
-                          {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </span>
-                        {p.note && <span className="text-[10px] text-slate-600 truncate">· {p.note}</span>}
-                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        {mPayments.length} payment{mPayments.length !== 1 ? 's' : ''}
+                        {member?.room ? ` · Room ${member.room}` : ''}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <span className="text-base font-bold text-green-400">₹{p.amount.toFixed(0)}</span>
-                    <button onClick={() => openEdit(p)}
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-base font-bold text-green-400">₹{mTotal.toFixed(0)}</span>
+                    {/* Add payment for this member */}
+                    <button
+                      onClick={e => { e.stopPropagation(); openAdd(id); }}
                       className="w-7 h-7 rounded-lg flex items-center justify-center"
-                      style={{ background: 'rgba(96,165,250,0.10)', WebkitTapHighlightColor: 'transparent' }}>
-                      <Pencil size={12} className="text-blue-400" />
+                      style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.20)', WebkitTapHighlightColor: 'transparent' }}
+                    >
+                      <Plus size={12} className="text-emerald-400" />
                     </button>
-                    <button onClick={() => handleDelete(p._id)}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center"
-                      style={{ background: 'rgba(248,113,113,0.10)', WebkitTapHighlightColor: 'transparent' }}>
-                      <Trash2 size={12} className="text-red-400" />
-                    </button>
+                    {isOpen
+                      ? <ChevronUp size={14} className="text-slate-500" />
+                      : <ChevronDown size={14} className="text-slate-500" />
+                    }
                   </div>
                 </div>
+
+                {/* Expanded payment list */}
+                {isOpen && (
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                    {mPayments
+                      .slice()
+                      .sort((a, b) => new Date(b.date) - new Date(a.date))
+                      .map((p, i) => {
+                        const ms = METHOD_STYLE[p.method] || METHOD_STYLE.Cash;
+                        return (
+                          <div key={p._id}
+                            className="flex items-center justify-between gap-2 px-4 py-2.5"
+                            style={{
+                              borderBottom: i < mPayments.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                              background: 'rgba(0,0,0,0.15)',
+                            }}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <CreditCard size={13} className="text-slate-600 flex-shrink-0" />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                                    style={{ background: ms.bg, color: ms.color, border: `1px solid ${ms.border}` }}>
+                                    {p.method}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">
+                                    {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                  </span>
+                                </div>
+                                {p.note && (
+                                  <p className="text-[10px] text-slate-600 mt-0.5 truncate">{p.note}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <span className="text-sm font-bold text-green-400">₹{p.amount.toFixed(0)}</span>
+                              <button
+                                onClick={() => openEdit(p)}
+                                className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                style={{ background: 'rgba(96,165,250,0.10)', WebkitTapHighlightColor: 'transparent' }}
+                              >
+                                <Pencil size={11} className="text-blue-400" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(p._id)}
+                                className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                style={{ background: 'rgba(248,113,113,0.10)', WebkitTapHighlightColor: 'transparent' }}
+                              >
+                                <Trash2 size={11} className="text-red-400" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                    {/* Member total footer */}
+                    <div className="flex items-center justify-between px-4 py-2.5"
+                      style={{ background: 'rgba(52,211,153,0.04)', borderTop: '1px solid rgba(52,211,153,0.12)' }}>
+                      <span className="text-[10px] text-slate-500 uppercase tracking-wide font-semibold">Total Paid</span>
+                      <span className="text-sm font-bold text-green-400">₹{mTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
 
       {/* ── Modal ── */}
       {modal && (
@@ -182,7 +272,8 @@ export default function ManagerPayments() {
           style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
           <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl overflow-hidden" style={modalGlass}>
 
-            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="flex items-center justify-between px-5 py-4"
+              style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <h2 className="font-bold text-white text-sm">{editId ? '✏️ Edit Payment' : '💳 Record Payment'}</h2>
               <button onClick={() => setModal(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400"
@@ -212,12 +303,11 @@ export default function ManagerPayments() {
                 </div>
               </div>
 
-              {/* Method picker */}
               <div>
                 <label className="label text-xs mb-2">Method</label>
                 <div className="grid grid-cols-3 gap-2">
                   {['Cash', 'UPI', 'Bank'].map(m => {
-                    const ms = METHOD_STYLE[m];
+                    const ms  = METHOD_STYLE[m];
                     const sel = form.method === m;
                     return (
                       <button key={m} type="button" onClick={() => f({ method: m })}
