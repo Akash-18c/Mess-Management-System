@@ -90,11 +90,15 @@ export default function Login() {
       {/* ── Full-screen wrapper ───────────────────────────────────────── */}
       <div className="fixed inset-0 flex flex-col items-center justify-center px-4 overflow-y-auto overflow-x-hidden">
 
-        {/* Background image */}
-        <div className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        {/* Background image — desktop */}
+        <div className="fixed inset-0 bg-cover bg-center bg-no-repeat hidden sm:block"
           style={{ backgroundImage: `url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=2560&q=95')`, transform: 'scale(1.06)', filter: 'brightness(0.45) saturate(1.2)' }} />
-        <div className="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
+        <div className="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10 hidden sm:block"
           style={{ backgroundImage: `url('https://images.unsplash.com/photo-1567337710282-00832b415979?auto=format&fit=crop&w=2560&q=95')`, filter: 'brightness(0.35) saturate(1.35)' }} />
+
+        {/* Background image — mobile */}
+        <div className="fixed inset-0 bg-cover bg-center bg-no-repeat sm:hidden"
+          style={{ backgroundImage: `url('https://i.pinimg.com/originals/ec/88/df/ec88df8ac4de2ae2b494e499b77ceebd.jpg')`, filter: 'brightness(0.50) saturate(1.2)' }} />
 
         {/* Gradient overlay */}
         <div className="fixed inset-0"
