@@ -1,11 +1,13 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, ChevronDown, Calendar, Check } from 'lucide-react';
 import api from '../../api';
 
 const now = new Date();
-const MONTH = now.getMonth() + 1;
-const YEAR  = now.getFullYear();
+const CUR_MONTH = now.getMonth() + 1;
+const CUR_YEAR  = now.getFullYear();
+const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || '—'); };
 
 const glass = {
@@ -16,28 +18,55 @@ const glass = {
   boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)',
 };
 
+// build last 12 months + current
+function buildMonthOptions() {
+  const opts = [];
+  for (let i = 12; i >= 0; i--) {
+    let m = CUR_MONTH - i, y = CUR_YEAR;
+    while (m <= 0) { m += 12; y--; }
+    opts.push({ month: m, year: y });
+  }
+  return opts;
+}
+
 export default function ManagerBills() {
+  const [month,      setMonth]      = useState(CUR_MONTH);
+  const [year,       setYear]       = useState(CUR_YEAR);
   const [bills,      setBills]      = useState([]);
   const [summary,    setSummary]    = useState(null);
   const [generating, setGenerating] = useState(false);
+  const [dropOpen,   setDropOpen]   = useState(false);
+  const dropRef = useRef(null);
+
+  const monthOpts = buildMonthOptions();
+  const selectedLabel = `${MONTHS_FULL[month - 1]} ${year}`;
+  const isCurrent = month === CUR_MONTH && year === CUR_YEAR;
+
+  // close on outside click/touch
+  useEffect(() => {
+    const h = (e) => { if (dropRef.current && !dropRef.current.contains(e.target)) setDropOpen(false); };
+    document.addEventListener('mousedown', h);
+    document.addEventListener('touchstart', h);
+    return () => { document.removeEventListener('mousedown', h); document.removeEventListener('touchstart', h); };
+  }, []);
 
   const load = useCallback(() => {
-    api.get(`/bills/${MONTH}/${YEAR}`).then(r => setBills(Array.isArray(r.data) ? r.data : [])).catch(() => {});
-    api.get(`/summary/${MONTH}/${YEAR}`).then(r => setSummary(r.data)).catch(() => {});
-  }, []);
+    api.get(`/bills/${month}/${year}`).then(r => setBills(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+    api.get(`/summary/${month}/${year}`).then(r => setSummary(r.data)).catch(() => {});
+  }, [month, year]);
 
   useEffect(() => { load(); }, [load]);
 
-  // auto-refresh every 30s so payments reflect quickly
   useEffect(() => {
+    if (!isCurrent) return;
     const t = setInterval(load, 30000);
     return () => clearInterval(t);
-  }, [load]);
+  }, [load, isCurrent]);
 
   const generateBills = async () => {
     setGenerating(true);
     try {
-      await api.post(`/bills/generate/${MONTH}/${YEAR}`);
+      await api.post(`/bills/generate/${month}/${year}`);
       toast.success('Bills generated');
       load();
     } catch (err) {
@@ -61,24 +90,119 @@ export default function ManagerBills() {
         <button
           onClick={generateBills}
           disabled={generating}
-          className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95 disabled:opacity-60"
-          style={{ background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s' }}
+          className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95 disabled:opacity-60 flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s', boxShadow: '0 4px 14px rgba(139,92,246,0.30)' }}
         >
           <RefreshCw size={13} className={generating ? 'animate-spin' : ''} />
           {generating ? 'Generating…' : 'Generate'}
         </button>
       </div>
 
+      {/* ── Month Dropdown ── */}
+      <div className="relative" ref={dropRef}>
+        <button
+          onClick={() => setDropOpen(o => !o)}
+          className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl"
+          style={{
+            ...glass,
+            border: dropOpen ? '1px solid rgba(139,92,246,0.40)' : '1px solid rgba(255,255,255,0.10)',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)' }}>
+              <Calendar size={14} className="text-violet-400" />
+            </div>
+            <div className="text-left">
+              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Viewing Month</p>
+              <p className="text-white font-bold text-sm leading-tight">{selectedLabel}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {isCurrent && (
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }}>
+                LIVE
+              </span>
+            )}
+            <ChevronDown size={16} className="text-slate-400 transition-transform duration-200"
+              style={{ transform: dropOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+          </div>
+        </button>
+
+        {/* Dropdown panel */}
+        {dropOpen && (
+          <div className="absolute left-0 right-0 top-full mt-2 z-[200] rounded-2xl overflow-hidden"
+            style={{
+              background: 'rgba(8,12,24,0.97)',
+              backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)',
+              border: '1px solid rgba(139,92,246,0.25)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+            }}>
+
+            {/* Dropdown header */}
+            <div className="flex items-center gap-2 px-4 py-3"
+              style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(139,92,246,0.08)' }}>
+              <Calendar size={12} className="text-violet-400" />
+              <p className="text-[10px] font-bold text-violet-300 uppercase tracking-widest">Select Month</p>
+            </div>
+
+            {/* Month list */}
+            <div className="max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(139,92,246,0.3) transparent' }}>
+              {monthOpts.map(({ month: m, year: y }) => {
+                const isSel = m === month && y === year;
+                const isCur = m === CUR_MONTH && y === CUR_YEAR;
+                return (
+                  <button
+                    key={`${m}-${y}`}
+                    onClick={() => { setMonth(m); setYear(y); setDropOpen(false); }}
+                    className="w-full flex items-center justify-between px-4 py-3"
+                    style={{
+                      background: isSel ? 'rgba(139,92,246,0.15)' : 'transparent',
+                      borderLeft: isSel ? '2px solid #8b5cf6' : '2px solid transparent',
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      WebkitTapHighlightColor: 'transparent',
+                      transition: 'background 0.1s',
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                        style={{ background: isSel ? '#8b5cf6' : isCur ? '#34d399' : '#1e293b' }} />
+                      <span className="text-sm font-semibold"
+                        style={{ color: isSel ? '#c4b5fd' : '#94a3b8' }}>
+                        {MONTHS_FULL[m - 1]}
+                      </span>
+                      <span className="text-xs text-slate-600">{y}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isCur && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                          style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.20)' }}>
+                          LIVE
+                        </span>
+                      )}
+                      {isSel && <Check size={13} className="text-violet-400" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* ── Summary Cards ── */}
       <div className="grid grid-cols-2 gap-2">
         {[
-          { label: 'Meal Rate',   value: `₹${mealRate.toFixed(2)}`,                   color: '#34d399' },
-          { label: 'Total Meals', value: summary?.totalMeals || 0,                    color: '#60a5fa' },
-          { label: 'Grand Total', value: `₹${(summary?.grandTotal || 0).toFixed(2)}`, color: '#fbbf24' },
-          { label: 'Members',     value: bills.length,                                color: '#a78bfa' },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="rounded-2xl p-3" style={glass}>
-            <p className="text-[10px] text-slate-500 mb-1">{label}</p>
+          { label: 'Meal Rate',   value: `₹${mealRate.toFixed(2)}`,                   color: '#34d399', bg: 'rgba(52,211,153,0.08)',  border: 'rgba(52,211,153,0.15)'  },
+          { label: 'Total Meals', value: summary?.totalMeals || 0,                    color: '#60a5fa', bg: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.15)'  },
+          { label: 'Grand Total', value: `₹${(summary?.grandTotal || 0).toFixed(2)}`, color: '#fbbf24', bg: 'rgba(251,191,36,0.08)',  border: 'rgba(251,191,36,0.15)'  },
+          { label: 'Members',     value: bills.length,                                color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.15)' },
+        ].map(({ label, value, color, bg, border }) => (
+          <div key={label} className="rounded-2xl p-3"
+            style={{ background: bg, backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', border: `1px solid ${border}` }}>
+            <p className="text-[10px] text-slate-500 mb-1 font-medium uppercase tracking-wide">{label}</p>
             <p className="text-base font-bold" style={{ color }}>{value}</p>
           </div>
         ))}
@@ -89,7 +213,7 @@ export default function ManagerBills() {
         {bills.length === 0 ? (
           <div className="py-14 flex flex-col items-center gap-3">
             <span className="text-4xl">🧾</span>
-            <p className="text-slate-500 text-sm">No bills yet</p>
+            <p className="text-slate-500 text-sm">No bills for {selectedLabel}</p>
             <p className="text-slate-600 text-xs">Tap "Generate" to calculate bills</p>
           </div>
         ) : (
@@ -98,16 +222,16 @@ export default function ManagerBills() {
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
                   {[
-                    { h: 'Member',         cls: 'text-left  pl-4' },
-                    { h: 'Meals',          cls: 'text-right' },
-                    { h: 'Per Meal',       cls: 'text-right' },
-                    { h: 'Meal Cost',      cls: 'text-right' },
-                    { h: 'Gas',            cls: 'text-right' },
-                    { h: 'Other Exp',      cls: 'text-right' },
-                    { h: 'Other Chg',      cls: 'text-right' },
-                    { h: 'Masi',           cls: 'text-right' },
-                    { h: 'Advance',        cls: 'text-right' },
-                    { h: 'Due / Refund',   cls: 'text-right pr-4' },
+                    { h: 'Member',       cls: 'text-left  pl-4' },
+                    { h: 'Meals',        cls: 'text-right' },
+                    { h: 'Per Meal',     cls: 'text-right' },
+                    { h: 'Meal Cost',    cls: 'text-right' },
+                    { h: 'Gas',          cls: 'text-right' },
+                    { h: 'Other Exp',    cls: 'text-right' },
+                    { h: 'Other Chg',    cls: 'text-right' },
+                    { h: 'Masi',         cls: 'text-right' },
+                    { h: 'Advance',      cls: 'text-right' },
+                    { h: 'Due / Refund', cls: 'text-right pr-4' },
                   ].map(({ h, cls }) => (
                     <th key={h} className={`py-2.5 px-2 text-slate-500 font-semibold text-[10px] uppercase tracking-wide ${cls}`}>{h}</th>
                   ))}
@@ -115,16 +239,14 @@ export default function ManagerBills() {
               </thead>
               <tbody>
                 {bills.map((b, i) => {
-                  const due    = b.dueAmount ?? 0;
-                  const isDue  = due > 0;
-                  const name   = rn(b.memberId?.name);
-                  const masi   = b.masiSalary || 0;
+                  const due   = b.dueAmount ?? 0;
+                  const isDue = due > 0;
+                  const name  = rn(b.memberId?.name);
                   return (
                     <tr key={b._id} style={{
                       borderBottom: '1px solid rgba(255,255,255,0.04)',
                       background: i % 2 !== 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
                     }}>
-                      {/* Member */}
                       <td className="py-2.5 px-2 pl-4">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
@@ -137,23 +259,14 @@ export default function ManagerBills() {
                           </div>
                         </div>
                       </td>
-                      {/* Meals */}
                       <td className="py-2.5 px-2 text-right text-white font-semibold">{b.mealCount}</td>
-                      {/* Per Meal */}
                       <td className="py-2.5 px-2 text-right text-amber-400">₹{mealRate.toFixed(2)}</td>
-                      {/* Meal Cost */}
                       <td className="py-2.5 px-2 text-right text-slate-200">₹{(b.mealCost ?? (b.mealCount * mealRate)).toFixed(2)}</td>
-                      {/* Gas */}
-                      <td className="py-2.5 px-2 text-right" style={{ color: (b.gasCharge || 0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.gasCharge || 0).toFixed(2)}</td>
-                      {/* Other Shared */}
-                      <td className="py-2.5 px-2 text-right" style={{ color: (b.otherSharedCharge || 0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.otherSharedCharge || 0).toFixed(2)}</td>
-                      {/* Individual Other Charges */}
-                      <td className="py-2.5 px-2 text-right" style={{ color: (b.otherCharges || 0) > 0 ? '#f472b6' : '#475569' }}>₹{(b.otherCharges || 0).toFixed(2)}</td>
-                      {/* Masi — same for everyone */}
-                      <td className="py-2.5 px-2 text-right text-slate-400">₹{(b.masiSalary || 0).toFixed(2)}</td>
-                      {/* Advance */}
-                      <td className="py-2.5 px-2 text-right text-green-400">₹{(b.advance || 0).toFixed(2)}</td>
-                      {/* Due / Refund */}
+                      <td className="py-2.5 px-2 text-right" style={{ color: (b.gasCharge||0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.gasCharge||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right" style={{ color: (b.otherSharedCharge||0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.otherSharedCharge||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right" style={{ color: (b.otherCharges||0) > 0 ? '#f472b6' : '#475569' }}>₹{(b.otherCharges||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right text-slate-400">₹{(b.masiSalary||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right text-green-400">₹{(b.advance||0).toFixed(2)}</td>
                       <td className="py-2.5 px-2 pr-4 text-right">
                         <span className="font-bold px-2 py-0.5 rounded-lg text-[11px]" style={{
                           background: isDue ? 'rgba(248,113,113,0.12)' : 'rgba(52,211,153,0.12)',
