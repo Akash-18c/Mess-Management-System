@@ -92,9 +92,7 @@ export default function Login() {
 
         {/* Background image — desktop */}
         <div className="fixed inset-0 bg-cover bg-center bg-no-repeat hidden sm:block"
-          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=2560&q=95')`, transform: 'scale(1.06)', filter: 'brightness(0.45) saturate(1.2)' }} />
-        <div className="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10 hidden sm:block"
-          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1567337710282-00832b415979?auto=format&fit=crop&w=2560&q=95')`, filter: 'brightness(0.35) saturate(1.35)' }} />
+          style={{ backgroundImage: `url('https://t4.ftcdn.net/jpg/12/71/73/57/360_F_1271735788_KJJXrMYcV7w16L4FRZQJoYmIDzpGL1ht.jpg')`, filter: 'brightness(0.55) saturate(1.15)' }} />
 
         {/* Background image — mobile */}
         <div className="fixed inset-0 bg-cover bg-center bg-no-repeat sm:hidden"
@@ -102,7 +100,7 @@ export default function Login() {
 
         {/* Gradient overlay */}
         <div className="fixed inset-0"
-          style={{ background: 'linear-gradient(160deg,rgba(1,6,15,0.78) 0%,rgba(3,16,9,0.55) 45%,rgba(10,28,18,0.62) 75%,rgba(1,6,15,0.78) 100%)' }} />
+          style={{ background: 'linear-gradient(160deg,rgba(1,6,15,0.65) 0%,rgba(3,16,9,0.40) 45%,rgba(10,28,18,0.50) 75%,rgba(1,6,15,0.65) 100%)' }} />
 
         {/* Ambient glows */}
         <div className="fixed -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none"
