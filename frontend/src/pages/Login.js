@@ -33,12 +33,12 @@ function LoadingOverlay() {
 function GlassInput({ icon: Icon, rightSlot, ...props }) {
   const [focused, setFocused] = useState(false);
   return (
-    <div className="relative flex items-center rounded-xl overflow-hidden transition-all duration-300"
+    <div className="relative flex items-center rounded-2xl overflow-hidden transition-all duration-300"
       style={{
-        background: focused ? 'rgba(16,185,129,0.07)' : 'rgba(255,255,255,0.06)',
-        border: focused ? '1.5px solid rgba(52,211,153,0.55)' : '1.5px solid rgba(255,255,255,0.13)',
-        boxShadow: focused ? '0 0 0 3px rgba(16,185,129,0.08), inset 0 1px 6px rgba(0,0,0,0.25)' : 'inset 0 1px 4px rgba(0,0,0,0.20)',
-        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        background: focused ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.09)',
+        border: focused ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.18)',
+        boxShadow: focused ? '0 0 0 3px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.15)' : 'inset 0 1px 0 rgba(255,255,255,0.10)',
+        backdropFilter: 'blur(40px) saturate(180%)', WebkitBackdropFilter: 'blur(40px) saturate(180%)',
       }}>
       <span className="pl-4 pr-2 flex-shrink-0" style={{ color: focused ? 'rgba(52,211,153,0.85)' : 'rgba(110,231,183,0.40)' }}>
         <Icon size={16} />
@@ -91,8 +91,8 @@ export default function Login() {
       <div className="fixed inset-0 flex flex-col items-center justify-center px-4 overflow-y-auto overflow-x-hidden">
 
         {/* Background image — desktop */}
-        <div className="fixed inset-0 bg-cover bg-center bg-no-repeat hidden sm:block"
-          style={{ backgroundImage: `url('https://t4.ftcdn.net/jpg/12/71/73/57/360_F_1271735788_KJJXrMYcV7w16L4FRZQJoYmIDzpGL1ht.jpg')`, filter: 'brightness(0.55) saturate(1.15)' }} />
+        <div className="fixed inset-0 hidden sm:block"
+          style={{ backgroundImage: `url('https://t4.ftcdn.net/jpg/12/71/73/57/360_F_1271735788_KJJXrMYcV7w16L4FRZQJoYmIDzpGL1ht.jpg')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', filter: 'brightness(0.72) saturate(1.1)' }} />
 
         {/* Background image — mobile */}
         <div className="fixed inset-0 bg-cover bg-center bg-no-repeat sm:hidden"
@@ -100,7 +100,7 @@ export default function Login() {
 
         {/* Gradient overlay */}
         <div className="fixed inset-0"
-          style={{ background: 'linear-gradient(160deg,rgba(1,6,15,0.65) 0%,rgba(3,16,9,0.40) 45%,rgba(10,28,18,0.50) 75%,rgba(1,6,15,0.65) 100%)' }} />
+          style={{ background: 'linear-gradient(160deg,rgba(0,0,0,0.28) 0%,rgba(0,0,0,0.10) 50%,rgba(0,0,0,0.28) 100%)' }} />
 
         {/* Ambient glows */}
         <div className="fixed -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none"
@@ -148,18 +148,18 @@ export default function Login() {
           </div>
 
           {/* ── Glass Card ─────────────────────────────────────────────── */}
-          <div className="relative rounded-2xl sm:rounded-[28px] overflow-hidden"
+          <div className="relative rounded-[28px] sm:rounded-[32px] overflow-hidden"
             style={{
-              background: 'linear-gradient(145deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.02) 50%,rgba(16,185,129,0.04) 100%)',
-              backdropFilter: 'blur(48px)',
-              WebkitBackdropFilter: 'blur(48px)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              boxShadow: '0 24px 60px -8px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.08)',
+              background: 'rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(60px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(60px) saturate(180%)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.20)',
             }}>
 
             {/* Top shimmer */}
-            <div className="absolute top-0 left-0 right-0 h-[1.5px]"
-              style={{ background: 'linear-gradient(90deg,transparent 0%,rgba(52,211,153,0.75) 30%,rgba(255,255,255,0.55) 50%,rgba(52,211,153,0.75) 70%,transparent 100%)' }} />
+            <div className="absolute top-0 left-0 right-0 h-px"
+              style={{ background: 'linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.55) 40%,rgba(255,255,255,0.55) 60%,transparent 100%)' }} />
             {/* Inner highlight */}
             <div className="absolute top-0 left-0 right-0 h-1/2 pointer-events-none"
               style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.04) 0%,transparent 100%)' }} />
@@ -233,15 +233,13 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group relative w-full py-3.5 sm:py-4 rounded-xl text-white overflow-hidden transition-all duration-300 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                  className="group relative w-full py-3.5 sm:py-4 rounded-2xl text-white overflow-hidden transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                   style={{
-                    background: loading
-                      ? 'rgba(16,185,129,0.25)'
-                      : 'rgba(16,185,129,0.18)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(52,211,153,0.35)',
-                    boxShadow: loading ? 'none' : '0 4px 24px rgba(16,185,129,0.20), inset 0 1px 0 rgba(255,255,255,0.10)',
+                    background: 'rgba(255,255,255,0.12)',
+                    backdropFilter: 'blur(40px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    boxShadow: '0 2px 16px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.20)',
                   }}>
                   {/* Hover shimmer */}
                   <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
