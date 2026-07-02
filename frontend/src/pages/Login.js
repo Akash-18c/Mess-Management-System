@@ -104,7 +104,7 @@ export default function Login() {
         {/* Background image — mobile */}
         <div className="fixed inset-0 sm:hidden"
           style={{
-            backgroundImage: `url('https://t4.ftcdn.net/jpg/12/71/73/57/360_F_1271735788_KJJXrMYcV7w16L4FRZQJoYmIDzpGL1ht.jpg')`,
+            backgroundImage: `url('/ph background.jpeg')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
