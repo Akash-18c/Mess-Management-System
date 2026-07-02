@@ -92,15 +92,31 @@ export default function Login() {
 
         {/* Background image — desktop */}
         <div className="fixed inset-0 hidden sm:block"
-          style={{ backgroundImage: `url('https://t4.ftcdn.net/jpg/12/71/73/57/360_F_1271735788_KJJXrMYcV7w16L4FRZQJoYmIDzpGL1ht.jpg')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', filter: 'brightness(0.72) saturate(1.1)' }} />
+          style={{
+            backgroundImage: `url('https://t4.ftcdn.net/jpg/12/71/73/57/360_F_1271735788_KJJXrMYcV7w16L4FRZQJoYmIDzpGL1ht.jpg')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            imageRendering: 'crisp-edges',
+            filter: 'brightness(0.75) saturate(1.05)',
+          }} />
 
         {/* Background image — mobile */}
-        <div className="fixed inset-0 bg-cover bg-center bg-no-repeat sm:hidden"
-          style={{ backgroundImage: `url('https://i.pinimg.com/originals/ec/88/df/ec88df8ac4de2ae2b494e499b77ceebd.jpg')`, filter: 'brightness(0.50) saturate(1.2)' }} />
+        <div className="fixed inset-0 sm:hidden"
+          style={{
+            backgroundImage: `url('https://t4.ftcdn.net/jpg/12/71/73/57/360_F_1271735788_KJJXrMYcV7w16L4FRZQJoYmIDzpGL1ht.jpg')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            imageRendering: 'crisp-edges',
+            filter: 'brightness(0.70) saturate(1.05)',
+          }} />
 
-        {/* Gradient overlay */}
-        <div className="fixed inset-0"
-          style={{ background: 'linear-gradient(160deg,rgba(0,0,0,0.28) 0%,rgba(0,0,0,0.10) 50%,rgba(0,0,0,0.28) 100%)' }} />
+        {/* Gradient overlay — very light so image stays sharp */}
+        <div className="fixed inset-0 hidden sm:block"
+          style={{ background: 'linear-gradient(160deg,rgba(0,0,0,0.22) 0%,rgba(0,0,0,0.08) 50%,rgba(0,0,0,0.22) 100%)' }} />
+        <div className="fixed inset-0 sm:hidden"
+          style={{ background: 'rgba(0,0,0,0.30)' }} />
 
         {/* Ambient glows */}
         <div className="fixed -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none"
