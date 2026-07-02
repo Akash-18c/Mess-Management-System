@@ -150,11 +150,11 @@ export default function Login() {
           {/* ── Glass Card ─────────────────────────────────────────────── */}
           <div className="relative rounded-2xl sm:rounded-[28px] overflow-hidden"
             style={{
-              background: 'linear-gradient(145deg,rgba(255,255,255,0.13) 0%,rgba(255,255,255,0.04) 55%,rgba(16,185,129,0.08) 100%)',
-              backdropFilter: 'blur(72px)',
-              WebkitBackdropFilter: 'blur(72px)',
-              border: '1.5px solid rgba(255,255,255,0.18)',
-              boxShadow: '0 28px 60px -8px rgba(0,0,0,0.72), inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(0,0,0,0.12)',
+              background: 'linear-gradient(145deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.02) 50%,rgba(16,185,129,0.04) 100%)',
+              backdropFilter: 'blur(48px)',
+              WebkitBackdropFilter: 'blur(48px)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              boxShadow: '0 24px 60px -8px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.08)',
             }}>
 
             {/* Top shimmer */}
@@ -236,9 +236,12 @@ export default function Login() {
                   className="group relative w-full py-3.5 sm:py-4 rounded-xl text-white overflow-hidden transition-all duration-300 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed mt-2"
                   style={{
                     background: loading
-                      ? 'linear-gradient(135deg,#047857,#059669)'
-                      : 'linear-gradient(135deg,#059669 0%,#10b981 55%,#059669 100%)',
-                    boxShadow: loading ? 'none' : '0 4px 18px rgba(0,0,0,0.35), 0 0 0 1px rgba(52,211,153,0.15)',
+                      ? 'rgba(16,185,129,0.25)'
+                      : 'rgba(16,185,129,0.18)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(52,211,153,0.35)',
+                    boxShadow: loading ? 'none' : '0 4px 24px rgba(16,185,129,0.20), inset 0 1px 0 rgba(255,255,255,0.10)',
                   }}>
                   {/* Hover shimmer */}
                   <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
