@@ -105,10 +105,10 @@ export default function Login() {
         <div className="fixed inset-0 sm:hidden"
           style={{
             backgroundImage: `url('/ph background.jpeg')`,
-            backgroundSize: 'cover',
+            backgroundSize: 'contain',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            imageRendering: 'crisp-edges',
+            backgroundColor: '#000',
             filter: 'brightness(0.70) saturate(1.05)',
           }} />
 
