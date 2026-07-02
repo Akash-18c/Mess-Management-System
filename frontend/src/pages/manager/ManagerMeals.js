@@ -235,7 +235,7 @@ export default function ManagerMeals() {
           <p className="text-slate-500 text-sm">No members found</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {members.map(m => (
             <MemberCard
               key={m._id}
@@ -300,7 +300,6 @@ function MemberCard({ member, data, isLive, onToggleMeal, onToggleOff, onChangeG
   const hasDinner= !!data.dinner;
   const guests   = data.guestMeals || 0;
   const name     = rn(member.name);
-  const roleColor = member.role === 'admin' ? '#f87171' : member.role === 'manager' ? '#fbbf24' : '#64748b';
 
   const lunchTap  = useSafeTap(() => onToggleMeal(member._id, 'lunch'),  isOff || !isLive);
   const dinnerTap = useSafeTap(() => onToggleMeal(member._id, 'dinner'), isOff || !isLive);
@@ -308,157 +307,89 @@ function MemberCard({ member, data, isLive, onToggleMeal, onToggleOff, onChangeG
   const gMinusTap = useSafeTap(() => onChangeGuest(member._id, -1),      isOff || guests===0 || !isLive);
   const gPlusTap  = useSafeTap(() => onChangeGuest(member._id, +1),      isOff || guests>=10 || !isLive);
 
-  const totalMeals = (hasLunch?1:0) + (hasDinner?1:0) + guests;
-
   return (
-    <div className="rounded-2xl overflow-hidden" style={{
+    <div className="rounded-2xl px-3 py-2.5" style={{
       background: 'rgba(255,255,255,0.04)',
       backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
       border: isOff
-        ? '1px solid rgba(248,113,113,0.25)'
-        : (hasLunch||hasDinner)
-        ? '1px solid rgba(16,185,129,0.20)'
-        : '1px solid rgba(255,255,255,0.09)',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-      opacity: isOff ? 0.7 : 1,
+        ? '1px solid rgba(248,113,113,0.22)'
+        : (hasLunch || hasDinner)
+        ? '1px solid rgba(16,185,129,0.18)'
+        : '1px solid rgba(255,255,255,0.08)',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+      opacity: isOff ? 0.65 : 1,
       transition: 'opacity 0.2s, border 0.2s',
     }}>
+      <div className="flex items-center gap-2">
 
-      {/* ── Top: name + status + off toggle ── */}
-      <div className="flex items-center gap-3 px-4 pt-3 pb-2">
         {/* Avatar */}
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
           style={{
             background: isOff ? 'rgba(248,113,113,0.15)' : 'rgba(16,185,129,0.15)',
-            border: `1px solid ${isOff ? 'rgba(248,113,113,0.28)' : 'rgba(16,185,129,0.25)'}`,
+            border: `1px solid ${isOff ? 'rgba(248,113,113,0.25)' : 'rgba(16,185,129,0.22)'}`,
           }}>
           {name[0]?.toUpperCase()}
         </div>
 
-        {/* Name + role */}
-        <div className="flex-1 min-w-0">
-          <p className="text-white font-semibold text-sm leading-tight truncate">{name}</p>
-          <p className="text-[10px] mt-0.5" style={{ color: roleColor }}>
-            {member.role !== 'member' ? member.role : `Room ${member.room || '—'}`}
-          </p>
-        </div>
+        {/* Name */}
+        <p className="text-white font-semibold text-xs leading-tight truncate flex-1 min-w-0">{name}</p>
 
-        {/* Status badge */}
-        {isOff ? (
-          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0"
-            style={{ background: 'rgba(248,113,113,0.12)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}>
-            Day Off
-          </span>
-        ) : totalMeals > 0 ? (
-          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0"
-            style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }}>
-            {totalMeals} meal{totalMeals!==1?'s':''}
-          </span>
-        ) : null}
-      </div>
-
-      {/* ── Meal buttons + Off toggle ── */}
-      <div className="grid grid-cols-3 gap-2 px-4 pb-3">
-
-        {/* Lunch */}
-        <button {...lunchTap}
-          disabled={isOff || !isLive}
-          className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl disabled:opacity-40"
+        {/* Lunch pill */}
+        <button {...lunchTap} disabled={isOff || !isLive}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex-shrink-0 disabled:opacity-30"
           style={{
-            background: hasLunch
-              ? 'linear-gradient(145deg,rgba(16,185,129,0.25),rgba(5,150,105,0.15))'
-              : 'rgba(255,255,255,0.04)',
-            border: hasLunch
-              ? '1.5px solid rgba(16,185,129,0.50)'
-              : '1.5px solid rgba(255,255,255,0.08)',
+            background: hasLunch ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.05)',
+            border: hasLunch ? '1px solid rgba(16,185,129,0.40)' : '1px solid rgba(255,255,255,0.08)',
+            color: hasLunch ? '#34d399' : '#475569',
             WebkitTapHighlightColor: 'transparent',
-            transition: 'background 0.15s, border 0.15s',
+            transition: 'background 0.15s, border 0.15s, color 0.15s',
           }}>
-          <span className="text-xl leading-none">☀️</span>
-          <span className="text-[11px] font-bold mt-0.5"
-            style={{ color: hasLunch ? '#34d399' : '#475569' }}>
-            Lunch
-          </span>
-          {hasLunch && (
-            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full"
-              style={{ background: 'rgba(16,185,129,0.20)', color: '#6ee7b7' }}>ON</span>
-          )}
+          ☀️ <span>L</span>
         </button>
 
-        {/* Dinner */}
-        <button {...dinnerTap}
-          disabled={isOff || !isLive}
-          className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl disabled:opacity-40"
+        {/* Dinner pill */}
+        <button {...dinnerTap} disabled={isOff || !isLive}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex-shrink-0 disabled:opacity-30"
           style={{
-            background: hasDinner
-              ? 'linear-gradient(145deg,rgba(59,130,246,0.25),rgba(37,99,235,0.15))'
-              : 'rgba(255,255,255,0.04)',
-            border: hasDinner
-              ? '1.5px solid rgba(59,130,246,0.50)'
-              : '1.5px solid rgba(255,255,255,0.08)',
+            background: hasDinner ? 'rgba(59,130,246,0.18)' : 'rgba(255,255,255,0.05)',
+            border: hasDinner ? '1px solid rgba(59,130,246,0.40)' : '1px solid rgba(255,255,255,0.08)',
+            color: hasDinner ? '#60a5fa' : '#475569',
             WebkitTapHighlightColor: 'transparent',
-            transition: 'background 0.15s, border 0.15s',
+            transition: 'background 0.15s, border 0.15s, color 0.15s',
           }}>
-          <span className="text-xl leading-none">🌙</span>
-          <span className="text-[11px] font-bold mt-0.5"
-            style={{ color: hasDinner ? '#60a5fa' : '#475569' }}>
-            Dinner
-          </span>
-          {hasDinner && (
-            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full"
-              style={{ background: 'rgba(59,130,246,0.20)', color: '#93c5fd' }}>ON</span>
-          )}
+          🌙 <span>D</span>
         </button>
 
-        {/* Off */}
-        <button {...offTap}
-          disabled={!isLive}
-          className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl disabled:opacity-40"
-          style={{
-            background: isOff
-              ? 'linear-gradient(145deg,rgba(248,113,113,0.22),rgba(220,38,38,0.12))'
-              : 'rgba(255,255,255,0.04)',
-            border: isOff
-              ? '1.5px solid rgba(248,113,113,0.45)'
-              : '1.5px solid rgba(255,255,255,0.08)',
-            WebkitTapHighlightColor: 'transparent',
-            transition: 'background 0.15s, border 0.15s',
-          }}>
-          <span className="text-xl leading-none">🚫</span>
-          <span className="text-[11px] font-bold mt-0.5"
-            style={{ color: isOff ? '#f87171' : '#475569' }}>
-            {isOff ? 'Day Off' : 'Off'}
-          </span>
-          {isOff && (
-            <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full"
-              style={{ background: 'rgba(248,113,113,0.20)', color: '#fca5a5' }}>ON</span>
-          )}
-        </button>
-      </div>
-
-      {/* ── Guest row ── */}
-      <div className="flex items-center justify-between px-4 pb-3">
-        <span className="text-[11px] font-medium text-slate-500">👤 Guest meals</span>
-        <div className="flex items-center gap-2">
-          <button {...gMinusTap}
-            disabled={isOff || guests===0 || !isLive}
-            className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-25"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', WebkitTapHighlightColor: 'transparent' }}>
-            <Minus size={12} className="text-slate-300" />
+        {/* Guest stepper */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button {...gMinusTap} disabled={isOff || guests===0 || !isLive}
+            className="w-6 h-6 rounded-md flex items-center justify-center disabled:opacity-20"
+            style={{ background: 'rgba(255,255,255,0.07)', WebkitTapHighlightColor: 'transparent' }}>
+            <Minus size={10} className="text-slate-400" />
           </button>
-          <span className="w-6 text-center text-sm font-bold"
-            style={{ color: guests > 0 ? '#f59e0b' : '#334155' }}>
-            {guests}
-          </span>
-          <button {...gPlusTap}
-            disabled={isOff || guests>=10 || !isLive}
-            className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-25"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', WebkitTapHighlightColor: 'transparent' }}>
-            <Plus size={12} className="text-slate-300" />
+          <span className="text-[11px] font-bold w-4 text-center"
+            style={{ color: guests > 0 ? '#f59e0b' : '#334155' }}>{guests}</span>
+          <button {...gPlusTap} disabled={isOff || guests>=10 || !isLive}
+            className="w-6 h-6 rounded-md flex items-center justify-center disabled:opacity-20"
+            style={{ background: 'rgba(255,255,255,0.07)', WebkitTapHighlightColor: 'transparent' }}>
+            <Plus size={10} className="text-slate-400" />
           </button>
         </div>
-      </div>
 
+        {/* Off pill */}
+        <button {...offTap} disabled={!isLive}
+          className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex-shrink-0 disabled:opacity-30"
+          style={{
+            background: isOff ? 'rgba(248,113,113,0.18)' : 'rgba(255,255,255,0.05)',
+            border: isOff ? '1px solid rgba(248,113,113,0.40)' : '1px solid rgba(255,255,255,0.08)',
+            color: isOff ? '#f87171' : '#475569',
+            WebkitTapHighlightColor: 'transparent',
+            transition: 'background 0.15s, border 0.15s, color 0.15s',
+          }}>
+          {isOff ? '✕ Off' : 'Off'}
+        </button>
+
+      </div>
     </div>
   );
 }
