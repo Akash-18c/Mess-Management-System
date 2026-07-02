@@ -93,12 +93,11 @@ export default function Login() {
         {/* Background image — desktop */}
         <div className="fixed inset-0 hidden sm:block"
           style={{
-            backgroundImage: `url('https://t4.ftcdn.net/jpg/12/71/73/57/360_F_1271735788_KJJXrMYcV7w16L4FRZQJoYmIDzpGL1ht.jpg')`,
+            backgroundImage: `url('https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=100&w=3840&auto=format&fit=crop')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            imageRendering: 'crisp-edges',
-            filter: 'brightness(0.75) saturate(1.05)',
+            filter: 'brightness(0.72) saturate(1.10)',
           }} />
 
         {/* Background image — mobile */}
