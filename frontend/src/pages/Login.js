@@ -35,10 +35,10 @@ function GlassInput({ icon: Icon, rightSlot, ...props }) {
   return (
     <div className="relative flex items-center rounded-2xl overflow-hidden transition-all duration-300"
       style={{
-        background: focused ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.09)',
-        border: focused ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.18)',
-        boxShadow: focused ? '0 0 0 3px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.15)' : 'inset 0 1px 0 rgba(255,255,255,0.10)',
-        backdropFilter: 'blur(40px) saturate(180%)', WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        background: focused ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)',
+        border: focused ? '1px solid rgba(255,255,255,0.28)' : '1px solid rgba(255,255,255,0.12)',
+        boxShadow: focused ? '0 0 0 3px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.10)' : 'inset 0 1px 0 rgba(255,255,255,0.07)',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
       }}>
       <span className="pl-4 pr-2 flex-shrink-0" style={{ color: focused ? 'rgba(52,211,153,0.85)' : 'rgba(110,231,183,0.40)' }}>
         <Icon size={16} />
@@ -118,9 +118,7 @@ export default function Login() {
 
         {/* Ambient glows */}
         <div className="fixed -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle,rgba(16,185,129,0.12) 0%,transparent 65%)' }} />
-        <div className="fixed -bottom-32 -right-32 w-[600px] h-[600px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle,rgba(245,158,11,0.08) 0%,transparent 65%)' }} />
+          style={{ background: 'radial-gradient(circle,rgba(16,185,129,0.08) 0%,transparent 65%)' }} />
 
         {/* ── Content ──────────────────────────────────────────────────── */}
         <div className="relative z-10 w-full max-w-[400px] flex flex-col my-auto py-8">
@@ -164,19 +162,19 @@ export default function Login() {
           {/* ── Glass Card ─────────────────────────────────────────────── */}
           <div className="relative rounded-[28px] sm:rounded-[32px] overflow-hidden"
             style={{
-              background: 'rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(60px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(60px) saturate(180%)',
-              border: '1px solid rgba(255,255,255,0.18)',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.20)',
+              background: 'rgba(15,15,20,0.35)',
+              backdropFilter: 'blur(48px) saturate(100%) brightness(1.08)',
+              WebkitBackdropFilter: 'blur(48px) saturate(100%) brightness(1.08)',
+              border: '1px solid rgba(255,255,255,0.13)',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.10) inset',
             }}>
 
             {/* Top shimmer */}
             <div className="absolute top-0 left-0 right-0 h-px"
-              style={{ background: 'linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.55) 40%,rgba(255,255,255,0.55) 60%,transparent 100%)' }} />
+              style={{ background: 'linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.30) 40%,rgba(255,255,255,0.30) 60%,transparent 100%)' }} />
             {/* Inner highlight */}
             <div className="absolute top-0 left-0 right-0 h-1/2 pointer-events-none"
-              style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.04) 0%,transparent 100%)' }} />
+              style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.03) 0%,transparent 100%)' }} />
 
             <div className="px-6 sm:px-8 py-7 sm:py-8 relative">
 
@@ -249,11 +247,11 @@ export default function Login() {
                   disabled={loading}
                   className="group relative w-full py-3.5 sm:py-4 rounded-2xl text-white overflow-hidden transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                   style={{
-                    background: 'rgba(255,255,255,0.12)',
-                    backdropFilter: 'blur(40px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                    border: '1px solid rgba(255,255,255,0.25)',
-                    boxShadow: '0 2px 16px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.20)',
+                    background: 'rgba(255,255,255,0.08)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    boxShadow: '0 2px 16px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.15)',
                   }}>
                   {/* Hover shimmer */}
                   <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
