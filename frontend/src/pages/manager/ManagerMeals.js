@@ -1,29 +1,19 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { ChevronLeft, ChevronRight, Users, Minus, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import api from '../../api';
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
 const glass = {
   background: 'rgba(255,255,255,0.04)',
-  backdropFilter: 'blur(40px)',
-  WebkitBackdropFilter: 'blur(40px)',
+  backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
   border: '1px solid rgba(255,255,255,0.10)',
   boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)',
 };
-
-const calGlass = {
-  background: 'rgba(255,255,255,0.03)',
-  backdropFilter: 'blur(48px)',
-  WebkitBackdropFilter: 'blur(48px)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.10)',
-};
-
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 export default function ManagerMeals() {
   const now = new Date();
@@ -31,14 +21,19 @@ export default function ManagerMeals() {
   const curYear  = now.getFullYear();
   const _pad = n => String(n).padStart(2, '0');
   const todayLocal = `${now.getFullYear()}-${_pad(now.getMonth()+1)}-${_pad(now.getDate())}`;
-  const [month, setMonth] = useState(curMonth);
-  const [year,  setYear]  = useState(curYear);
-  const isLiveMonth = month === curMonth && year === curYear;
-  const [members,      setMembers]      = useState([]);
-  const [mealData,     setMealData]     = useState({});
-  const [selectedDate, setSelectedDate] = useState(todayLocal);
-  const pendingRef = useRef({}); // track in-flight requests per memberId
 
+  const [month, setMonth]           = useState(curMonth);
+  const [year,  setYear]            = useState(curYear);
+  const [members, setMembers]       = useState([]);
+  const [mealData, setMealData]     = useState({});
+  const [selectedDate, setSelectedDate] = useState(todayLocal);
+  // arming state for Off button: memberId or null
+  const [armedOff, setArmedOff]     = useState(null);
+  const armTimerRef                 = useRef(null);
+  const pendingRef                  = useRef({});
+  const calendarRef                 = useRef(null);
+
+  const isLiveMonth = month === curMonth && year === curYear;
   const daysInMonth = new Date(year, month, 0).getDate();
 
   const loadData = useCallback(async () => {
@@ -57,26 +52,44 @@ export default function ManagerMeals() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // prevent double-fire on touch (onTouchEnd + onClick both fire on mobile)
+  useEffect(() => {
+    if (!calendarRef.current) return;
+    const todayBtn = calendarRef.current.querySelector('[data-today="true"]');
+    if (todayBtn) todayBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [members]);
+
+  // Disarm Off button when date changes
+  useEffect(() => { setArmedOff(null); }, [selectedDate]);
+
+  // ── touch dedup ──
   const handled = useRef(false);
   const touch = (fn) => (e) => { e.preventDefault(); handled.current = true; fn(); };
   const click = (fn) => () => { if (handled.current) { handled.current = false; return; } fn(); };
 
-  // ── Optimistic toggle — update UI instantly, sync in background ──
+  // ── Meal toggle with 250ms tap-hold guard ──
+  const tapStart = useRef({});
+  const handleMealTouchStart = (memberId, mealType) => {
+    tapStart.current[`${memberId}_${mealType}`] = Date.now();
+  };
+  const handleMealToggle = (memberId, mealType) => {
+    const startKey = `${memberId}_${mealType}`;
+    const elapsed = Date.now() - (tapStart.current[startKey] || 0);
+    // ignore accidental taps shorter than 80ms
+    if (elapsed < 80) return;
+    toggleMeal(memberId, mealType);
+  };
+
   const toggleMeal = (memberId, mealType) => {
     if (!isLiveMonth) return;
     const key = `${memberId}_${selectedDate}`;
     const current = mealData[key] || {};
     if (current.isOff) return;
-
     const newVal = mealType === 'lunch'
       ? { ...current, lunch: !current.lunch }
       : { ...current, dinner: !current.dinner };
 
-    // instant UI update
     setMealData(prev => ({ ...prev, [key]: { ...prev[key], ...newVal } }));
 
-    // debounce — cancel previous pending for this member
     if (pendingRef.current[memberId]) clearTimeout(pendingRef.current[memberId]);
     pendingRef.current[memberId] = setTimeout(async () => {
       try {
@@ -85,34 +98,44 @@ export default function ManagerMeals() {
           breakfast: false,
           lunch:  newVal.lunch  || false,
           dinner: newVal.dinner || false,
-          isOff: false,
-          month, year,
+          isOff: false, month, year,
         });
       } catch {
         toast.error('Failed to save');
-        // revert on error
         setMealData(prev => ({ ...prev, [key]: current }));
       }
     }, 300);
   };
 
-  const toggleOff = (memberId) => {
+  // ── Off toggle: two-tap confirm ──
+  const handleOffTap = (memberId) => {
     if (!isLiveMonth) return;
+    if (armedOff === memberId) {
+      // second tap — confirm
+      clearTimeout(armTimerRef.current);
+      setArmedOff(null);
+      toggleOff(memberId);
+    } else {
+      // first tap — arm for 2.5s
+      setArmedOff(memberId);
+      clearTimeout(armTimerRef.current);
+      armTimerRef.current = setTimeout(() => setArmedOff(null), 2500);
+    }
+  };
+
+  const toggleOff = (memberId) => {
     const key = `${memberId}_${selectedDate}`;
     const current = mealData[key] || {};
     const isOff = !current.isOff;
-
     setMealData(prev => ({
       ...prev,
       [key]: { ...prev[key], isOff, lunch: isOff ? false : current.lunch, dinner: isOff ? false : current.dinner },
     }));
-
     if (pendingRef.current[memberId + '_off']) clearTimeout(pendingRef.current[memberId + '_off']);
     pendingRef.current[memberId + '_off'] = setTimeout(async () => {
       try {
         await api.post('/meals/mark', {
-          date: selectedDate, memberId,
-          breakfast: false,
+          date: selectedDate, memberId, breakfast: false,
           lunch: isOff ? false : current.lunch || false,
           dinner: isOff ? false : current.dinner || false,
           isOff, month, year,
@@ -130,9 +153,7 @@ export default function ManagerMeals() {
     const current = mealData[key] || {};
     if (current.isOff) return;
     const next = Math.max(0, Math.min(10, (current.guestMeals || 0) + delta));
-
     setMealData(prev => ({ ...prev, [key]: { ...prev[key], guestMeals: next } }));
-
     if (pendingRef.current[memberId + '_guest']) clearTimeout(pendingRef.current[memberId + '_guest']);
     pendingRef.current[memberId + '_guest'] = setTimeout(async () => {
       try {
@@ -150,93 +171,72 @@ export default function ManagerMeals() {
   const days = Array.from({ length: daysInMonth }, (_, i) => {
     const d = new Date(year, month - 1, i + 1);
     const pad = n => String(n).padStart(2, '0');
-    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    return { num: i + 1, dateStr, dayIdx: d.getDay() };
+    return { num: i + 1, dateStr: `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`, dayIdx: d.getDay() };
   });
 
   const pad = n => String(n).padStart(2, '0');
-  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  const calendarRef = useRef(null);
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  const selDate  = new Date(selectedDate + 'T00:00:00');
 
-  // auto-scroll calendar to today on load
-  useEffect(() => {
-    if (!calendarRef.current) return;
-    const todayBtn = calendarRef.current.querySelector('[data-today="true"]');
-    if (todayBtn) todayBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-  }, [members]);
   const lunchCount  = members.filter(m => mealData[`${m._id}_${selectedDate}`]?.lunch).length;
   const dinnerCount = members.filter(m => mealData[`${m._id}_${selectedDate}`]?.dinner).length;
   const offCount    = members.filter(m => mealData[`${m._id}_${selectedDate}`]?.isOff).length;
   const guestCount  = members.reduce((s, m) => s + (mealData[`${m._id}_${selectedDate}`]?.guestMeals || 0), 0);
-  const selDate     = new Date(selectedDate + 'T00:00:00');
 
   return (
     <div className="space-y-4">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between gap-3 rounded-2xl p-3 px-4" style={calGlass}>
-        <div className="min-w-0">
+      <div className="flex items-center justify-between gap-3 rounded-2xl p-3 px-4" style={glass}>
+        <div>
           <h1 className="text-lg font-bold text-white leading-tight">Daily Meals</h1>
           <p className="text-[10px] text-slate-500 mt-0.5">
-            {isLiveMonth ? 'Mark attendance for each member' : 'View only — editing allowed in current month only'}
+            {isLiveMonth ? 'Tap Lunch / Dinner to toggle' : 'View only — current month only'}
           </p>
         </div>
-        <div className="flex items-center gap-1 rounded-xl p-1 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <button
-            onTouchEnd={touch(prevMonth)} onClick={click(prevMonth)}
+        <div className="flex items-center gap-1 rounded-xl p-1 flex-shrink-0"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <button onTouchEnd={touch(prevMonth)} onClick={click(prevMonth)}
             className="p-2 rounded-lg text-slate-400 active:text-white"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-          >
+            style={{ WebkitTapHighlightColor: 'transparent' }}>
             <ChevronLeft size={15} />
           </button>
-          <span className="text-white font-semibold px-2 text-xs whitespace-nowrap">{MONTHS_SHORT[month - 1]} {year}</span>
-          <button
-            onTouchEnd={touch(nextMonth)} onClick={click(nextMonth)}
+          <span className="text-white font-semibold px-2 text-xs whitespace-nowrap">
+            {MONTHS_SHORT[month - 1]} {year}
+          </span>
+          <button onTouchEnd={touch(nextMonth)} onClick={click(nextMonth)}
             className="p-2 rounded-lg text-slate-400 active:text-white"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-          >
+            style={{ WebkitTapHighlightColor: 'transparent' }}>
             <ChevronRight size={15} />
           </button>
         </div>
       </div>
 
-      {/* ── Calendar Date Strip ── */}
-      <div className="rounded-2xl p-3" style={calGlass}>
-        <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }} ref={calendarRef}>
+      {/* ── Calendar Strip ── */}
+      <div className="rounded-2xl p-3" style={glass}>
+        <div className="flex gap-1.5 overflow-x-auto pb-1"
+          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }} ref={calendarRef}>
           {days.map(({ num, dateStr, dayIdx }) => {
             const isSel   = dateStr === selectedDate;
             const isToday = dateStr === todayStr;
-            const isSun   = dayIdx === 0;
             const hasMeal = members.some(m => {
               const d = mealData[`${m._id}_${dateStr}`];
               return d?.lunch || d?.dinner || d?.guestMeals > 0;
             });
             return (
-              <button
-                key={num}
-                data-today={isToday ? 'true' : undefined}
+              <button key={num} data-today={isToday ? 'true' : undefined}
                 onTouchEnd={touch(() => setSelectedDate(dateStr))}
                 onClick={click(() => setSelectedDate(dateStr))}
                 className="flex flex-col items-center flex-shrink-0 rounded-xl"
                 style={{
                   width: '40px', padding: '7px 3px',
-                  background: isSel
-                    ? 'linear-gradient(135deg,#10b981,#059669)'
-                    : isToday
-                    ? 'rgba(16,185,129,0.10)'
-                    : 'rgba(255,255,255,0.03)',
-                  border: isSel
-                    ? '1px solid rgba(16,185,129,0.6)'
-                    : isToday
-                    ? '1px solid rgba(16,185,129,0.20)'
-                    : '1px solid rgba(255,255,255,0.06)',
+                  background: isSel ? 'linear-gradient(135deg,#10b981,#059669)' : isToday ? 'rgba(16,185,129,0.10)' : 'rgba(255,255,255,0.03)',
+                  border: isSel ? '1px solid rgba(16,185,129,0.6)' : isToday ? '1px solid rgba(16,185,129,0.20)' : '1px solid rgba(255,255,255,0.06)',
                   boxShadow: isSel ? '0 4px 12px rgba(16,185,129,0.30)' : 'none',
                   WebkitTapHighlightColor: 'transparent',
-                  transition: 'transform 0.1s',
-                }}
-              >
+                }}>
                 <span className="text-[8px] font-semibold uppercase mb-0.5"
-                  style={{ color: isSel ? 'rgba(255,255,255,0.7)' : isSun ? '#f87171' : '#475569' }}>
+                  style={{ color: isSel ? 'rgba(255,255,255,0.7)' : dayIdx === 0 ? '#f87171' : '#475569' }}>
                   {DAYS[dayIdx]}
                 </span>
                 <span className="text-xs font-bold"
@@ -253,7 +253,7 @@ export default function ManagerMeals() {
         </div>
       </div>
 
-      {/* ── Selected Date + Summary ── */}
+      {/* ── Date + Summary ── */}
       <div className="rounded-2xl p-3 px-4" style={glass}>
         <p className="text-white font-semibold text-sm">
           {selDate.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -274,7 +274,6 @@ export default function ManagerMeals() {
         </div>
       </div>
 
-      {/* ── Read-only banner ── */}
       {!isLiveMonth && (
         <div className="rounded-2xl px-4 py-2.5 flex items-center gap-2"
           style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.20)' }}>
@@ -283,144 +282,138 @@ export default function ManagerMeals() {
         </div>
       )}
 
-      {/* ── Member Cards ── */}}
+      {/* ── Member List ── */}
       {members.length === 0 ? (
         <div className="rounded-2xl py-16 flex flex-col items-center gap-3" style={glass}>
           <Users size={36} style={{ color: '#334155' }} />
           <p className="text-slate-500 text-sm">No members found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {members.map(m => {
-            const key        = `${m._id}_${selectedDate}`;
-            const data       = mealData[key] || {};
-            const isOff      = !!data.isOff;
-            const hasLunch   = !!data.lunch;
-            const hasDinner  = !!data.dinner;
-            const guests     = data.guestMeals || 0;
-            const name       = rn(m.name);
-            const totalToday = (hasLunch ? 1 : 0) + (hasDinner ? 1 : 0) + guests;
-            const roleColor  = m.role === 'admin' ? '#f87171' : m.role === 'manager' ? '#fbbf24' : '#64748b';
+        <div className="rounded-2xl overflow-hidden" style={glass}>
+          {members.map((m, idx) => {
+            const key       = `${m._id}_${selectedDate}`;
+            const data      = mealData[key] || {};
+            const isOff     = !!data.isOff;
+            const hasLunch  = !!data.lunch;
+            const hasDinner = !!data.dinner;
+            const guests    = data.guestMeals || 0;
+            const name      = rn(m.name);
+            const isArmed   = armedOff === m._id;
 
             return (
-              <div key={m._id} className="rounded-2xl p-3" style={{
-                ...glass,
-                opacity: isOff ? 0.55 : 1,
-                border: isOff
-                  ? '1px solid rgba(248,113,113,0.20)'
-                  : (hasLunch || hasDinner)
-                  ? '1px solid rgba(16,185,129,0.20)'
-                  : '1px solid rgba(255,255,255,0.08)',
-              }}>
-                {/* Member Info */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                      style={{ background: isOff ? 'rgba(248,113,113,0.15)' : 'rgba(16,185,129,0.15)', border: `1px solid ${isOff ? 'rgba(248,113,113,0.25)' : 'rgba(16,185,129,0.25)'}` }}>
-                      {name[0]?.toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-white font-semibold text-sm leading-tight truncate">{name}</p>
-                      <p className="text-[10px]" style={{ color: roleColor }}>
-                        {m.role !== 'member' ? m.role : `Room ${m.room || '—'}`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0">
-                    {isOff ? (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: 'rgba(248,113,113,0.12)', color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}>
-                        Day Off
-                      </span>
-                    ) : totalToday > 0 ? (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }}>
-                        {totalToday} meal{totalToday > 1 ? 's' : ''}
-                      </span>
-                    ) : null}
-                  </div>
+              <div key={m._id}
+                className="flex items-center gap-3 px-4 py-3"
+                style={{
+                  borderBottom: idx < members.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                  opacity: isOff ? 0.55 : 1,
+                  background: isOff ? 'rgba(248,113,113,0.04)' : 'transparent',
+                  transition: 'opacity 0.2s',
+                }}>
+
+                {/* Avatar */}
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                  style={{
+                    background: isOff ? 'rgba(248,113,113,0.15)' : 'rgba(16,185,129,0.15)',
+                    border: `1px solid ${isOff ? 'rgba(248,113,113,0.25)' : 'rgba(16,185,129,0.20)'}`,
+                  }}>
+                  {name[0]?.toUpperCase()}
                 </div>
 
-                {/* Lunch + Dinner */}
-                <div className="grid grid-cols-2 gap-2 mb-2">
+                {/* Name */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-semibold leading-tight truncate">{name}</p>
+                  {guests > 0 && (
+                    <p className="text-[10px]" style={{ color: '#f59e0b' }}>+{guests} guest{guests > 1 ? 's' : ''}</p>
+                  )}
+                </div>
+
+                {/* Lunch */}
+                <button
+                  onTouchStart={() => handleMealTouchStart(m._id, 'lunch')}
+                  onTouchEnd={(e) => { e.preventDefault(); handled.current = true; handleMealToggle(m._id, 'lunch'); }}
+                  onClick={() => { if (handled.current) { handled.current = false; return; } handleMealToggle(m._id, 'lunch'); }}
+                  disabled={isOff || !isLiveMonth}
+                  className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold disabled:cursor-not-allowed"
+                  style={{
+                    background: hasLunch ? 'linear-gradient(135deg,#10b981,#059669)' : 'rgba(255,255,255,0.06)',
+                    border: hasLunch ? '1px solid rgba(16,185,129,0.5)' : '1px solid rgba(255,255,255,0.09)',
+                    color: hasLunch ? '#fff' : '#475569',
+                    minWidth: '54px', textAlign: 'center',
+                    boxShadow: hasLunch ? '0 2px 8px rgba(16,185,129,0.25)' : 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    transition: 'background 0.15s, color 0.15s',
+                  }}>
+                  🌤 Lunch
+                </button>
+
+                {/* Dinner */}
+                <button
+                  onTouchStart={() => handleMealTouchStart(m._id, 'dinner')}
+                  onTouchEnd={(e) => { e.preventDefault(); handled.current = true; handleMealToggle(m._id, 'dinner'); }}
+                  onClick={() => { if (handled.current) { handled.current = false; return; } handleMealToggle(m._id, 'dinner'); }}
+                  disabled={isOff || !isLiveMonth}
+                  className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold disabled:cursor-not-allowed"
+                  style={{
+                    background: hasDinner ? 'linear-gradient(135deg,#3b82f6,#2563eb)' : 'rgba(255,255,255,0.06)',
+                    border: hasDinner ? '1px solid rgba(59,130,246,0.5)' : '1px solid rgba(255,255,255,0.09)',
+                    color: hasDinner ? '#fff' : '#475569',
+                    minWidth: '60px', textAlign: 'center',
+                    boxShadow: hasDinner ? '0 2px 8px rgba(59,130,246,0.25)' : 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    transition: 'background 0.15s, color 0.15s',
+                  }}>
+                  🌙 Dinner
+                </button>
+
+                {/* Guest stepper — compact */}
+                <div className="flex items-center gap-1 flex-shrink-0">
                   <button
-                    onTouchEnd={touch(() => toggleMeal(m._id, 'lunch'))}
-                    onClick={click(() => toggleMeal(m._id, 'lunch'))}
-                    disabled={isOff || !isLiveMonth}
-                    className="flex items-center justify-center py-2.5 rounded-xl font-semibold text-sm disabled:cursor-not-allowed active:scale-95"
-                    style={{
-                      background: hasLunch ? 'linear-gradient(135deg,#10b981,#059669)' : 'rgba(255,255,255,0.05)',
-                      border: hasLunch ? '1px solid rgba(16,185,129,0.5)' : '1px solid rgba(255,255,255,0.08)',
-                      color: hasLunch ? '#fff' : '#64748b',
-                      boxShadow: hasLunch ? '0 4px 12px rgba(16,185,129,0.25)' : 'none',
-                      transition: 'transform 0.1s, background 0.1s',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    Lunch
+                    onTouchEnd={touch(() => changeGuest(m._id, -1))}
+                    onClick={click(() => changeGuest(m._id, -1))}
+                    disabled={isOff || guests === 0 || !isLiveMonth}
+                    className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-300 disabled:opacity-25 text-sm font-bold"
+                    style={{ background: 'rgba(255,255,255,0.07)', WebkitTapHighlightColor: 'transparent' }}>
+                    −
                   </button>
+                  <span className="w-5 text-center text-xs font-bold"
+                    style={{ color: guests > 0 ? '#f59e0b' : '#334155' }}>
+                    {guests}
+                  </span>
                   <button
-                    onTouchEnd={touch(() => toggleMeal(m._id, 'dinner'))}
-                    onClick={click(() => toggleMeal(m._id, 'dinner'))}
-                    disabled={isOff || !isLiveMonth}
-                    className="flex items-center justify-center py-2.5 rounded-xl font-semibold text-sm disabled:cursor-not-allowed active:scale-95"
-                    style={{
-                      background: hasDinner ? 'linear-gradient(135deg,#3b82f6,#2563eb)' : 'rgba(255,255,255,0.05)',
-                      border: hasDinner ? '1px solid rgba(59,130,246,0.5)' : '1px solid rgba(255,255,255,0.08)',
-                      color: hasDinner ? '#fff' : '#64748b',
-                      boxShadow: hasDinner ? '0 4px 12px rgba(59,130,246,0.25)' : 'none',
-                      transition: 'transform 0.1s, background 0.1s',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    Dinner
+                    onTouchEnd={touch(() => changeGuest(m._id, +1))}
+                    onClick={click(() => changeGuest(m._id, +1))}
+                    disabled={isOff || guests >= 10 || !isLiveMonth}
+                    className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-300 disabled:opacity-25 text-sm font-bold"
+                    style={{ background: 'rgba(255,255,255,0.07)', WebkitTapHighlightColor: 'transparent' }}>
+                    +
                   </button>
                 </div>
 
-                {/* Guest + Off */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 flex-1 rounded-xl px-2 py-1.5"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                    <span className="text-[10px] font-medium flex-1 text-slate-400">👤 Guest</span>
-                    <button
-                      onTouchEnd={touch(() => changeGuest(m._id, -1))}
-                      onClick={click(() => changeGuest(m._id, -1))}
-                      disabled={isOff || guests === 0 || !isLiveMonth}
-                      className="w-6 h-6 rounded-lg flex items-center justify-center disabled:opacity-30"
-                      style={{ background: 'rgba(255,255,255,0.07)', WebkitTapHighlightColor: 'transparent' }}
-                    >
-                      <Minus size={10} className="text-slate-300" />
-                    </button>
-                    <span className="w-5 text-center text-sm font-bold"
-                      style={{ color: guests > 0 ? '#f59e0b' : '#475569' }}>
-                      {guests}
-                    </span>
-                    <button
-                      onTouchEnd={touch(() => changeGuest(m._id, +1))}
-                      onClick={click(() => changeGuest(m._id, +1))}
-                      disabled={isOff || guests >= 10 || !isLiveMonth}
-                      className="w-6 h-6 rounded-lg flex items-center justify-center disabled:opacity-30"
-                      style={{ background: 'rgba(255,255,255,0.07)', WebkitTapHighlightColor: 'transparent' }}
-                    >
-                      <Plus size={10} className="text-slate-300" />
-                    </button>
-                  </div>
-                  <button
-                    onTouchEnd={touch(() => toggleOff(m._id))}
-                    onClick={click(() => toggleOff(m._id))}
-                    disabled={!isLiveMonth}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold active:scale-95"
-                    style={{
-                      background: isOff ? 'rgba(248,113,113,0.15)' : 'rgba(255,255,255,0.05)',
-                      border: isOff ? '1px solid rgba(248,113,113,0.35)' : '1px solid rgba(255,255,255,0.08)',
-                      color: isOff ? '#f87171' : '#475569',
-                      transition: 'transform 0.1s',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    {isOff ? '✕ Off' : 'Off?'}
-                  </button>
-                </div>
+                {/* Off — two-tap confirm */}
+                <button
+                  onTouchEnd={touch(() => handleOffTap(m._id))}
+                  onClick={click(() => handleOffTap(m._id))}
+                  disabled={!isLiveMonth}
+                  className="flex-shrink-0 px-2.5 py-2 rounded-xl text-[11px] font-bold disabled:opacity-30"
+                  style={{
+                    background: isOff
+                      ? 'rgba(248,113,113,0.18)'
+                      : isArmed
+                      ? 'rgba(248,113,113,0.12)'
+                      : 'rgba(255,255,255,0.04)',
+                    border: isOff
+                      ? '1px solid rgba(248,113,113,0.40)'
+                      : isArmed
+                      ? '1px solid rgba(248,113,113,0.30)'
+                      : '1px solid rgba(255,255,255,0.07)',
+                    color: isOff ? '#f87171' : isArmed ? '#fca5a5' : '#334155',
+                    WebkitTapHighlightColor: 'transparent',
+                    transition: 'all 0.2s',
+                    minWidth: '42px', textAlign: 'center',
+                  }}>
+                  {isOff ? 'On?' : isArmed ? 'Sure?' : 'Off'}
+                </button>
+
               </div>
             );
           })}
