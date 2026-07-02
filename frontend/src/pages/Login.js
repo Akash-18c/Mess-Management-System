@@ -93,7 +93,7 @@ export default function Login() {
         {/* Background image — desktop */}
         <div className="fixed inset-0 hidden sm:block"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=100&w=3840&auto=format&fit=crop')`,
+            backgroundImage: `url('https://images.unsplash.com/photo-1588644525273-f37b60d78512?w=3840&auto=format&fit=crop&q=100')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
