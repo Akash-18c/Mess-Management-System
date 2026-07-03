@@ -88,7 +88,7 @@ export default function BirthdayBanner() {
               };
 
           return (
-            <div key={p._id} className="relative overflow-hidden rounded-[28px]"
+            <div key={p._id} className="relative overflow-hidden rounded-2xl"
               style={{
                 background: 'rgba(255,255,255,0.18)',
                 backdropFilter: 'blur(40px)',
@@ -104,45 +104,37 @@ export default function BirthdayBanner() {
                 style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.10) 0%,transparent 100%)' }} />
 
               {/* Main row */}
-              <div className="relative flex items-center gap-3 px-4 pt-3.5 pb-2">
+              <div className="relative flex items-center gap-2.5 px-3 pt-3 pb-2">
 
                 {/* Balloon — left */}
                 <div className="flex-shrink-0" style={{ animation: 'floatBalloon 3s ease-in-out infinite' }}>
-                  <img src={BALLOON_IMG} alt="balloon" className="w-14 h-14 object-contain"
+                  <img src={BALLOON_IMG} alt="balloon" className="w-10 h-10 sm:w-14 sm:h-14 object-contain"
                     onError={e => { e.target.style.display = 'none'; }} />
                 </div>
 
                 {/* Name + badge */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-white leading-tight" style={{ fontSize: '17px' }}>
-                      {p.name}
-                    </span>
-                    <span className="font-bold px-2.5 py-0.5 rounded-full leading-none flex-shrink-0"
-                      style={{
-                        fontSize: '11px',
-                        background: 'rgba(255,255,255,0.20)',
-                        color: 'rgba(255,255,255,0.92)',
-                        border: '1px solid rgba(255,255,255,0.32)',
-                      }}>
-                      {badge}
-                    </span>
-                  </div>
+                  <p className="font-bold text-white leading-tight truncate" style={{ fontSize: '15px' }}>
+                    {p.name}
+                  </p>
+                  <span className="inline-block font-semibold px-2 py-0.5 rounded-full mt-0.5"
+                    style={{
+                      fontSize: '10px',
+                      background: 'rgba(255,255,255,0.18)',
+                      color: 'rgba(255,255,255,0.88)',
+                      border: '1px solid rgba(255,255,255,0.28)',
+                    }}>
+                    {badge}
+                  </span>
                 </div>
 
                 {/* Right GIF */}
-                <div className="flex-shrink-0 overflow-hidden rounded-2xl"
-                  style={{ width: 90, height: 90 }}>
+                <div className="flex-shrink-0 overflow-hidden"
+                  style={{ width: 64, height: 64, borderRadius: 12 }}>
                   <img
                     src={gifSrc}
                     alt="status"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      borderRadius: 14,
-                      ...gifStyle,
-                    }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', ...gifStyle }}
                     onError={e => { e.target.style.display = 'none'; }}
                   />
                 </div>
@@ -156,9 +148,9 @@ export default function BirthdayBanner() {
                 <div className="absolute right-0 top-0 bottom-0 w-8 z-10 pointer-events-none"
                   style={{ background: 'linear-gradient(270deg,rgba(255,255,255,0.18),transparent)' }} />
 
-                <div className="flex pt-2"
+                <div className="flex pt-1.5"
                   style={{ animation: `marqueeScroll ${duration} linear infinite`, whiteSpace: 'nowrap', willChange: 'transform' }}>
-                  <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.70)', fontWeight: 500, paddingRight: '2rem' }}>
+                  <span style={{ fontSize: '11.5px', color: 'rgba(255,255,255,0.68)', fontWeight: 500, paddingRight: '2rem' }}>
                     {fullText}
                   </span>
                 </div>

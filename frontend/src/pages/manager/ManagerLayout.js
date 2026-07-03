@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, UtensilsCrossed, ShoppingCart, CreditCard, FileText, LogOut, Menu, Receipt } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
@@ -18,9 +18,19 @@ const links = [
 
 export default function ManagerLayout() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const mainRef = useRef(null);
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const handleLogout = () => { logout(); navigate('/login'); };
+
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const onScroll = () => setScrolled(el.scrollTop > 10);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -79,7 +89,19 @@ export default function ManagerLayout() {
         </div>
       )}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)' }}>
+        <header className="lg:hidden flex items-center justify-between px-4 py-3 transition-all duration-300"
+          style={scrolled ? {
+            background: 'rgba(8,14,28,0.85)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            borderBottom: '1px solid rgba(255,255,255,0.10)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 -1px 0 rgba(255,255,255,0.04)',
+          } : {
+            background: 'rgba(8,14,28,0.45)',
+            backdropFilter: 'blur(16px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+          }}>
           <button onClick={() => setOpen(true)} className="text-slate-400 hover:text-white"><Menu size={22} /></button>
           <div className="flex items-center gap-2">
             <img src="/messy-logo.png" alt="logo" className="w-7 h-7 object-contain" />
@@ -87,7 +109,7 @@ export default function ManagerLayout() {
           </div>
           <span className="badge-manager">Manager</span>
         </header>
-        <main className="flex-1 overflow-y-auto"><div className="p-4 lg:p-6"><Outlet /></div></main>
+        <main ref={mainRef} className="flex-1 overflow-y-auto"><div className="p-4 lg:p-6"><BirthdayBanner /><div className="mt-3"><Outlet /></div></div></main>
       </div>
     </div>
   );
