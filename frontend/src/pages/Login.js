@@ -247,56 +247,50 @@ export default function Login() {
                   disabled={loading}
                   className="group relative w-full py-3.5 sm:py-4 rounded-2xl text-white overflow-hidden mt-2"
                   style={{
-                    background: loading
-                      ? 'linear-gradient(135deg,#10b981,#059669)'
-                      : 'rgba(255,255,255,0.25)',
+                    background: 'rgba(255,255,255,0.22)',
                     backdropFilter: 'blur(20px)',
                     WebkitBackdropFilter: 'blur(20px)',
-                    border: loading
-                      ? '1px solid rgba(16,185,129,0.60)'
-                      : '1px solid rgba(255,255,255,0.40)',
-                    boxShadow: loading
-                      ? '0 4px 20px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.20)'
-                      : '0 2px 12px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.50)',
-                    transition: 'background 0.4s ease, border 0.4s ease, box-shadow 0.4s ease, transform 0.1s',
-                    transform: loading ? 'scale(1)' : undefined,
+                    border: '1px solid rgba(255,255,255,0.38)',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.45)',
+                    transition: 'opacity 0.2s, transform 0.1s',
+                    opacity: loading ? 0.85 : 1,
                     cursor: loading ? 'not-allowed' : 'pointer',
                   }}>
 
-                  {/* Shimmer sweep on hover (idle only) */}
+                  {/* Shimmer sweep on hover */}
                   {!loading && (
                     <span className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none"
                       style={{
-                        background: 'linear-gradient(110deg,transparent 20%,rgba(255,255,255,0.22) 50%,transparent 80%)',
-                        transition: 'opacity 0.5s',
-                      }} />
-                  )}
-
-                  {/* Animated sweep fill while loading */}
-                  {loading && (
-                    <span className="absolute inset-0 pointer-events-none"
-                      style={{
-                        background: 'linear-gradient(90deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.18) 50%,rgba(255,255,255,0.08) 100%)',
-                        backgroundSize: '200% 100%',
-                        animation: 'shimmerSlide 1.4s ease-in-out infinite',
+                        background: 'linear-gradient(110deg,transparent 20%,rgba(255,255,255,0.20) 50%,transparent 80%)',
+                        transition: 'opacity 0.4s',
                       }} />
                   )}
 
                   <style>{`
-                    @keyframes shimmerSlide {
-                      0%   { background-position: 200% center; }
-                      100% { background-position: -200% center; }
-                    }
-                    @keyframes leafSpin {
-                      0%   { transform: rotate(0deg); }
-                      100% { transform: rotate(360deg); }
+                    @keyframes orbitBubble {
+                      from { transform: rotate(0deg) translateX(10px) rotate(0deg); }
+                      to   { transform: rotate(360deg) translateX(10px) rotate(-360deg); }
                     }
                   `}</style>
 
                   {loading ? (
-                    <span className="relative flex items-center justify-center gap-2.5">
-                      {/* Leaf spinner */}
-                      <span style={{ animation: 'leafSpin 0.9s linear infinite', display: 'inline-block', fontSize: '1.1rem', lineHeight: 1 }}>🍃</span>
+                    <span className="relative flex items-center justify-center gap-3">
+                      {/* Orbiting bubbles */}
+                      <span className="relative w-5 h-5 flex-shrink-0">
+                        {[0,1,2,3].map(i => (
+                          <span key={i} className="absolute rounded-full"
+                            style={{
+                              width: i % 2 === 0 ? 5 : 4,
+                              height: i % 2 === 0 ? 5 : 4,
+                              background: 'rgba(255,255,255,0.90)',
+                              top: '50%', left: '50%',
+                              marginTop: i % 2 === 0 ? -2.5 : -2,
+                              marginLeft: i % 2 === 0 ? -2.5 : -2,
+                              animation: `orbitBubble ${0.9 + i * 0.15}s linear ${i * 0.22}s infinite`,
+                              opacity: 1 - i * 0.15,
+                            }} />
+                        ))}
+                      </span>
                       <span className="text-sm font-semibold tracking-wide text-white/90">Signing in…</span>
                     </span>
                   ) : (

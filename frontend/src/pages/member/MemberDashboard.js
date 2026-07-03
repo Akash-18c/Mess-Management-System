@@ -5,6 +5,7 @@ import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
 import PageLoader from '../../components/PageLoader';
 import useAuthStore from '../../store/authStore';
+import BirthdayBanner from '../../components/BirthdayBanner';
 
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -115,7 +116,8 @@ export default function MemberDashboard() {
 
   return (
     <div className="space-y-4 pb-8">
-
+      {/* ── Birthday Banner ── */}
+      <BirthdayBanner />
       {/* ── Header row ── */}
       <div className="flex items-center justify-between gap-3">
         {/* Title */}

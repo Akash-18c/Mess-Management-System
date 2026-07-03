@@ -5,6 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
 import PageLoader from '../../components/PageLoader';
+import BirthdayBanner from '../../components/BirthdayBanner';
 
 const MONTHS      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -124,6 +125,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6 relative">
+      {/* ── Birthday Banner ── */}
+      <BirthdayBanner />
       {/* ── Background Orbs ── */}
       <div aria-hidden="true" style={{ pointerEvents: 'none', position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '45vw', height: '45vw', maxWidth: 520, maxHeight: 520, background: 'radial-gradient(circle, rgba(20,184,166,0.09) 0%, transparent 70%)', borderRadius: '50%', filter: 'blur(40px)' }} />

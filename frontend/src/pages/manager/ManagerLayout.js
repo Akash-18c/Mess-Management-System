@@ -87,7 +87,7 @@ export default function ManagerLayout() {
           </div>
           <span className="badge-manager">Manager</span>
         </header>
-        <main className="flex-1 overflow-y-auto"><BirthdayBanner /><div className="p-4 lg:p-6 mt-3"><Outlet /></div></main>
+        <main className="flex-1 overflow-y-auto"><div className="p-4 lg:p-6"><Outlet /></div></main>
       </div>
     </div>
   );

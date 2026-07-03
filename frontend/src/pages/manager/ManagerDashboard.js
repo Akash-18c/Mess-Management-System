@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend
 import { Calendar, ChevronDown, Sparkles, UtensilsCrossed } from 'lucide-react';
 import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
+import BirthdayBanner from '../../components/BirthdayBanner';
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
@@ -164,7 +165,8 @@ export default function ManagerDashboard() {
 
   return (
     <div className="space-y-4">
-
+      {/* ── Birthday Banner ── */}
+      <BirthdayBanner />
       {/* ── Header + Dropdown ── */}
       <div className="relative" ref={dropRef}>
         <div className="flex items-start justify-between gap-3 rounded-2xl p-3 px-4" style={glass}>

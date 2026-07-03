@@ -116,7 +116,7 @@ export default function MemberLayout() {
           </div>
           <span className="badge-member">Member</span>
         </header>
-        <main ref={mainRef} className="flex-1 overflow-y-auto"><BirthdayBanner /><div className="p-4 lg:p-6 mt-3"><Outlet /></div></main>
+        <main ref={mainRef} className="flex-1 overflow-y-auto"><div className="p-4 lg:p-6"><Outlet /></div></main>
       </div>
     </div>
   );
