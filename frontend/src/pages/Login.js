@@ -287,21 +287,16 @@ export default function Login() {
                       0%   { background-position: 200% center; }
                       100% { background-position: -200% center; }
                     }
-                    @keyframes dotBounce {
-                      0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
-                      40%           { transform: translateY(-5px); opacity: 1; }
+                    @keyframes leafSpin {
+                      0%   { transform: rotate(0deg); }
+                      100% { transform: rotate(360deg); }
                     }
                   `}</style>
 
                   {loading ? (
-                    <span className="relative flex items-center justify-center gap-3">
-                      {/* Bouncing dots */}
-                      <span className="flex items-center gap-1">
-                        {[0, 1, 2].map(i => (
-                          <span key={i} className="w-1.5 h-1.5 rounded-full bg-white inline-block"
-                            style={{ animation: `dotBounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
-                        ))}
-                      </span>
+                    <span className="relative flex items-center justify-center gap-2.5">
+                      {/* Leaf spinner */}
+                      <span style={{ animation: 'leafSpin 0.9s linear infinite', display: 'inline-block', fontSize: '1.1rem', lineHeight: 1 }}>🍃</span>
                       <span className="text-sm font-semibold tracking-wide text-white/90">Signing in…</span>
                     </span>
                   ) : (

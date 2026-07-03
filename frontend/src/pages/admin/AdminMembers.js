@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { Plus, Pencil, UserCheck, UserX, Trash2, X, ShieldCheck, Sparkles, KeyRound } from 'lucide-react';
 import api from '../../api';
 
-const EMPTY = { name: '', email: '', password: '', phone: '', room: '', joinDate: '', birthday: '', role: 'member' };
+const EMPTY = { name: '', email: '', password: '', phone: '', room: '', joinDate: '', role: 'member' };
 
 const glass = {
   background: 'rgba(255,255,255,0.04)',
@@ -43,7 +43,7 @@ export default function AdminMembers() {
   const openAdd  = () => { setEditing(null); setForm(EMPTY); setModal(true); };
   const openEdit = (m) => {
     setEditing(m._id);
-    setForm({ name: m.name, email: m.email, password: '', phone: m.phone || '', room: m.room || '', joinDate: m.joinDate?.slice(0, 10) || '', birthday: m.birthday || '', role: m.role });
+    setForm({ name: m.name, email: m.email, password: '', phone: m.phone || '', room: m.room || '', joinDate: m.joinDate?.slice(0, 10) || '', role: m.role });
     setModal(true);
   };
 
@@ -93,7 +93,6 @@ export default function AdminMembers() {
                 <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Member</th>
                 <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">Room</th>
                 <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Phone</th>
-                <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">🎂 Birthday</th>
                 <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Role</th>
                 <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Status</th>
                 <th className="text-right py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
@@ -121,9 +120,6 @@ export default function AdminMembers() {
                     </td>
                     <td className="py-3 px-4 text-slate-400 text-sm hidden sm:table-cell">{m.room || '—'}</td>
                     <td className="py-3 px-4 text-slate-400 text-sm hidden md:table-cell">{m.phone || '—'}</td>
-                    <td className="py-3 px-4 text-slate-400 text-sm hidden lg:table-cell">
-                      {m.birthday ? <span className="text-amber-400/80">{m.birthday}</span> : <span className="text-slate-600">—</span>}
-                    </td>
                     <td className="py-3 px-4">
                       {m.role === 'admin'   && <span className="badge-admin   text-[10px]">Admin</span>}
                       {m.role === 'manager' && <span className="badge-manager text-[10px]">Manager</span>}
@@ -236,13 +232,6 @@ export default function AdminMembers() {
                 <div>
                   <label className="label text-xs">Join Date</label>
                   <input className="input" type="date" value={form.joinDate} onChange={e => setForm({...form, joinDate: e.target.value})} />
-                </div>
-                <div>
-                  <label className="label text-xs flex items-center gap-1">🎂 Birthday <span className="text-slate-600 font-normal">(MM-DD)</span></label>
-                  <input className="input" type="text" placeholder="e.g. 07-15" maxLength={5}
-                    value={form.birthday}
-                    onChange={e => setForm({...form, birthday: e.target.value})}
-                    pattern="^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$" />
                 </div>
                 <div>
                   <label className="label text-xs flex items-center gap-1"><ShieldCheck size={12} />Role</label>

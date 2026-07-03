@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Cake, Pencil, Check, X } from 'lucide-react';
+import { Cake, Pencil, Check, X, CalendarDays } from 'lucide-react';
 import api from '../../api';
 
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 const glass = {
   background: 'rgba(255,255,255,0.04)',
@@ -13,19 +14,13 @@ const glass = {
   boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07)',
 };
 
-const realName = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
+const realName = (n) => { const m = n?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (n || ''); };
 
 function parseBirthday(val) {
   if (!val) return '';
-  // accept both MM-DD and YYYY-MM-DD (date input)
   const parts = val.split('-');
-  if (parts.length === 3) return `${parts[1]}-${parts[2]}`; // YYYY-MM-DD → MM-DD
+  if (parts.length === 3) return `${parts[1]}-${parts[2]}`;
   return val;
-}
-
-function toDateInputValue(mmdd) {
-  if (!mmdd) return '';
-  return `2000-${mmdd}`; // use year 2000 as placeholder for date input
 }
 
 export default function AdminBirthdays() {
@@ -39,16 +34,14 @@ export default function AdminBirthdays() {
 
   const startEdit = (m) => {
     setEditingId(m._id);
-    setEditVal(toDateInputValue(m.birthday || ''));
+    setEditVal(m.birthday ? `2000-${m.birthday}` : '');
   };
-
   const cancelEdit = () => { setEditingId(null); setEditVal(''); };
 
   const save = async (id) => {
     setSaving(true);
     try {
-      const birthday = parseBirthday(editVal);
-      await api.put(`/admin/members/${id}`, { birthday });
+      await api.put(`/admin/members/${id}`, { birthday: parseBirthday(editVal) });
       toast.success('Birthday saved');
       setEditingId(null);
       load();
@@ -65,140 +58,210 @@ export default function AdminBirthdays() {
   };
 
   const active = members.filter(m => m.isActive && m.role !== 'admin');
-
-  const withBday   = active.filter(m => m.birthday);
+  const withBday = active.filter(m => m.birthday);
   const withoutBday = active.filter(m => !m.birthday);
 
-  const MemberRow = ({ m }) => {
+  // Sort withBday by upcoming: compute daysLeft
+  const today = new Date();
+  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const sorted = [...withBday].sort((a, b) => {
+    const daysLeft = (mmdd) => {
+      const [mm, dd] = mmdd.split('-').map(Number);
+      let d = new Date(today.getFullYear(), mm - 1, dd);
+      if (d < todayMid) d = new Date(today.getFullYear() + 1, mm - 1, dd);
+      return Math.floor((d - todayMid) / 86400000);
+    };
+    return daysLeft(a.birthday) - daysLeft(b.birthday);
+  });
+
+  const MemberCard = ({ m }) => {
     const isEditing = editingId === m._id;
-    const [mm, dd] = (m.birthday || '').split('-').map(Number);
-    const dateLabel = m.birthday ? `${dd} ${MONTHS[mm - 1]}` : null;
+    const hasBday = !!m.birthday;
+    const [mm, dd] = hasBday ? m.birthday.split('-').map(Number) : [];
+    const dateLabel = hasBday ? `${dd} ${MONTHS_SHORT[mm - 1]}` : null;
+    const fullDate  = hasBday ? `${MONTHS[mm - 1]} ${dd}` : null;
+
+    // compute daysLeft
+    let daysLeft = null;
+    let isUpcoming = false;
+    if (hasBday) {
+      let bday = new Date(today.getFullYear(), mm - 1, dd);
+      if (bday < todayMid) bday = new Date(today.getFullYear() + 1, mm - 1, dd);
+      daysLeft = Math.floor((bday - todayMid) / 86400000);
+      isUpcoming = daysLeft <= 2;
+    }
+
+    const upcomingBadge = daysLeft === 0 ? { label: 'Today! 🎉', color: '#fbbf24' }
+      : daysLeft === 1 ? { label: 'Tomorrow 🎈', color: '#fb923c' }
+      : daysLeft === 2 ? { label: 'In 2 Days 🎁', color: '#fcd34d' }
+      : null;
 
     return (
-      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+      <div className="relative rounded-2xl p-4 transition-all duration-200"
+        style={{
+          background: isUpcoming
+            ? 'linear-gradient(135deg,rgba(251,191,36,0.10) 0%,rgba(245,158,11,0.06) 100%)'
+            : 'rgba(255,255,255,0.04)',
+          border: isUpcoming
+            ? '1px solid rgba(251,191,36,0.28)'
+            : '1px solid rgba(255,255,255,0.08)',
+          boxShadow: isUpcoming ? '0 4px 20px rgba(245,158,11,0.10)' : 'none',
+        }}>
 
-        {/* Member */}
-        <td className="py-3 px-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0"
-              style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.22)', color: '#fbbf24' }}>
+        {/* Upcoming glow strip */}
+        {isUpcoming && (
+          <div className="absolute top-0 left-0 right-0 h-px rounded-t-2xl"
+            style={{ background: 'linear-gradient(90deg,transparent,rgba(251,191,36,0.55),transparent)' }} />
+        )}
+
+        <div className="flex items-center gap-3">
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-base font-bold"
+              style={{
+                background: isUpcoming ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.07)',
+                border: isUpcoming ? '1px solid rgba(251,191,36,0.30)' : '1px solid rgba(255,255,255,0.10)',
+                color: isUpcoming ? '#fbbf24' : '#94a3b8',
+              }}>
               {realName(m.name)?.[0]?.toUpperCase()}
             </div>
-            <div className="min-w-0">
-              <p className="text-white font-semibold text-sm truncate">{realName(m.name)}</p>
-              <p className="text-slate-500 text-[11px] truncate">{m.room || m.email}</p>
-            </div>
+            {isUpcoming && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px]"
+                style={{ background: '#fbbf24', boxShadow: '0 0 8px rgba(251,191,36,0.6)' }}>
+                🎂
+              </div>
+            )}
           </div>
-        </td>
 
-        {/* Birthday */}
-        <td className="py-3 px-4">
-          {isEditing ? (
-            <input
-              type="date"
-              className="input text-sm py-1.5 w-36"
-              value={editVal}
-              onChange={e => setEditVal(e.target.value)}
-              autoFocus
-            />
-          ) : (
-            dateLabel
-              ? <span className="text-amber-400 font-medium text-sm">🎂 {dateLabel}</span>
-              : <span className="text-slate-600 text-sm">— not set</span>
-          )}
-        </td>
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-semibold text-sm truncate">{realName(m.name)}</p>
+            <p className="text-slate-500 text-[11px] truncate">{m.room || m.email}</p>
+          </div>
 
-        {/* Actions */}
-        <td className="py-3 px-4">
-          <div className="flex items-center justify-end gap-1.5">
+          {/* Birthday display / edit */}
+          <div className="flex-shrink-0 text-right">
             {isEditing ? (
-              <>
+              <div className="flex items-center gap-1.5">
+                <input type="date" className="input text-xs py-1 px-2 w-32"
+                  value={editVal} onChange={e => setEditVal(e.target.value)} autoFocus />
                 <button onClick={() => save(m._id)} disabled={saving}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', WebkitTapHighlightColor: 'transparent' }}>
                   <Check size={13} className="text-green-400" />
                 </button>
                 <button onClick={cancelEdit}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.20)', WebkitTapHighlightColor: 'transparent' }}>
                   <X size={13} className="text-red-400" />
                 </button>
-              </>
-            ) : (
-              <>
-                <button onClick={() => startEdit(m)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center"
-                  style={{ background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.20)', WebkitTapHighlightColor: 'transparent' }}
-                  title="Set birthday">
-                  <Pencil size={12} className="text-violet-400" />
-                </button>
-                {m.birthday && (
+              </div>
+            ) : hasBday ? (
+              <div className="flex items-center gap-2">
+                <div className="text-right">
+                  <p className="text-amber-400 font-bold text-sm">{dateLabel}</p>
+                  {upcomingBadge && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                      style={{ background: `${upcomingBadge.color}18`, color: upcomingBadge.color, border: `1px solid ${upcomingBadge.color}35` }}>
+                      {upcomingBadge.label}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => startEdit(m)}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.20)', WebkitTapHighlightColor: 'transparent' }}>
+                    <Pencil size={11} className="text-violet-400" />
+                  </button>
                   <button onClick={() => clear(m._id)}
                     className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.20)', WebkitTapHighlightColor: 'transparent' }}
-                    title="Clear birthday">
-                    <X size={12} className="text-red-400" />
+                    style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.18)', WebkitTapHighlightColor: 'transparent' }}>
+                    <X size={11} className="text-red-400" />
                   </button>
-                )}
-              </>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => startEdit(m)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
+                style={{ background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.20)', color: '#a5b4fc', WebkitTapHighlightColor: 'transparent' }}>
+                <CalendarDays size={12} /> Set Date
+              </button>
             )}
           </div>
-        </td>
-      </tr>
+        </div>
+
+        {/* Full date label below for set birthdays */}
+        {hasBday && !isEditing && (
+          <p className="text-[10px] mt-2 pl-14" style={{ color: 'rgba(148,163,184,0.45)' }}>
+            🗓 {fullDate} every year
+          </p>
+        )}
+      </div>
     );
   };
-
-  const Table = ({ rows, label, labelColor }) => (
-    <div>
-      <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5 pl-1" style={{ color: labelColor }}>{label}</p>
-      <div className="rounded-2xl overflow-hidden" style={glass}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Member</th>
-                <th className="text-left py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Birthday</th>
-                <th className="text-right py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Action</th>
-              </tr>
-            </thead>
-            <tbody>{rows.map(m => <MemberRow key={m._id} m={m} />)}</tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-5">
 
-      {/* Header */}
-      <div className="rounded-2xl p-4 px-5 flex items-center gap-3" style={glass}>
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.22)' }}>
-          <Cake size={20} style={{ color: '#fbbf24' }} />
-        </div>
-        <div>
-          <h1 style={{
-            fontFamily: "'Dancing Script', cursive",
-            fontSize: 'clamp(1.3rem,5vw,1.8rem)', fontWeight: 700,
-            background: 'linear-gradient(135deg,#ffffff 0%,#fef3c7 40%,#fbbf24 75%,#d97706 100%)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            lineHeight: 1.2,
-          }}>Birthdays</h1>
-          <p className="text-slate-500 text-[11px] mt-0.5">
-            {withBday.length} set · {withoutBday.length} not set — banner auto-shows 2 days before
-          </p>
+      {/* ── Header ── */}
+      <div className="relative rounded-2xl overflow-hidden p-5" style={{
+        background: 'linear-gradient(135deg,rgba(251,191,36,0.10) 0%,rgba(245,158,11,0.06) 50%,rgba(217,119,6,0.08) 100%)',
+        border: '1px solid rgba(251,191,36,0.20)',
+        boxShadow: '0 8px 32px rgba(245,158,11,0.08)',
+      }}>
+        <div className="absolute top-0 left-0 right-0 h-px"
+          style={{ background: 'linear-gradient(90deg,transparent,rgba(251,191,36,0.50),transparent)' }} />
+        <div className="flex items-center gap-4">
+          <div className="relative flex-shrink-0">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
+              style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.28)' }}>
+              🎂
+            </div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full animate-ping"
+              style={{ background: 'rgba(251,191,36,0.40)' }} />
+          </div>
+          <div>
+            <h1 style={{
+              fontFamily: "'Dancing Script', cursive",
+              fontSize: 'clamp(1.4rem,5vw,2rem)', fontWeight: 700,
+              background: 'linear-gradient(135deg,#ffffff 0%,#fef3c7 40%,#fbbf24 75%,#d97706 100%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              lineHeight: 1.2,
+            }}>Member Birthdays</h1>
+            <p className="text-[11px] mt-0.5" style={{ color: 'rgba(251,191,36,0.55)' }}>
+              {withBday.length} set · {withoutBday.length} not set · banner shows 2 days before 🎉
+            </p>
+          </div>
         </div>
       </div>
 
       {active.length === 0 && (
-        <div className="rounded-2xl py-12 text-center text-slate-600 text-sm" style={glass}>No active members</div>
+        <div className="rounded-2xl py-14 text-center text-slate-600 text-sm" style={glass}>No active members</div>
       )}
 
-      {withBday.length > 0   && <Table rows={withBday}    label="Birthday Set"     labelColor="#fbbf24" />}
-      {withoutBday.length > 0 && <Table rows={withoutBday} label="Birthday Not Set" labelColor="#475569" />}
+      {/* ── Set birthdays ── */}
+      {sorted.length > 0 && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-3 pl-1" style={{ color: '#fbbf24' }}>
+            🎂 Birthday Set — {sorted.length} member{sorted.length !== 1 ? 's' : ''}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {sorted.map(m => <MemberCard key={m._id} m={m} />)}
+          </div>
+        </div>
+      )}
+
+      {/* ── Not set ── */}
+      {withoutBday.length > 0 && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-3 pl-1" style={{ color: '#475569' }}>
+            📅 Birthday Not Set — {withoutBday.length} member{withoutBday.length !== 1 ? 's' : ''}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {withoutBday.map(m => <MemberCard key={m._id} m={m} />)}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
