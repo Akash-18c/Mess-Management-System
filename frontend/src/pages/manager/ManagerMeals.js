@@ -181,9 +181,9 @@ export default function ManagerMeals() {
       </div>
 
       {/* ── Calendar Strip ── */}
-      <div className="rounded-2xl p-3" style={glass}>
-        <div ref={calendarRef} className="flex gap-1.5 overflow-x-auto"
-          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', paddingBottom: 2 }}>
+      <div className="rounded-2xl px-2 py-2" style={glass}>
+        <div ref={calendarRef} className="flex gap-0.5 overflow-x-auto"
+          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           {days.map(({ num, dateStr, dayIdx }) => {
             const isSel   = dateStr === selectedDate;
             const isToday = dateStr === todayStr;
@@ -271,24 +271,30 @@ function CalDay({ num, dayIdx, isSel, isToday, hasMeal, onSelect }) {
     <button {...tap} data-today={isToday ? 'true' : undefined}
       className="flex flex-col items-center flex-shrink-0 rounded-xl"
       style={{
-        width: 42, padding: '8px 4px',
-        background: isSel ? 'linear-gradient(135deg,#10b981,#059669)' : isToday ? 'rgba(16,185,129,0.10)' : 'rgba(255,255,255,0.03)',
-        border: isSel ? '1px solid rgba(16,185,129,0.6)' : isToday ? '1px solid rgba(16,185,129,0.25)' : '1px solid rgba(255,255,255,0.06)',
-        boxShadow: isSel ? '0 4px 14px rgba(16,185,129,0.30)' : 'none',
+        width: 44, padding: '7px 4px',
+        background: isSel
+          ? 'linear-gradient(160deg,#10b981,#059669)'
+          : isToday
+          ? 'rgba(16,185,129,0.12)'
+          : 'transparent',
+        border: isSel
+          ? '1px solid rgba(16,185,129,0.50)'
+          : isToday
+          ? '1px solid rgba(16,185,129,0.22)'
+          : '1px solid transparent',
         WebkitTapHighlightColor: 'transparent',
+        transition: 'background 0.15s',
       }}>
-      <span className="text-[8px] font-bold uppercase mb-1"
-        style={{ color: isSel ? 'rgba(255,255,255,0.75)' : dayIdx===0 ? '#f87171' : '#475569' }}>
+      <span className="text-[9px] font-semibold uppercase mb-0.5"
+        style={{ color: isSel ? 'rgba(255,255,255,0.65)' : dayIdx===0 ? '#f87171' : '#4b5563' }}>
         {DAYS[dayIdx]}
       </span>
-      <span className="text-sm font-bold"
-        style={{ color: isSel ? '#fff' : isToday ? '#34d399' : '#94a3b8' }}>
+      <span className="text-[13px] font-bold"
+        style={{ color: isSel ? '#fff' : isToday ? '#34d399' : '#9ca3af' }}>
         {num}
       </span>
-      {hasMeal && (
-        <span className="w-1.5 h-1.5 rounded-full mt-1"
-          style={{ background: isSel ? 'rgba(255,255,255,0.8)' : '#10b981' }} />
-      )}
+      <span className="w-1 h-1 rounded-full mt-1"
+        style={{ background: hasMeal ? (isSel ? 'rgba(255,255,255,0.7)' : '#10b981') : 'transparent' }} />
     </button>
   );
 }

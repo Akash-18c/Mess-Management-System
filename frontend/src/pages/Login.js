@@ -35,9 +35,9 @@ function GlassInput({ icon: Icon, rightSlot, ...props }) {
   return (
     <div className="relative flex items-center rounded-2xl overflow-hidden transition-all duration-300"
       style={{
-        background: focused ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)',
-        border: focused ? '1px solid rgba(255,255,255,0.28)' : '1px solid rgba(255,255,255,0.12)',
-        boxShadow: focused ? '0 0 0 3px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.10)' : 'inset 0 1px 0 rgba(255,255,255,0.07)',
+        background: focused ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.20)',
+        border: focused ? '1px solid rgba(255,255,255,0.55)' : '1px solid rgba(255,255,255,0.30)',
+        boxShadow: focused ? '0 0 0 3px rgba(255,255,255,0.12)' : 'none',
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
       }}>
       <span className="pl-4 pr-2 flex-shrink-0" style={{ color: focused ? 'rgba(52,211,153,0.85)' : 'rgba(110,231,183,0.40)' }}>
@@ -46,7 +46,7 @@ function GlassInput({ icon: Icon, rightSlot, ...props }) {
       <input {...props}
         onFocus={e => { setFocused(true); props.onFocus?.(e); }}
         onBlur={e => { setFocused(false); props.onBlur?.(e); }}
-        className="flex-1 bg-transparent py-3.5 text-sm text-white outline-none min-w-0"
+        className="flex-1 bg-transparent py-3.5 text-sm text-white outline-none min-w-0 placeholder:text-white/40"
         style={{ caretColor: '#34d399' }}
         placeholder={props.placeholder}
       />
@@ -162,19 +162,19 @@ export default function Login() {
           {/* ── Glass Card ─────────────────────────────────────────────── */}
           <div className="relative rounded-[28px] sm:rounded-[32px] overflow-hidden"
             style={{
-              background: 'rgba(15,15,20,0.35)',
-              backdropFilter: 'blur(48px) saturate(100%) brightness(1.08)',
-              WebkitBackdropFilter: 'blur(48px) saturate(100%) brightness(1.08)',
-              border: '1px solid rgba(255,255,255,0.13)',
-              boxShadow: '0 8px 40px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.10) inset',
+              background: 'rgba(255,255,255,0.18)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255,255,255,0.28)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.35)',
             }}>
 
             {/* Top shimmer */}
             <div className="absolute top-0 left-0 right-0 h-px"
-              style={{ background: 'linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.30) 40%,rgba(255,255,255,0.30) 60%,transparent 100%)' }} />
+              style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
             {/* Inner highlight */}
             <div className="absolute top-0 left-0 right-0 h-1/2 pointer-events-none"
-              style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.03) 0%,transparent 100%)' }} />
+              style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.10) 0%,transparent 100%)' }} />
 
             <div className="px-6 sm:px-8 py-7 sm:py-8 relative">
 
@@ -191,7 +191,7 @@ export default function Login() {
               }}>Welcome Back</h2>
 
               <p className="text-xs sm:text-sm mb-6"
-                style={{ color: 'rgba(148,163,184,0.80)' }}>
+                style={{ color: 'rgba(30,40,50,0.65)' }}>
                 Sign in to your mess account
               </p>
 
@@ -200,7 +200,7 @@ export default function Login() {
                 {/* Email */}
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-[0.22em] mb-2"
-                    style={{ color: 'rgba(110,231,183,0.70)' }}>
+                    style={{ color: 'rgba(255,255,255,0.70)' }}>
                     Email Address
                   </label>
                   <GlassInput
@@ -217,7 +217,7 @@ export default function Login() {
                 {/* Password */}
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-[0.22em] mb-2"
-                    style={{ color: 'rgba(110,231,183,0.70)' }}>
+                    style={{ color: 'rgba(255,255,255,0.70)' }}>
                     Password
                   </label>
                   <GlassInput
@@ -247,11 +247,11 @@ export default function Login() {
                   disabled={loading}
                   className="group relative w-full py-3.5 sm:py-4 rounded-2xl text-white overflow-hidden transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                   style={{
-                    background: 'rgba(255,255,255,0.08)',
+                    background: 'rgba(255,255,255,0.25)',
                     backdropFilter: 'blur(20px)',
                     WebkitBackdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255,255,255,0.18)',
-                    boxShadow: '0 2px 16px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.15)',
+                    border: '1px solid rgba(255,255,255,0.40)',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.50)',
                   }}>
                   {/* Hover shimmer */}
                   <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
