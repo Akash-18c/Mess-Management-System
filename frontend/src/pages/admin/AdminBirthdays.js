@@ -16,17 +16,10 @@ const glass = {
 
 const realName = (n) => { const m = n?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (n || ''); };
 
-function parseBirthday(val) {
-  if (!val) return '';
-  const parts = val.split('-');
-  if (parts.length === 3) return `${parts[1]}-${parts[2]}`;
-  return val;
-}
-
 export default function AdminBirthdays() {
   const [members, setMembers] = useState([]);
   const [editingId, setEditingId] = useState(null);
-  const [editVal, setEditVal] = useState('');
+  const [editVal, setEditVal] = useState({ month: '', day: '' });
   const [saving, setSaving] = useState(false);
 
   const load = () => api.get('/admin/members').then(r => setMembers(r.data));
@@ -34,14 +27,23 @@ export default function AdminBirthdays() {
 
   const startEdit = (m) => {
     setEditingId(m._id);
-    setEditVal(m.birthday ? `2000-${m.birthday}` : '');
+    if (m.birthday) {
+      const [mm, dd] = m.birthday.split('-');
+      setEditVal({ month: mm, day: dd });
+    } else {
+      setEditVal({ month: '', day: '' });
+    }
   };
-  const cancelEdit = () => { setEditingId(null); setEditVal(''); };
+  const cancelEdit = () => { setEditingId(null); setEditVal({ month: '', day: '' }); };
 
   const save = async (id) => {
+    const { month, day } = editVal;
+    if (!month || !day) { toast.error('Pick a month and day'); return; }
+    const mm = month.padStart(2, '0');
+    const dd = day.padStart(2, '0');
     setSaving(true);
     try {
-      await api.put(`/admin/members/${id}`, { birthday: parseBirthday(editVal) });
+      await api.put(`/admin/members/${id}`, { birthday: `${mm}-${dd}` });
       toast.success('Birthday saved');
       setEditingId(null);
       load();
@@ -57,7 +59,7 @@ export default function AdminBirthdays() {
     } catch { toast.error('Failed to clear'); }
   };
 
-  const active = members.filter(m => m.isActive && m.role !== 'admin');
+  const active = members.filter(m => m.isActive);
   const withBday = active.filter(m => m.birthday);
   const withoutBday = active.filter(m => !m.birthday);
 
@@ -142,9 +144,28 @@ export default function AdminBirthdays() {
           {/* Birthday display / edit */}
           <div className="flex-shrink-0 text-right">
             {isEditing ? (
-              <div className="flex items-center gap-1.5">
-                <input type="date" className="input text-xs py-1 px-2 w-32"
-                  value={editVal} onChange={e => setEditVal(e.target.value)} autoFocus />
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <select
+                  className="input text-xs py-1 px-2"
+                  style={{ width: '90px' }}
+                  value={editVal.month}
+                  onChange={e => setEditVal(v => ({ ...v, month: e.target.value }))}
+                  autoFocus>
+                  <option value="">Month</option>
+                  {MONTHS.map((mn, i) => (
+                    <option key={i+1} value={String(i+1).padStart(2,'0')}>{mn.slice(0,3)}</option>
+                  ))}
+                </select>
+                <select
+                  className="input text-xs py-1 px-2"
+                  style={{ width: '68px' }}
+                  value={editVal.day}
+                  onChange={e => setEditVal(v => ({ ...v, day: e.target.value }))}>
+                  <option value="">Day</option>
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                    <option key={d} value={String(d).padStart(2,'0')}>{d}</option>
+                  ))}
+                </select>
                 <button onClick={() => save(m._id)} disabled={saving}
                   className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', WebkitTapHighlightColor: 'transparent' }}>
