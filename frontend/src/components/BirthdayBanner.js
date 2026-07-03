@@ -3,10 +3,16 @@ import api from '../api';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-const CFG = {
-  0: { badge: 'Today! 🎉',    color: '#fbbf24', glow: 'rgba(251,191,36,0.30)', msg: 'Wishing you a wonderful birthday!' },
-  1: { badge: 'Tomorrow 🎈',  color: '#fb923c', glow: 'rgba(251,146,60,0.25)', msg: "Birthday's just around the corner!" },
-  2: { badge: 'In 2 Days 🎁', color: '#fcd34d', glow: 'rgba(252,211,77,0.22)', msg: 'Get ready to celebrate soon!' },
+const BADGE = {
+  0: 'Today! 🎉',
+  1: 'Tomorrow 🎈',
+  2: 'In 2 Days 🎁',
+};
+
+const MSG = {
+  0: 'Wishing you a wonderful birthday!',
+  1: "Birthday's just around the corner!",
+  2: 'Get ready to celebrate soon!',
 };
 
 const BALLOON_IMG = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5wfRdOxSyRLBqDDkRvkjQh-FGS9CBsCMPZCUyWhFOqw&s=10';
@@ -26,62 +32,43 @@ export default function BirthdayBanner() {
     <>
       <style>{`
         @keyframes floatBalloon {
-          0%, 100% { transform: translateY(0px) rotate(-4deg); }
-          50%       { transform: translateY(-7px) rotate(4deg); }
-        }
-        @keyframes bdayFadeIn {
-          from { opacity: 0; transform: translateY(-8px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes shimmerMove {
-          0%   { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
+          0%, 100% { transform: translateY(0px) rotate(-3deg); }
+          50%       { transform: translateY(-6px) rotate(3deg); }
         }
       `}</style>
 
-      <div className="space-y-2.5" style={{ animation: 'bdayFadeIn 0.4s ease' }}>
+      <div className="space-y-2.5">
         {people.map((p) => {
-          const cfg = CFG[p.daysLeft] ?? CFG[2];
           const [mm, dd] = p.birthday.split('-').map(Number);
           const dateLabel = `${dd} ${MONTHS[mm - 1]}`;
+          const badge = BADGE[p.daysLeft] ?? BADGE[2];
+          const msg   = MSG[p.daysLeft]   ?? MSG[2];
 
           return (
-            <div key={p._id} className="relative overflow-hidden rounded-[22px]"
+            <div key={p._id} className="relative overflow-hidden rounded-[28px]"
               style={{
-                /* iOS-style frosted glass */
-                background: 'rgba(30, 20, 5, 0.55)',
-                backdropFilter: 'blur(40px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                border: `1px solid rgba(251,191,36,0.22)`,
-                boxShadow: `0 8px 32px ${cfg.glow}, 0 1px 0 rgba(255,255,255,0.10) inset, 0 -1px 0 rgba(0,0,0,0.20) inset`,
+                background: 'rgba(255,255,255,0.18)',
+                backdropFilter: 'blur(40px)',
+                WebkitBackdropFilter: 'blur(40px)',
+                border: '1px solid rgba(255,255,255,0.28)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.35)',
               }}>
 
-              {/* Shimmer sweep */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[22px]">
-                <div style={{
-                  position: 'absolute', top: 0, left: 0, width: '40%', height: '100%',
-                  background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.07) 50%, transparent 70%)',
-                  animation: 'shimmerMove 3.5s ease-in-out infinite',
-                }} />
-              </div>
-
-              {/* Top highlight line */}
-              <div className="absolute top-0 left-6 right-6 h-px rounded-full"
-                style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.30), transparent)' }} />
-
-              {/* Subtle warm glow bg */}
-              <div className="absolute inset-0 pointer-events-none"
-                style={{ background: `radial-gradient(ellipse at 80% 50%, ${cfg.glow} 0%, transparent 65%)` }} />
+              {/* Top shimmer — same as login card */}
+              <div className="absolute top-0 left-0 right-0 h-px"
+                style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
+              {/* Inner top highlight */}
+              <div className="absolute top-0 left-0 right-0 h-1/2 pointer-events-none"
+                style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.10) 0%,transparent 100%)' }} />
 
               <div className="relative flex items-center gap-3 px-4 py-3.5">
 
-                {/* Balloon image — floating */}
+                {/* Balloon */}
                 <div className="flex-shrink-0" style={{ animation: 'floatBalloon 3s ease-in-out infinite' }}>
                   <img
                     src={BALLOON_IMG}
                     alt="balloon"
-                    className="w-12 h-12 object-contain"
-                    style={{ filter: `drop-shadow(0 4px 12px ${cfg.glow})` }}
+                    className="w-11 h-11 object-contain"
                     onError={e => { e.target.style.display = 'none'; }}
                   />
                 </div>
@@ -89,30 +76,24 @@ export default function BirthdayBanner() {
                 {/* Text */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-white font-bold text-[15px] leading-tight">{p.name}</span>
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full leading-none flex-shrink-0"
+                    <span className="font-bold text-white text-[15px] leading-tight">{p.name}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full leading-none flex-shrink-0"
                       style={{
-                        background: `${cfg.color}20`,
-                        color: cfg.color,
-                        border: `1px solid ${cfg.color}50`,
-                        boxShadow: `0 0 12px ${cfg.glow}`,
-                        letterSpacing: '0.02em',
+                        background: 'rgba(255,255,255,0.20)',
+                        color: 'rgba(255,255,255,0.90)',
+                        border: '1px solid rgba(255,255,255,0.30)',
                       }}>
-                      {cfg.badge}
+                      {badge}
                     </span>
                   </div>
-                  <p className="text-[12px] mt-1 leading-tight font-medium" style={{ color: 'rgba(253,230,138,0.70)' }}>
-                    🗓 {dateLabel} · {cfg.msg}
+                  <p className="text-[11px] mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.60)' }}>
+                    🗓 {dateLabel} · {msg}
                   </p>
                 </div>
 
-                {/* Right cake emoji */}
-                <span className="text-2xl flex-shrink-0 select-none" style={{ filter: 'drop-shadow(0 2px 6px rgba(251,191,36,0.4))' }}>🎂</span>
+                {/* Cake */}
+                <span className="text-2xl flex-shrink-0 select-none">🎂</span>
               </div>
-
-              {/* Bottom glow line */}
-              <div className="absolute bottom-0 left-8 right-8 h-px"
-                style={{ background: `linear-gradient(90deg, transparent, ${cfg.color}40, transparent)` }} />
             </div>
           );
         })}
