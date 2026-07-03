@@ -245,28 +245,67 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group relative w-full py-3.5 sm:py-4 rounded-2xl text-white overflow-hidden transition-all duration-300 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                  className="group relative w-full py-3.5 sm:py-4 rounded-2xl text-white overflow-hidden mt-2"
                   style={{
-                    background: 'rgba(255,255,255,0.25)',
+                    background: loading
+                      ? 'linear-gradient(135deg,#10b981,#059669)'
+                      : 'rgba(255,255,255,0.25)',
                     backdropFilter: 'blur(20px)',
                     WebkitBackdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255,255,255,0.40)',
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.50)',
+                    border: loading
+                      ? '1px solid rgba(16,185,129,0.60)'
+                      : '1px solid rgba(255,255,255,0.40)',
+                    boxShadow: loading
+                      ? '0 4px 20px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.20)'
+                      : '0 2px 12px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.50)',
+                    transition: 'background 0.4s ease, border 0.4s ease, box-shadow 0.4s ease, transform 0.1s',
+                    transform: loading ? 'scale(1)' : undefined,
+                    cursor: loading ? 'not-allowed' : 'pointer',
                   }}>
-                  {/* Hover shimmer */}
-                  <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
-                    style={{ background: 'linear-gradient(110deg,transparent 20%,rgba(255,255,255,0.18) 50%,transparent 80%)' }} />
+
+                  {/* Shimmer sweep on hover (idle only) */}
+                  {!loading && (
+                    <span className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(110deg,transparent 20%,rgba(255,255,255,0.22) 50%,transparent 80%)',
+                        transition: 'opacity 0.5s',
+                      }} />
+                  )}
+
+                  {/* Animated sweep fill while loading */}
+                  {loading && (
+                    <span className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(90deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.18) 50%,rgba(255,255,255,0.08) 100%)',
+                        backgroundSize: '200% 100%',
+                        animation: 'shimmerSlide 1.4s ease-in-out infinite',
+                      }} />
+                  )}
+
+                  <style>{`
+                    @keyframes shimmerSlide {
+                      0%   { background-position: 200% center; }
+                      100% { background-position: -200% center; }
+                    }
+                    @keyframes dotBounce {
+                      0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+                      40%           { transform: translateY(-5px); opacity: 1; }
+                    }
+                  `}</style>
 
                   {loading ? (
-                    <span className="flex items-center justify-center gap-3 text-sm">
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                      </svg>
-                      Authenticating…
+                    <span className="relative flex items-center justify-center gap-3">
+                      {/* Bouncing dots */}
+                      <span className="flex items-center gap-1">
+                        {[0, 1, 2].map(i => (
+                          <span key={i} className="w-1.5 h-1.5 rounded-full bg-white inline-block"
+                            style={{ animation: `dotBounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+                        ))}
+                      </span>
+                      <span className="text-sm font-semibold tracking-wide text-white/90">Signing in…</span>
                     </span>
                   ) : (
-                    <span className="flex items-center justify-center gap-2.5"
+                    <span className="relative flex items-center justify-center gap-2.5"
                       style={{ fontFamily: "'Dancing Script', cursive", fontWeight: 700, fontSize: '1.3rem', letterSpacing: '0.04em' }}>
                       Sign In
                       <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
