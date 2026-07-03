@@ -10,6 +10,7 @@ import AdminAssignments from './pages/admin/AdminAssignments';
 import AdminReports from './pages/admin/AdminReports';
 import AdminMonths from './pages/admin/AdminMonths';
 import AdminMasiSalary from './pages/admin/AdminMasiSalary';
+import AdminBirthdays from './pages/admin/AdminBirthdays';
 import AdminPurge from './pages/admin/AdminPurge';
 import AdminExpensesHistory from './pages/admin/AdminExpensesHistory';
 import ManagerLayout from './pages/manager/ManagerLayout';
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="reports" element={<AdminReports />} />
           <Route path="masi-salary" element={<AdminMasiSalary />} />
           <Route path="expenses-history" element={<AdminExpensesHistory />} />
+          <Route path="birthdays" element={<AdminBirthdays />} />
           <Route path="purge" element={<AdminPurge />} />
         </Route>
 

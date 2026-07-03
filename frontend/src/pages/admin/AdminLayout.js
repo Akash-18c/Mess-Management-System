@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, FileText, Trash2, LogOut, Menu, HandCoins, CalendarDays, Receipt } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, FileText, Trash2, LogOut, Menu, HandCoins, CalendarDays, Receipt, Cake } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 
 import BirthdayBanner from '../../components/BirthdayBanner';
@@ -15,6 +15,7 @@ const links = [
   { to: '/admin/expenses-history', icon: Receipt,         label: 'Expenses History' },
   { to: '/admin/reports',          icon: FileText,        label: 'Reports' },
   { to: '/admin/masi-salary',      icon: HandCoins,       label: 'Masi Salary' },
+  { to: '/admin/birthdays',        icon: Cake,            label: 'Birthdays' },
   { to: '/admin/purge',            icon: Trash2,          label: 'Purge Data', danger: true },
 ];
 
