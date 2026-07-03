@@ -108,7 +108,7 @@ export default function BirthdayBanner() {
 
                 {/* Balloon — left */}
                 <div className="flex-shrink-0" style={{ animation: 'floatBalloon 3s ease-in-out infinite' }}>
-                  <img src={BALLOON_IMG} alt="balloon" className="w-12 h-12 object-contain"
+                  <img src={BALLOON_IMG} alt="balloon" className="w-14 h-14 object-contain"
                     onError={e => { e.target.style.display = 'none'; }} />
                 </div>
 
@@ -131,15 +131,16 @@ export default function BirthdayBanner() {
                 </div>
 
                 {/* Right GIF */}
-                <div className="flex-shrink-0 overflow-hidden" style={{ width: 52, height: 52 }}>
+                <div className="flex-shrink-0 overflow-hidden rounded-2xl"
+                  style={{ width: 90, height: 90 }}>
                   <img
                     src={gifSrc}
                     alt="status"
                     style={{
                       width: '100%',
                       height: '100%',
-                      objectFit: 'contain',
-                      borderRadius: 10,
+                      objectFit: 'cover',
+                      borderRadius: 14,
                       ...gifStyle,
                     }}
                     onError={e => { e.target.style.display = 'none'; }}
