@@ -3,6 +3,8 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, UtensilsCrossed, ShoppingCart, CreditCard, FileText, LogOut, Menu, Receipt } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 
+import BirthdayBanner from '../../components/BirthdayBanner';
+
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
 const links = [
@@ -85,7 +87,7 @@ export default function ManagerLayout() {
           </div>
           <span className="badge-manager">Manager</span>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6"><Outlet /></main>
+        <main className="flex-1 overflow-y-auto"><BirthdayBanner /><div className="p-4 lg:p-6 mt-3"><Outlet /></div></main>
       </div>
     </div>
   );

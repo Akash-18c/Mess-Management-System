@@ -22,6 +22,27 @@ router.get('/members-list', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// Upcoming birthdays — within today + 2 days
+router.get('/birthdays/upcoming', async (req, res) => {
+  try {
+    const members = await User.find({ isActive: true, birthday: { $nin: ['', null] } }).select('name birthday');
+    const rn2 = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
+    const today = new Date();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const upcoming = [];
+    members.forEach(m => {
+      const [mm, dd] = (m.birthday || '').split('-').map(Number);
+      if (!mm || !dd) return;
+      let bday = new Date(today.getFullYear(), mm - 1, dd);
+      if (bday < todayMidnight) bday = new Date(today.getFullYear() + 1, mm - 1, dd);
+      const diffDays = Math.floor((bday - todayMidnight) / 86400000);
+      if (diffDays >= 0 && diffDays <= 2)
+        upcoming.push({ _id: m._id, name: rn2(m.name), birthday: m.birthday, daysLeft: diffDays });
+    });
+    res.json(upcoming);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 router.get('/dashboard', async (req, res) => {
   try {
     const now = new Date();

@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['admin', 'manager', 'member'], default: 'member' },
   isActive: { type: Boolean, default: true },
   joinDate: { type: Date, default: Date.now },
+  birthday: { type: String, default: '' }, // stored as 'MM-DD' e.g. '07-15'
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

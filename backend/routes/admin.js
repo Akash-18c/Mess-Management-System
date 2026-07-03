@@ -402,4 +402,30 @@ router.get('/active-months', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// --- Upcoming Birthdays (accessible to all authenticated users) ---
+router.get('/birthdays/upcoming', async (req, res) => {
+  try {
+    const members = await User.find({ isActive: true, birthday: { $nin: ['', null] } }).select('name birthday role');
+    const today = new Date();
+    const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
+    const upcoming = members.filter(m => {
+      const [mm, dd] = m.birthday.split('-').map(Number);
+      if (!mm || !dd) return false;
+      const thisYear = new Date(today.getFullYear(), mm - 1, dd);
+      const nextYear = new Date(today.getFullYear() + 1, mm - 1, dd);
+      const bday = thisYear >= new Date(today.getFullYear(), today.getMonth(), today.getDate()) ? thisYear : nextYear;
+      const diffDays = Math.floor((bday - new Date(today.getFullYear(), today.getMonth(), today.getDate())) / 86400000);
+      return diffDays >= 0 && diffDays <= 2;
+    }).map(m => {
+      const [mm, dd] = m.birthday.split('-').map(Number);
+      const thisYear = new Date(today.getFullYear(), mm - 1, dd);
+      const nextYear = new Date(today.getFullYear() + 1, mm - 1, dd);
+      const bday = thisYear >= new Date(today.getFullYear(), today.getMonth(), today.getDate()) ? thisYear : nextYear;
+      const diffDays = Math.floor((bday - new Date(today.getFullYear(), today.getMonth(), today.getDate())) / 86400000);
+      return { _id: m._id, name: rn(m.name), birthday: m.birthday, daysLeft: diffDays };
+    });
+    res.json(upcoming);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 module.exports = router;
