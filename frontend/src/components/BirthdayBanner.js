@@ -1,30 +1,35 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import api from '../api';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-const BADGE = {
-  0: 'Today! 🎉',
-  1: 'Tomorrow 🎈',
-  2: 'In 2 Days 🎁',
-};
-
-const MSG = {
-  0: 'Wishing you a wonderful birthday!',
-  1: "Birthday's just around the corner!",
-  2: 'Get ready to celebrate soon!',
-};
-
 const BALLOON_IMG = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5wfRdOxSyRLBqDDkRvkjQh-FGS9CBsCMPZCUyWhFOqw&s=10';
+
+function msUntilMidnight() {
+  const now = new Date();
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  return midnight - now;
+}
 
 export default function BirthdayBanner() {
   const [people, setPeople] = useState([]);
 
-  useEffect(() => {
+  const fetchBirthdays = useCallback(() => {
     api.get('/member/birthdays/upcoming')
       .then(r => setPeople(r.data || []))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    fetchBirthdays();
+
+    // Re-fetch just after midnight so status updates (Today → gone, Tomorrow → Today, etc.)
+    const t = setTimeout(() => {
+      fetchBirthdays();
+    }, msUntilMidnight() + 500); // +500ms buffer past midnight
+
+    return () => clearTimeout(t);
+  }, [fetchBirthdays]);
 
   if (people.length === 0) return null;
 
@@ -41,8 +46,16 @@ export default function BirthdayBanner() {
         {people.map((p) => {
           const [mm, dd] = p.birthday.split('-').map(Number);
           const dateLabel = `${dd} ${MONTHS[mm - 1]}`;
-          const badge = BADGE[p.daysLeft] ?? BADGE[2];
-          const msg   = MSG[p.daysLeft]   ?? MSG[2];
+
+          const badge =
+            p.daysLeft === 0 ? '🎉 Birthday Today!' :
+            p.daysLeft === 1 ? '🎈 Birthday Tomorrow' :
+            '🎁 Birthday in 2 Days';
+
+          const msg =
+            p.daysLeft === 0 ? `Wishing you a wonderful birthday! 🎂` :
+            p.daysLeft === 1 ? `Birthday is coming tomorrow — get ready to celebrate!` :
+            `Birthday is coming within 2 days — don't forget to wish!`;
 
           return (
             <div key={p._id} className="relative overflow-hidden rounded-[28px]"
@@ -54,10 +67,9 @@ export default function BirthdayBanner() {
                 boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.35)',
               }}>
 
-              {/* Top shimmer — same as login card */}
+              {/* Top shimmer */}
               <div className="absolute top-0 left-0 right-0 h-px"
                 style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
-              {/* Inner top highlight */}
               <div className="absolute top-0 left-0 right-0 h-1/2 pointer-events-none"
                 style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.10) 0%,transparent 100%)' }} />
 
