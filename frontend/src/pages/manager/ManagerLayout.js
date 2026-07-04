@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, UtensilsCrossed, ShoppingCart, CreditCard, FileText, LogOut, Menu, Receipt } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, ShoppingCart, CreditCard, FileText, LogOut, Menu, Receipt, Bike } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useMarketDutyNotifier from '../../hooks/useMarketDutyNotifier';
 
@@ -13,6 +13,7 @@ const links = [
   { to: '/manager/charges', icon: Receipt, label: 'Other Charges' },
   { to: '/manager/payments', icon: CreditCard, label: 'Payments' },
   { to: '/manager/bills', icon: FileText, label: 'Bills' },
+  { to: '/manager/market-duty', icon: Bike, label: 'Market Duty' },
 ];
 
 export default function ManagerLayout() {

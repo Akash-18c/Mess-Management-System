@@ -81,6 +81,7 @@ export default function App() {
           <Route path="payments" element={<ManagerPayments />} />
           <Route path="bills" element={<ManagerBills />} />
           <Route path="charges" element={<ManagerOtherCharges />} />
+          <Route path="market-duty" element={<AdminMarketDuty />} />
         </Route>
 
         <Route path="/member" element={<ProtectedRoute roles={['member', 'manager', 'admin']}><MemberLayout /></ProtectedRoute>}>
