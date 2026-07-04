@@ -7,11 +7,11 @@ import useAuthStore from '../store/authStore';
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 const glass = {
-  background: 'rgba(255,255,255,0.03)',
-  backdropFilter: 'blur(20px)',
-  WebkitBackdropFilter: 'blur(20px)',
-  border: '1px solid rgba(255,255,255,0.10)',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)',
+  background: 'rgba(255,255,255,0.08)',
+  backdropFilter: 'blur(40px)',
+  WebkitBackdropFilter: 'blur(40px)',
+  border: '1px solid rgba(255,255,255,0.18)',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25)',
 };
 
 // Helper: extract display name — strips role prefix like "Admin (...)" → shows full name
@@ -251,7 +251,7 @@ function ExpenseTypeCard({ month, year, canEdit, categoryName, emoji, onStatusCh
     <div className="rounded-2xl overflow-hidden" style={glass}>
       {/* card header */}
       <div className="flex items-center justify-between px-4 py-3"
-        style={{ borderBottom: entries.length ? '1px solid rgba(255,255,255,0.07)' : 'none', background: 'rgba(255,255,255,0.02)' }}>
+        style={{ borderBottom: entries.length ? '1px solid rgba(255,255,255,0.12)' : 'none', background: 'rgba(255,255,255,0.04)' }}>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
@@ -277,7 +277,7 @@ function ExpenseTypeCard({ month, year, canEdit, categoryName, emoji, onStatusCh
         <div className="px-3 py-2 space-y-1.5">
           {entries.map(e => (
             <div key={e._id} className="flex items-center justify-between rounded-xl px-3 py-2.5"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
               <div className="min-w-0 flex-1 mr-3">
                 <p className="text-white text-sm font-medium truncate">{e.description || categoryName}</p>
                 <p className="text-slate-500 text-xs mt-0.5">{new Date(e.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
@@ -339,7 +339,7 @@ function IndividualCostTable({ individualCosts, mealRate, summary, totalCollecte
     <div className="rounded-2xl overflow-hidden" style={glass}>
       {/* header */}
       <div className="flex items-center gap-3 px-4 py-3"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.04)' }}>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.22)' }}>
           <ChefHat size={17} className="text-green-400" />
@@ -431,11 +431,11 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
 
       {/* ── Welcome Banner ── */}
       <div className="rounded-2xl p-4" style={{
-        background: 'rgba(255,255,255,0.03)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.10)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10)',
+        background: 'rgba(255,255,255,0.08)',
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        border: '1px solid rgba(255,255,255,0.18)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25)',
       }}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">

@@ -29,11 +29,11 @@ function buildMonthRange() {
 }
 
 const glass = {
-  background: 'rgba(255,255,255,0.04)',
-  backdropFilter: 'blur(32px)',
-  WebkitBackdropFilter: 'blur(32px)',
-  border: '1px solid rgba(255,255,255,0.10)',
-  boxShadow: '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)',
+  background: 'rgba(255,255,255,0.08)',
+  backdropFilter: 'blur(40px)',
+  WebkitBackdropFilter: 'blur(40px)',
+  border: '1px solid rgba(255,255,255,0.18)',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25)',
 };
 
 const tooltipStyle = {
