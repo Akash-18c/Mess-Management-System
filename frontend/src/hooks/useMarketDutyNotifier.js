@@ -10,16 +10,19 @@ function buildWaUrl(phone, message) {
   return `https://wa.me/${num}?text=${encodeURIComponent(message)}`;
 }
 
-export function buildMessage(duty) {
+export function buildMessage(duty, isNightBefore = false) {
   const name = rn(duty.memberId?.name || '');
   const day  = DAYS[duty.dayOfWeek];
   const meal = duty.meal === 'lunch' ? '☀️ Lunch' : '🌙 Dinner';
+  if (isNightBefore) {
+    return `🛒 *Market Duty Reminder — Tomorrow*\n\nHey ${name}! 👋\nJust a heads-up — you have market duty *tomorrow morning*.\n\n📅 Day: ${day}\n🍽 Meal: ${meal}\n⏰ Time: ${duty.time}\n${duty.note ? `📝 Note: ${duty.note}\n` : ''}\nPlease be ready on time tomorrow! 🙏\n\n— The Messy Kitchen 🍳`;
+  }
   return `🛒 *Market Duty Reminder*\n\nHey ${name}! 👋\nIt's your turn to buy groceries today.\n\n📅 Day: ${day}\n🍽 Meal: ${meal}\n⏰ Time: ${duty.time}\n${duty.note ? `📝 Note: ${duty.note}\n` : ''}\nPlease make sure to buy everything on time! 🙏\n\n— The Messy Kitchen 🍳`;
 }
 
-export function buildWaLink(duty) {
+export function buildWaLink(duty, isNightBefore = false) {
   if (!duty.memberId?.phone) return null;
-  return buildWaUrl(duty.memberId.phone, buildMessage(duty));
+  return buildWaUrl(duty.memberId.phone, buildMessage(duty, isNightBefore));
 }
 
 async function requestPermission() {
@@ -66,25 +69,45 @@ export default function useMarketDutyNotifier() {
       duties.forEach(duty => {
         if (!duty.isActive || !duty.memberId?.phone) return;
         const [hh, mm] = duty.time.split(':').map(Number);
-        const delay = msUntilNext(duty.dayOfWeek, hh, mm);
-        if (delay > 2147483647) return;
-
         const waUrl = buildWaLink(duty);
         const name  = rn(duty.memberId.name);
         const meal  = duty.meal === 'lunch' ? 'Lunch' : 'Dinner';
 
-        const t = setTimeout(() => {
-          if (Notification.permission === 'granted') {
-            new Notification('🛒 Market Duty Reminder — The Messy Kitchen', {
-              body: `${name} needs to buy groceries for ${meal} today! Tap to send WhatsApp.`,
-              icon: '/messy-logo.png',
-              tag: `duty-${duty._id}`,
-            });
-          }
-          if (waUrl) window.open(waUrl, '_blank');
-        }, delay);
+        // Day-of notification
+        const delay = msUntilNext(duty.dayOfWeek, hh, mm);
+        if (delay <= 2147483647) {
+          const t = setTimeout(() => {
+            if (Notification.permission === 'granted') {
+              new Notification('🛒 Market Duty Reminder — The Messy Kitchen', {
+                body: `${name} needs to buy groceries for ${meal} today!`,
+                icon: '/messy-logo.png',
+                tag: `duty-${duty._id}`,
+              });
+            }
+            if (waUrl) window.open(waUrl, '_blank');
+          }, delay);
+          timersRef.current.push(t);
+        }
 
-        timersRef.current.push(t);
+        // Night-before notification at 21:00 for lunch duties
+        if (duty.meal === 'lunch') {
+          const prevDay = (duty.dayOfWeek - 1 + 7) % 7;
+          const nightDelay = msUntilNext(prevDay, 21, 0);
+          if (nightDelay <= 2147483647) {
+            const waUrlNight = buildWaLink(duty, true);
+            const tn = setTimeout(() => {
+              if (Notification.permission === 'granted') {
+                new Notification('🌙 Market Duty Tomorrow — The Messy Kitchen', {
+                  body: `Reminder: ${name} has market duty tomorrow for Lunch!`,
+                  icon: '/messy-logo.png',
+                  tag: `duty-night-${duty._id}`,
+                });
+              }
+              if (waUrlNight) window.open(waUrlNight, '_blank');
+            }, nightDelay);
+            timersRef.current.push(tn);
+          }
+        }
       });
     }
 

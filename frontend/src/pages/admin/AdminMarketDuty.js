@@ -69,8 +69,8 @@ export default function AdminMarketDuty() {
     load();
   };
 
-  const sendWhatsApp = (duty) => {
-    const url = buildWaLink(duty);
+  const sendWhatsApp = (duty, isNightBefore = false) => {
+    const url = buildWaLink(duty, isNightBefore);
     if (!url) return toast.error('No phone number for this member');
     window.open(url, '_blank');
   };
@@ -129,6 +129,13 @@ export default function AdminMarketDuty() {
                   style={{ background: 'rgba(37,211,102,0.18)', border: '1px solid rgba(37,211,102,0.35)', color: '#25d366' }}>
                   <Send size={13} /> Send WhatsApp
                 </button>
+                {d.meal === 'lunch' && (
+                  <button onClick={() => sendWhatsApp(d, true)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
+                    style={{ background: 'rgba(139,92,246,0.18)', border: '1px solid rgba(139,92,246,0.35)', color: '#c4b5fd' }}>
+                    <Send size={13} /> Send Tonight
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -239,6 +246,13 @@ export default function AdminMarketDuty() {
                         style={{ background: 'rgba(37,211,102,0.15)', border: '1px solid rgba(37,211,102,0.28)', color: '#25d366' }}>
                         <Send size={13} />
                       </button>
+                      {d.meal === 'lunch' && (
+                        <button onClick={() => sendWhatsApp(d, true)} title="Send tonight (night before reminder)"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-all active:scale-95"
+                          style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.28)', color: '#c4b5fd' }}>
+                          🌙
+                        </button>
+                      )}
                       <button onClick={() => openEdit(d)} title="Edit"
                         className="w-8 h-8 rounded-lg flex items-center justify-center transition-all active:scale-95"
                         style={{ background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.25)', color: '#93c5fd' }}>
