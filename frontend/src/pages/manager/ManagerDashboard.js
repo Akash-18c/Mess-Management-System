@@ -43,14 +43,16 @@ const glass = {
   boxShadow: '0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)',
 };
 
-export default function ManagerDashboard() {
-  const now = new Date();
-  const curMonth = now.getMonth() + 1;
-  const curYear = now.getFullYear();
+function getNow() { const d = new Date(); return { m: d.getMonth() + 1, y: d.getFullYear() }; }
 
-  const [today, setToday] = useState(now.toISOString().slice(0, 10));
-  const [selectedMonth, setSelectedMonth] = useState(curMonth);
-  const [selectedYear, setSelectedYear] = useState(curYear);
+export default function ManagerDashboard() {
+  const [cur, setCur] = useState(getNow);
+  const curMonth = cur.m;
+  const curYear  = cur.y;
+
+  const [today, setToday] = useState(() => new Date().toISOString().slice(0, 10));
+  const [selectedMonth, setSelectedMonth] = useState(() => getNow().m);
+  const [selectedYear,  setSelectedYear]  = useState(() => getNow().y);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [allSummaries, setAllSummaries] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -69,14 +71,22 @@ export default function ManagerDashboard() {
       const n = new Date();
       return new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1) - n;
     };
-    const tick = () => {
-      setToday(new Date().toISOString().slice(0, 10));
-      // clear cache so fresh data loads
-      Object.keys(cache).forEach(k => delete cache[k]);
+    const schedule = () => {
+      const t = setTimeout(() => {
+        const next = getNow();
+        setToday(new Date().toISOString().slice(0, 10));
+        setSelectedMonth(prev => prev === curMonth ? next.m : prev);
+        setSelectedYear(prev => prev === curYear ? next.y : prev);
+        setCur(next);
+        Object.keys(cache).forEach(k => delete cache[k]);
+        schedule();
+      }, msUntilMidnight() + 500);
+      return t;
     };
-    const t = setTimeout(() => { tick(); }, msUntilMidnight());
+    const t = schedule();
     return () => clearTimeout(t);
-  }, [today]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── auto-refresh every 60s for current month
   useEffect(() => {

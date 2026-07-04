@@ -29,19 +29,21 @@ function buildMonthRange() {
 
 const BAR_COLORS = ['#22c55e','#34d399','#4ade80','#86efac','#6ee7b7','#10b981','#059669','#16a34a'];
 
+function getNow() { const d = new Date(); return { m: d.getMonth() + 1, y: d.getFullYear() }; }
+
 export default function MemberDashboard() {
   const { user } = useAuthStore();
-  const now = new Date();
-  const curMonth = now.getMonth() + 1;
-  const curYear  = now.getFullYear();
+  const [cur, setCur] = useState(getNow);
+  const curMonth = cur.m;
+  const curYear  = cur.y;
 
   const [data,          setData]          = useState(null);
   const [allSummaries,  setAllSummaries]  = useState([]);
   const [monthData,     setMonthData]     = useState(null);
   const [myCharges,     setMyCharges]     = useState([]);
   const [dropdownOpen,  setDropdownOpen]  = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(curMonth);
-  const [selectedYear,  setSelectedYear]  = useState(curYear);
+  const [selectedMonth, setSelectedMonth] = useState(() => getNow().m);
+  const [selectedYear,  setSelectedYear]  = useState(() => getNow().y);
   const dropRef = useRef(null);
 
   useEffect(() => {
@@ -49,6 +51,27 @@ export default function MemberDashboard() {
     document.addEventListener('mousedown', h);
     document.addEventListener('touchstart', h, { passive: true });
     return () => { document.removeEventListener('mousedown', h); document.removeEventListener('touchstart', h); };
+  }, []);
+
+  // Auto-advance month at midnight
+  useEffect(() => {
+    const msUntilMidnight = () => {
+      const n = new Date();
+      return new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1) - n;
+    };
+    const schedule = () => {
+      const t = setTimeout(() => {
+        const next = getNow();
+        setSelectedMonth(prev => prev === curMonth ? next.m : prev);
+        setSelectedYear(prev => prev === curYear ? next.y : prev);
+        setCur(next);
+        schedule();
+      }, msUntilMidnight() + 500);
+      return t;
+    };
+    const t = schedule();
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
