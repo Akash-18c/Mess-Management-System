@@ -248,6 +248,17 @@ router.get('/all-payments/:month/:year', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// Market duty — readable by all roles
+router.get('/market-duty', async (req, res) => {
+  try {
+    const MarketDuty = require('../models/MarketDuty');
+    const duties = await MarketDuty.find({ isActive: true })
+      .populate('memberId', 'name phone')
+      .sort({ dayOfWeek: 1, meal: 1 });
+    res.json(duties);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 router.get('/history', async (req, res) => {
   try {
     const bills = await Bill.find({ memberId: req.user._id }).sort({ year: -1, month: -1 });

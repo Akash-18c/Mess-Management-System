@@ -59,7 +59,7 @@ export default function useMarketDutyNotifier() {
 
       let duties = [];
       try {
-        const r = await api.get('/admin/market-duty');
+        const r = await api.get('/member/market-duty');
         duties = r.data || [];
       } catch { return; }
 
