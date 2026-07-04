@@ -17,48 +17,46 @@ const glass = {
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
+function PersonCard({ d, isLunch, onSend }) {
+  return (
+    <div className="rounded-2xl p-3" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 text-white"
+          style={{ background: isLunch ? 'rgba(251,191,36,0.25)' : 'rgba(99,102,241,0.25)', border: isLunch ? '1px solid rgba(251,191,36,0.4)' : '1px solid rgba(99,102,241,0.4)' }}>
+          {rn(d.memberId?.name)?.[0]?.toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-bold text-sm truncate">{rn(d.memberId?.name)}</p>
+          <p className="text-slate-400 text-xs">⏰ {d.time}{d.note ? ` · ${d.note}` : ''}</p>
+        </div>
+      </div>
+      <button onClick={() => onSend(d)}
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95"
+        style={{ background: 'rgba(37,211,102,0.20)', border: '1px solid rgba(37,211,102,0.40)', color: '#22c55e', boxShadow: '0 0 12px rgba(37,211,102,0.10)' }}>
+        <Send size={14} /> Send WhatsApp
+      </button>
+    </div>
+  );
+}
+
 function MealSlot({ meal, duties, onSend }) {
   const isLunch = meal === 'lunch';
-  const accent  = isLunch ? 'rgba(251,191,36,0.18)' : 'rgba(99,102,241,0.18)';
-  const border  = isLunch ? 'rgba(251,191,36,0.30)' : 'rgba(99,102,241,0.30)';
+  const accent  = isLunch ? 'rgba(251,191,36,0.10)' : 'rgba(99,102,241,0.10)';
+  const border  = isLunch ? 'rgba(251,191,36,0.25)' : 'rgba(99,102,241,0.25)';
   const color   = isLunch ? '#fcd34d'               : '#a5b4fc';
   const label   = isLunch ? '☀️ Lunch'             : '🌙 Dinner';
 
   return (
     <div className="flex-1 rounded-2xl overflow-hidden" style={{ background: accent, border: `1px solid ${border}`, minWidth: 0 }}>
-      <div className="px-3 py-2" style={{ borderBottom: `1px solid ${border}` }}>
-        <span className="text-xs font-bold" style={{ color }}>{label}</span>
+      <div className="px-3 py-2.5" style={{ borderBottom: `1px solid ${border}` }}>
+        <span className="text-xs font-bold tracking-wide" style={{ color }}>{label}</span>
       </div>
       {duties.length === 0 ? (
-        <div className="px-3 py-3 text-center text-slate-600 text-xs">No duty</div>
+        <div className="px-3 py-4 text-center text-slate-600 text-xs">No duty assigned</div>
       ) : (
-        <div className="p-2 space-y-1.5">
+        <div className="p-2 space-y-2">
           {duties.map(d => (
-            <div key={d._id} className="rounded-xl px-2.5 py-2"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 text-white"
-                  style={{ background: 'rgba(255,255,255,0.12)' }}>
-                  {rn(d.memberId?.name)?.[0]?.toUpperCase()}
-                </div>
-                <p className="text-white font-semibold text-xs truncate flex-1">{rn(d.memberId?.name)}</p>
-              </div>
-              <p className="text-slate-500 text-[10px] mb-2">⏰ {d.time}{d.note ? ` · ${d.note}` : ''}</p>
-              <div className="flex items-center gap-1">
-                <button onClick={() => onSend(d, false)}
-                  className="flex-1 flex items-center justify-center gap-1 py-1 rounded-lg text-[10px] font-bold transition-all active:scale-95"
-                  style={{ background: 'rgba(37,211,102,0.18)', border: '1px solid rgba(37,211,102,0.30)', color: '#25d366' }}>
-                  <Send size={10} /> Send
-                </button>
-                {isLunch && (
-                  <button onClick={() => onSend(d, true)}
-                    className="flex-1 flex items-center justify-center gap-1 py-1 rounded-lg text-[10px] font-bold transition-all active:scale-95"
-                    style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.28)', color: '#c4b5fd' }}>
-                    🌙 Tonight
-                  </button>
-                )}
-              </div>
-            </div>
+            <PersonCard key={d._id} d={d} isLunch={isLunch} onSend={onSend} />
           ))}
         </div>
       )}
@@ -78,8 +76,8 @@ export default function ManagerMarketDuty() {
       .finally(() => setLoading(false));
   }, []);
 
-  const sendWhatsApp = (duty, isNightBefore = false) => {
-    const url = buildWaLink(duty, isNightBefore, user);
+  const sendWhatsApp = (duty) => {
+    const url = buildWaLink(duty, false, user);
     if (!url) return toast.error('No phone number for this member');
     window.open(url, '_blank');
   };
@@ -94,29 +92,33 @@ export default function ManagerMarketDuty() {
   })).filter(g => g.lunch.length > 0 || g.dinner.length > 0);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
+
       {/* Header */}
       <div className="flex items-center gap-3 rounded-2xl p-4" style={glass}>
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.25)' }}>
-          <ShoppingCart size={18} className="text-amber-400" />
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.30)' }}>
+          <ShoppingCart size={20} className="text-amber-400" />
         </div>
         <div>
           <h1 className="font-bold text-white text-base leading-tight">Market Duty</h1>
-          <p className="text-slate-500 text-xs mt-0.5">Weekly grocery schedule · Tap Send to notify via WhatsApp</p>
+          <p className="text-slate-500 text-xs mt-0.5">Weekly schedule · Tap Send to notify</p>
         </div>
       </div>
 
       {loading ? (
-        <div className="rounded-2xl p-10 text-center text-slate-500 text-sm" style={glass}>Loading...</div>
+        <div className="rounded-2xl p-12 text-center" style={glass}>
+          <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-slate-500 text-sm">Loading duties...</p>
+        </div>
       ) : (
         <>
           {/* Today banner */}
           {todayDuties.length > 0 && (
-            <div className="rounded-2xl overflow-hidden" style={{ ...glass, border: '1px solid rgba(245,158,11,0.35)' }}>
-              <div className="px-4 py-2.5 flex items-center gap-2"
+            <div className="rounded-2xl overflow-hidden" style={{ ...glass, border: '1px solid rgba(245,158,11,0.40)' }}>
+              <div className="px-4 py-3 flex items-center gap-2"
                 style={{ borderBottom: '1px solid rgba(255,255,255,0.10)', background: 'rgba(245,158,11,0.08)' }}>
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
                 <p className="text-sm font-bold text-amber-300">Today's Duty — {DAYS[todayDay]}</p>
               </div>
               <div className="p-3 flex gap-3">
@@ -131,21 +133,23 @@ export default function ManagerMarketDuty() {
 
           {/* Weekly schedule */}
           {byDay.length === 0 ? (
-            <div className="rounded-2xl p-10 text-center text-slate-600 text-sm" style={glass}>
-              No duties scheduled yet. Ask admin to set up the schedule.
+            <div className="rounded-2xl p-12 text-center" style={glass}>
+              <ShoppingCart size={32} className="text-slate-700 mx-auto mb-3" />
+              <p className="text-slate-500 text-sm font-medium">No duties scheduled yet</p>
+              <p className="text-slate-600 text-xs mt-1">Ask admin to set up the schedule</p>
             </div>
           ) : (
             <div className="space-y-3">
               {byDay.map(({ day, lunch, dinner }) => (
                 <div key={day} className="rounded-2xl overflow-hidden" style={glass}>
-                  <div className="px-4 py-2.5 flex items-center gap-2"
+                  <div className="px-4 py-3 flex items-center gap-2"
                     style={{ borderBottom: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)' }}>
-                    <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">{DAYS[day]}</span>
+                    <span className="text-sm font-bold text-white tracking-wide">{DAYS[day]}</span>
                     {day === todayDay && (
-                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: 'rgba(245,158,11,0.20)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.35)' }}>TODAY</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        style={{ background: 'rgba(245,158,11,0.20)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.40)' }}>TODAY</span>
                     )}
-                    <span className="ml-auto text-[10px] text-slate-600">
+                    <span className="ml-auto text-[11px] font-medium text-slate-500">
                       {lunch.length + dinner.length} {lunch.length + dinner.length === 1 ? 'person' : 'people'}
                     </span>
                   </div>
