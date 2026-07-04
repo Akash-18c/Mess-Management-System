@@ -3,6 +3,7 @@ import { ShoppingCart, Send } from 'lucide-react';
 import api from '../../api';
 import toast from 'react-hot-toast';
 import { buildWaLink } from '../../hooks/useMarketDutyNotifier';
+import useAuthStore from '../../store/authStore';
 
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
@@ -68,6 +69,7 @@ function MealSlot({ meal, duties, onSend }) {
 export default function ManagerMarketDuty() {
   const [duties, setDuties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuthStore();
 
   useEffect(() => {
     api.get('/member/market-duty')
@@ -77,7 +79,7 @@ export default function ManagerMarketDuty() {
   }, []);
 
   const sendWhatsApp = (duty, isNightBefore = false) => {
-    const url = buildWaLink(duty, isNightBefore);
+    const url = buildWaLink(duty, isNightBefore, user);
     if (!url) return toast.error('No phone number for this member');
     window.open(url, '_blank');
   };

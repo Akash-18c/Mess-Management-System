@@ -3,6 +3,7 @@ import { ShoppingCart, Plus, Trash2, Edit2, Send, X, Check } from 'lucide-react'
 import api from '../../api';
 import toast from 'react-hot-toast';
 import { buildWaLink } from '../../hooks/useMarketDutyNotifier';
+import useAuthStore from '../../store/authStore';
 
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
@@ -92,6 +93,7 @@ export default function AdminMarketDuty() {
   const [editId,   setEditId]   = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading,  setLoading]  = useState(false);
+  const { user } = useAuthStore();
 
   const load = () => api.get('/admin/market-duty').then(r => setDuties(r.data)).catch(() => {});
 
@@ -132,7 +134,7 @@ export default function AdminMarketDuty() {
   };
 
   const sendWhatsApp = (duty, isNightBefore = false) => {
-    const url = buildWaLink(duty, isNightBefore);
+    const url = buildWaLink(duty, isNightBefore, user);
     if (!url) return toast.error('No phone number for this member');
     window.open(url, '_blank');
   };

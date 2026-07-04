@@ -10,19 +10,38 @@ function buildWaUrl(phone, message) {
   return `https://wa.me/${num}?text=${encodeURIComponent(message)}`;
 }
 
-export function buildMessage(duty, isNightBefore = false) {
+function formatTime12h(time24) {
+  const [hh, mm] = time24.split(':').map(Number);
+  const period = hh >= 12 ? 'PM' : 'AM';
+  const h = hh % 12 || 12;
+  return `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')} ${period}`;
+}
+
+function senderFooter(sender) {
+  if (!sender) return '';
+  const senderName = rn(sender.name || '');
+  if (sender.role === 'admin') return `${senderName} *(Admin)*`;
+  if (sender.role === 'manager') return `${senderName} *(Manager)*`;
+  return senderName;
+}
+
+export function buildMessage(duty, isNightBefore = false, sender = null) {
   const name = rn(duty.memberId?.name || '');
   const day  = DAYS[duty.dayOfWeek];
   const meal = duty.meal === 'lunch' ? '☀️ Lunch' : '🌙 Dinner';
+  const time = formatTime12h(duty.time);
+  const footer = senderFooter(sender);
+  const signOff = `— *The Messy Kitchen*${footer ? `\n${footer}` : ''}`;
+
   if (isNightBefore) {
-    return `🛒 *Market Duty Reminder — Tomorrow*\n\nHey ${name}! 👋\nJust a heads-up — you have market duty *tomorrow morning*.\n\n📅 Day: ${day}\n🍽 Meal: ${meal}\n⏰ Time: ${duty.time}\n${duty.note ? `📝 Note: ${duty.note}\n` : ''}\nPlease be ready on time tomorrow! 🙏\n\n— The Messy Kitchen 🍳`;
+    return `*🛒 MARKET DUTY ALERT*\n\n👋 Hello, *${name}*\nJust a heads-up — you have market duty *tomorrow morning*.\n\n📅 Day      : ${day}\n🍽 Meal     : ${meal}\n⏰ Time     : ${time}\n${duty.note ? `📝 Note     : ${duty.note}\n` : ''}\n*📋 Please ensure all required grocery items are purchased before the scheduled meal time.*\n\n*Your contribution helps keep our mess running smoothly. ❤️*\n\n${signOff}`;
   }
-  return `🛒 *Market Duty Reminder*\n\nHey ${name}! 👋\nIt's your turn to buy groceries today.\n\n📅 Day: ${day}\n🍽 Meal: ${meal}\n⏰ Time: ${duty.time}\n${duty.note ? `📝 Note: ${duty.note}\n` : ''}\nPlease make sure to buy everything on time! 🙏\n\n— The Messy Kitchen 🍳`;
+  return `*🛒 MARKET DUTY ALERT*\n\n👋 Hello, *${name}*\nIt's your scheduled turn to purchase today's groceries.\n\n📅 Day      : ${day}\n🍽 Meal     : ${meal}\n⏰ Time     : ${time}\n${duty.note ? `📝 Note     : ${duty.note}\n` : ''}\n*📋 Please ensure all required grocery items are purchased before the scheduled meal time.*\n\n*Your contribution helps keep our mess running smoothly. ❤️*\n\n${signOff}`;
 }
 
-export function buildWaLink(duty, isNightBefore = false) {
+export function buildWaLink(duty, isNightBefore = false, sender = null) {
   if (!duty.memberId?.phone) return null;
-  return buildWaUrl(duty.memberId.phone, buildMessage(duty, isNightBefore));
+  return buildWaUrl(duty.memberId.phone, buildMessage(duty, isNightBefore, sender));
 }
 
 async function requestPermission() {
