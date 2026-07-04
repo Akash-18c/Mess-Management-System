@@ -6,48 +6,70 @@ import { buildWaLink } from '../../hooks/useMarketDutyNotifier';
 import useAuthStore from '../../store/authStore';
 
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-
-const glass = {
-  background: 'rgba(255,255,255,0.08)',
-  backdropFilter: 'blur(40px)',
-  WebkitBackdropFilter: 'blur(40px)',
-  border: '1px solid rgba(255,255,255,0.18)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25)',
-};
-
 const EMPTY = { memberId: '', dayOfWeek: 1, meal: 'lunch', time: '08:00', note: '' };
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
+// Same glass as BirthdayBanner
+const cardGlass = {
+  background: 'rgba(255,255,255,0.18)',
+  backdropFilter: 'blur(40px)',
+  WebkitBackdropFilter: 'blur(40px)',
+  border: '1px solid rgba(255,255,255,0.28)',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.35)',
+};
+
+const formGlass = {
+  background: 'rgba(255,255,255,0.10)',
+  backdropFilter: 'blur(40px)',
+  WebkitBackdropFilter: 'blur(40px)',
+  border: '1px solid rgba(255,255,255,0.20)',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.25)',
+};
+
 function PersonCard({ d, isLunch, onEdit, onDelete, onSend }) {
+  const avatarBg  = isLunch ? 'rgba(251,191,36,0.22)'  : 'rgba(99,102,241,0.22)';
+  const avatarBdr = isLunch ? 'rgba(251,191,36,0.45)'  : 'rgba(99,102,241,0.45)';
+  const avatarClr = isLunch ? '#fcd34d'                : '#a5b4fc';
+
   return (
-    <div className="rounded-2xl p-3" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}>
-      {/* Avatar + name + time row */}
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 text-white"
-          style={{ background: isLunch ? 'rgba(251,191,36,0.25)' : 'rgba(99,102,241,0.25)', border: isLunch ? '1px solid rgba(251,191,36,0.4)' : '1px solid rgba(99,102,241,0.4)' }}>
+    <div className="relative rounded-2xl p-3 overflow-hidden"
+      style={{
+        background: 'rgba(255,255,255,0.10)',
+        border: '1px solid rgba(255,255,255,0.18)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.20)',
+      }}>
+      {/* top shimmer */}
+      <div className="absolute top-0 left-0 right-0 h-px"
+        style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.45),transparent)' }} />
+
+      {/* Avatar + name + time */}
+      <div className="flex items-center gap-2.5 mb-2.5">
+        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+          style={{ background: avatarBg, border: `1.5px solid ${avatarBdr}`, color: avatarClr }}>
           {rn(d.memberId?.name)?.[0]?.toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-white font-bold text-sm truncate">{rn(d.memberId?.name)}</p>
-          <p className="text-slate-400 text-xs">⏰ {d.time}{d.note ? ` · ${d.note}` : ''}</p>
+          <p className="text-white font-bold text-sm leading-tight truncate">{rn(d.memberId?.name)}</p>
+          <p className="text-slate-300 text-[11px] mt-0.5">⏰ {d.time}{d.note ? ` · ${d.note}` : ''}</p>
         </div>
       </div>
-      {/* Buttons row */}
-      <div className="flex gap-2">
+
+      {/* Action buttons */}
+      <div className="flex gap-1.5">
         <button onClick={() => onSend(d)}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95"
-          style={{ background: 'rgba(37,211,102,0.20)', border: '1px solid rgba(37,211,102,0.40)', color: '#22c55e' }}>
-          <Send size={13} /> WhatsApp
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform"
+          style={{ background: 'rgba(37,211,102,0.22)', border: '1px solid rgba(37,211,102,0.45)', color: '#22c55e' }}>
+          <Send size={12} /> Send
         </button>
         <button onClick={() => onEdit(d)}
-          className="flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95"
-          style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.35)', color: '#60a5fa' }}>
-          <Edit2 size={13} /> Edit
+          className="flex items-center justify-center gap-1 px-3 py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform"
+          style={{ background: 'rgba(96,165,250,0.18)', border: '1px solid rgba(96,165,250,0.40)', color: '#60a5fa' }}>
+          <Edit2 size={12} /> Edit
         </button>
         <button onClick={() => onDelete(d._id)}
-          className="flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95"
-          style={{ background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.35)', color: '#f87171' }}>
-          <Trash2 size={13} />
+          className="flex items-center justify-center px-3 py-2 rounded-xl active:scale-95 transition-transform"
+          style={{ background: 'rgba(248,113,113,0.18)', border: '1px solid rgba(248,113,113,0.40)', color: '#f87171' }}>
+          <Trash2 size={12} />
         </button>
       </div>
     </div>
@@ -56,29 +78,28 @@ function PersonCard({ d, isLunch, onEdit, onDelete, onSend }) {
 
 function MealSlot({ meal, duties, day, onAdd, onEdit, onDelete, onSend }) {
   const isLunch = meal === 'lunch';
-  const accent  = isLunch ? 'rgba(251,191,36,0.10)' : 'rgba(99,102,241,0.10)';
-  const border  = isLunch ? 'rgba(251,191,36,0.25)' : 'rgba(99,102,241,0.25)';
-  const color   = isLunch ? '#fcd34d'               : '#a5b4fc';
-  const label   = isLunch ? '☀️ Lunch'             : '🌙 Dinner';
+  const color   = isLunch ? '#fcd34d' : '#a5b4fc';
+  const border  = isLunch ? 'rgba(251,191,36,0.30)' : 'rgba(99,102,241,0.30)';
+  const bg      = isLunch ? 'rgba(251,191,36,0.08)'  : 'rgba(99,102,241,0.08)';
+  const label   = isLunch ? '☀️ Lunch' : '🌙 Dinner';
 
   return (
-    <div className="flex-1 rounded-2xl overflow-hidden" style={{ background: accent, border: `1px solid ${border}`, minWidth: 0 }}>
-      {/* Meal header */}
-      <div className="px-3 py-2.5 flex items-center justify-between" style={{ borderBottom: `1px solid ${border}` }}>
-        <span className="text-xs font-bold tracking-wide" style={{ color }}>{label}</span>
+    <div className="flex-1 rounded-2xl overflow-hidden" style={{ background: bg, border: `1px solid ${border}`, minWidth: 0 }}>
+      <div className="px-3 py-2 flex items-center justify-between" style={{ borderBottom: `1px solid ${border}` }}>
+        <span className="text-xs font-bold" style={{ color }}>{label}</span>
         <button onClick={() => onAdd({ meal, dayOfWeek: day })}
-          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold transition-all active:scale-95"
-          style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)', color: '#94a3b8' }}>
-          <Plus size={11} /> Add
+          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold active:scale-95 transition-transform"
+          style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)', color: '#cbd5e1' }}>
+          <Plus size={10} /> Add
         </button>
       </div>
-
       {duties.length === 0 ? (
-        <div className="px-3 py-4 text-center text-slate-600 text-xs">No duty assigned</div>
+        <p className="text-center text-slate-500 text-xs py-4">No duty</p>
       ) : (
         <div className="p-2 space-y-2">
           {duties.map(d => (
-            <PersonCard key={d._id} d={d} isLunch={isLunch} onEdit={onEdit} onDelete={onDelete} onSend={onSend} />
+            <PersonCard key={d._id} d={d} isLunch={isLunch}
+              onEdit={onEdit} onDelete={onDelete} onSend={onSend} />
           ))}
         </div>
       )}
@@ -147,54 +168,63 @@ export default function AdminMarketDuty() {
     lunch:  duties.filter(d => d.dayOfWeek === i && d.meal === 'lunch'),
     dinner: duties.filter(d => d.dayOfWeek === i && d.meal === 'dinner'),
   })).filter(g => g.lunch.length > 0 || g.dinner.length > 0);
-
   const todayDuties = duties.filter(d => d.dayOfWeek === todayDay);
+
+  const inputStyle = {
+    background: 'rgba(255,255,255,0.10)',
+    border: '1px solid rgba(255,255,255,0.22)',
+    color: '#fff',
+    borderRadius: '12px',
+    padding: '10px 12px',
+    fontSize: '14px',
+    width: '100%',
+    outline: 'none',
+  };
 
   return (
     <div className="space-y-4">
 
-      {/* Header */}
-      <div className="rounded-2xl p-4" style={glass}>
+      {/* ── Header ── */}
+      <div className="relative rounded-2xl overflow-hidden p-4" style={cardGlass}>
+        <div className="absolute top-0 left-0 right-0 h-px"
+          style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.30)' }}>
-              <ShoppingCart size={20} className="text-green-400" />
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-xl"
+              style={{ background: 'rgba(34,197,94,0.18)', border: '1px solid rgba(34,197,94,0.35)' }}>
+              🛒
             </div>
             <div>
               <h1 className="font-bold text-white text-base leading-tight">Market Duty</h1>
-              <p className="text-slate-500 text-xs mt-0.5">Weekly grocery schedule</p>
+              <p className="text-slate-300 text-xs mt-0.5 opacity-70">Weekly grocery schedule</p>
             </div>
           </div>
-          {/* Add Duty button — prominent on mobile */}
           <button onClick={() => openAdd()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.30), rgba(16,185,129,0.20))', border: '1px solid rgba(34,197,94,0.50)', color: '#4ade80', boxShadow: '0 0 16px rgba(34,197,94,0.15)' }}>
-            <Plus size={16} />
-            <span className="hidden sm:inline">Add Duty</span>
-            <span className="sm:hidden">Add</span>
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-transform flex-shrink-0"
+            style={{ background: 'rgba(34,197,94,0.22)', border: '1px solid rgba(34,197,94,0.50)', color: '#4ade80', boxShadow: '0 0 14px rgba(34,197,94,0.18)' }}>
+            <Plus size={15} /> Add
           </button>
         </div>
       </div>
 
-      {/* Add/Edit Form */}
+      {/* ── Add / Edit Form ── */}
       {showForm && (
-        <div className="rounded-2xl overflow-hidden" style={{ ...glass, border: '1px solid rgba(34,197,94,0.30)' }}>
+        <div className="relative rounded-2xl overflow-hidden" style={formGlass}>
+          <div className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.50),transparent)' }} />
           <div className="flex items-center justify-between px-4 py-3"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.10)', background: 'rgba(34,197,94,0.06)' }}>
-            <p className="font-bold text-white text-sm">{editId ? '✏️ Edit Duty' : '➕ Add New Duty'}</p>
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
+            <p className="font-bold text-white text-sm">{editId ? '✏️ Edit Duty' : '➕ Add Duty'}</p>
             <button onClick={() => setShowForm(false)}
-              className="w-8 h-8 rounded-lg flex items-center justify-center transition-all active:scale-95"
-              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', color: '#94a3b8' }}>
-              <X size={15} />
+              className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-95 transition-transform"
+              style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.20)', color: '#94a3b8' }}>
+              <X size={14} />
             </button>
           </div>
           <div className="p-4 space-y-3">
             <div>
-              <label className="text-xs text-slate-400 font-semibold mb-1.5 block">Member</label>
-              <select value={form.memberId} onChange={e => setForm(f => ({ ...f, memberId: e.target.value }))}
-                className="w-full rounded-xl px-3 py-3 text-sm text-white outline-none"
-                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.16)' }}>
+              <label className="text-[11px] text-slate-300 font-semibold mb-1.5 block uppercase tracking-wide">Member</label>
+              <select value={form.memberId} onChange={e => setForm(f => ({ ...f, memberId: e.target.value }))} style={inputStyle}>
                 <option value="">Select member...</option>
                 {members.map(m => (
                   <option key={m._id} value={m._id}>{rn(m.name)}{m.phone ? ` · ${m.phone}` : ' · ⚠️ no phone'}</option>
@@ -203,18 +233,14 @@ export default function AdminMarketDuty() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-slate-400 font-semibold mb-1.5 block">Day</label>
-                <select value={form.dayOfWeek} onChange={e => setForm(f => ({ ...f, dayOfWeek: Number(e.target.value) }))}
-                  className="w-full rounded-xl px-3 py-3 text-sm text-white outline-none"
-                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.16)' }}>
+                <label className="text-[11px] text-slate-300 font-semibold mb-1.5 block uppercase tracking-wide">Day</label>
+                <select value={form.dayOfWeek} onChange={e => setForm(f => ({ ...f, dayOfWeek: Number(e.target.value) }))} style={inputStyle}>
                   {DAYS.map((d, i) => <option key={i} value={i}>{d}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-xs text-slate-400 font-semibold mb-1.5 block">Meal</label>
-                <select value={form.meal} onChange={e => setForm(f => ({ ...f, meal: e.target.value }))}
-                  className="w-full rounded-xl px-3 py-3 text-sm text-white outline-none"
-                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.16)' }}>
+                <label className="text-[11px] text-slate-300 font-semibold mb-1.5 block uppercase tracking-wide">Meal</label>
+                <select value={form.meal} onChange={e => setForm(f => ({ ...f, meal: e.target.value }))} style={inputStyle}>
                   <option value="lunch">☀️ Lunch</option>
                   <option value="dinner">🌙 Dinner</option>
                 </select>
@@ -222,73 +248,75 @@ export default function AdminMarketDuty() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-slate-400 font-semibold mb-1.5 block">Time</label>
+                <label className="text-[11px] text-slate-300 font-semibold mb-1.5 block uppercase tracking-wide">Time</label>
                 <input type="time" value={form.time} onChange={e => setForm(f => ({ ...f, time: e.target.value }))}
-                  className="w-full rounded-xl px-3 py-3 text-sm text-white outline-none"
-                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.16)', colorScheme: 'dark' }} />
+                  style={{ ...inputStyle, colorScheme: 'dark' }} />
               </div>
               <div>
-                <label className="text-xs text-slate-400 font-semibold mb-1.5 block">Note</label>
+                <label className="text-[11px] text-slate-300 font-semibold mb-1.5 block uppercase tracking-wide">Note</label>
                 <input type="text" value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
-                  placeholder="Optional..."
-                  className="w-full rounded-xl px-3 py-3 text-sm text-white outline-none placeholder-slate-600"
-                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.16)' }} />
+                  placeholder="Optional..." style={inputStyle} />
               </div>
             </div>
             <button onClick={save} disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all active:scale-95 mt-1"
-              style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.30), rgba(16,185,129,0.20))', border: '1px solid rgba(34,197,94,0.50)', color: '#4ade80', opacity: loading ? 0.7 : 1, boxShadow: '0 0 20px rgba(34,197,94,0.12)' }}>
-              <Check size={16} /> {loading ? 'Saving...' : editId ? 'Update Duty' : 'Save Duty'}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold active:scale-95 transition-transform"
+              style={{ background: 'rgba(34,197,94,0.25)', border: '1px solid rgba(34,197,94,0.55)', color: '#4ade80', opacity: loading ? 0.7 : 1, boxShadow: '0 0 18px rgba(34,197,94,0.15)' }}>
+              <Check size={15} /> {loading ? 'Saving...' : editId ? 'Update Duty' : 'Save Duty'}
             </button>
           </div>
         </div>
       )}
 
-      {/* Today banner */}
+      {/* ── Today Banner ── */}
       {todayDuties.length > 0 && (
-        <div className="rounded-2xl overflow-hidden" style={{ ...glass, border: '1px solid rgba(34,197,94,0.35)' }}>
-          <div className="px-4 py-3 flex items-center gap-2"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.10)', background: 'rgba(34,197,94,0.08)' }}>
+        <div className="relative rounded-2xl overflow-hidden" style={{ ...cardGlass, border: '1px solid rgba(34,197,94,0.40)' }}>
+          <div className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: 'linear-gradient(90deg,transparent,rgba(34,197,94,0.70),transparent)' }} />
+          <div className="px-4 py-2.5 flex items-center gap-2"
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.12)', background: 'rgba(34,197,94,0.08)' }}>
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
-            <p className="text-sm font-bold text-green-300">Today's Duty — {DAYS[todayDay]}</p>
+            <p className="text-sm font-bold text-green-300">Today — {DAYS[todayDay]}</p>
           </div>
           <div className="p-3 flex gap-3">
             {['lunch','dinner'].map(meal => {
               const dd = todayDuties.filter(d => d.meal === meal);
               if (!dd.length) return null;
-              return (
-                <MealSlot key={meal} meal={meal} duties={dd} day={todayDay}
-                  onAdd={openAdd} onEdit={openEdit} onDelete={remove} onSend={sendWhatsApp} />
-              );
+              return <MealSlot key={meal} meal={meal} duties={dd} day={todayDay}
+                onAdd={openAdd} onEdit={openEdit} onDelete={remove} onSend={sendWhatsApp} />;
             })}
           </div>
         </div>
       )}
 
-      {/* Weekly Schedule */}
+      {/* ── Weekly Schedule ── */}
       {byDay.length === 0 ? (
-        <div className="rounded-2xl p-12 text-center" style={glass}>
-          <ShoppingCart size={32} className="text-slate-700 mx-auto mb-3" />
-          <p className="text-slate-500 text-sm font-medium">No duties scheduled yet</p>
-          <p className="text-slate-600 text-xs mt-1">Tap "Add" to get started</p>
+        <div className="relative rounded-2xl overflow-hidden p-12 text-center" style={cardGlass}>
+          <div className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
+          <p className="text-4xl mb-3">🛒</p>
+          <p className="text-white font-semibold text-sm">No duties scheduled yet</p>
+          <p className="text-slate-400 text-xs mt-1">Tap "Add" to get started</p>
         </div>
       ) : (
         <div className="space-y-3">
           {byDay.map(({ day, lunch, dinner }) => (
-            <div key={day} className="rounded-2xl overflow-hidden" style={glass}>
+            <div key={day} className="relative rounded-2xl overflow-hidden" style={cardGlass}>
+              {/* shimmer */}
+              <div className="absolute top-0 left-0 right-0 h-px"
+                style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
               {/* Day header */}
               <div className="px-4 py-3 flex items-center gap-2"
-                style={{ borderBottom: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)' }}>
-                <span className="text-sm font-bold text-white tracking-wide">{DAYS[day]}</span>
+                style={{ borderBottom: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)' }}>
+                <span className="text-sm font-bold text-white">{DAYS[day]}</span>
                 {day === todayDay && (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: 'rgba(34,197,94,0.20)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.40)' }}>TODAY</span>
+                    style={{ background: 'rgba(34,197,94,0.22)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.45)' }}>TODAY</span>
                 )}
-                <span className="ml-auto text-[11px] font-medium text-slate-500">
+                <span className="ml-auto text-[11px] font-medium" style={{ color: 'rgba(148,163,184,0.60)' }}>
                   {lunch.length + dinner.length} {lunch.length + dinner.length === 1 ? 'person' : 'people'}
                 </span>
               </div>
-              {/* Lunch + Dinner side by side */}
+              {/* Meal slots side by side */}
               <div className="p-3 flex gap-3">
                 <MealSlot meal="lunch"  duties={lunch}  day={day}
                   onAdd={openAdd} onEdit={openEdit} onDelete={remove} onSend={sendWhatsApp} />
