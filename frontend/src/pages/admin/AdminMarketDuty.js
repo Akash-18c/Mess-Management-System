@@ -30,47 +30,49 @@ function PersonCard({ d, isLunch, onEdit, onDelete, onSend }) {
   const avatarBg  = isLunch ? 'rgba(251,191,36,0.22)'  : 'rgba(99,102,241,0.22)';
   const avatarBdr = isLunch ? 'rgba(251,191,36,0.45)'  : 'rgba(99,102,241,0.45)';
   const avatarClr = isLunch ? '#fcd34d'                : '#a5b4fc';
+  const name = rn(d.memberId?.name);
 
   return (
-    <div className="relative rounded-2xl p-3 overflow-hidden"
+    <div className="relative rounded-2xl p-2.5 overflow-hidden"
       style={{
         background: 'rgba(255,255,255,0.10)',
         border: '1px solid rgba(255,255,255,0.18)',
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.20)',
       }}>
-      {/* top shimmer */}
       <div className="absolute top-0 left-0 right-0 h-px"
         style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.45),transparent)' }} />
 
-      {/* Avatar + name + time */}
-      <div className="flex items-center gap-2.5 mb-2.5">
-        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+      {/* Avatar + name */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
           style={{ background: avatarBg, border: `1.5px solid ${avatarBdr}`, color: avatarClr }}>
-          {rn(d.memberId?.name)?.[0]?.toUpperCase()}
+          {name?.[0]?.toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-white font-bold text-sm leading-tight truncate">{rn(d.memberId?.name)}</p>
-          <p className="text-slate-300 text-[11px] mt-0.5">⏰ {d.time}{d.note ? ` · ${d.note}` : ''}</p>
+          <p className="text-white font-bold text-xs leading-tight" style={{ wordBreak: 'break-word' }}>{name}</p>
+          <p className="text-slate-300 text-[10px]">{d.time}{d.note ? ` · ${d.note}` : ''}</p>
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex gap-1.5">
+      {/* Buttons — stacked vertically so each has full width */}
+      <div className="flex flex-col gap-1.5">
         <button onClick={() => onSend(d)}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform"
-          style={{ background: 'rgba(37,211,102,0.22)', border: '1px solid rgba(37,211,102,0.45)', color: '#22c55e' }}>
-          <Send size={12} /> Send
+          className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform"
+          style={{ background: 'rgba(37,211,102,0.22)', border: '1px solid rgba(37,211,102,0.50)', color: '#22c55e' }}>
+          <Send size={11} /> WhatsApp
         </button>
-        <button onClick={() => onEdit(d)}
-          className="flex items-center justify-center gap-1 px-3 py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform"
-          style={{ background: 'rgba(96,165,250,0.18)', border: '1px solid rgba(96,165,250,0.40)', color: '#60a5fa' }}>
-          <Edit2 size={12} /> Edit
-        </button>
-        <button onClick={() => onDelete(d._id)}
-          className="flex items-center justify-center px-3 py-2 rounded-xl active:scale-95 transition-transform"
-          style={{ background: 'rgba(248,113,113,0.18)', border: '1px solid rgba(248,113,113,0.40)', color: '#f87171' }}>
-          <Trash2 size={12} />
-        </button>
+        <div className="flex gap-1.5">
+          <button onClick={() => onEdit(d)}
+            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform"
+            style={{ background: 'rgba(96,165,250,0.18)', border: '1px solid rgba(96,165,250,0.45)', color: '#60a5fa' }}>
+            <Edit2 size={11} /> Edit
+          </button>
+          <button onClick={() => onDelete(d._id)}
+            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform"
+            style={{ background: 'rgba(248,113,113,0.18)', border: '1px solid rgba(248,113,113,0.45)', color: '#f87171' }}>
+            <Trash2 size={11} /> Del
+          </button>
+        </div>
       </div>
     </div>
   );
