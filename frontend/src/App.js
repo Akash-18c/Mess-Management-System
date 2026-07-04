@@ -11,6 +11,7 @@ import AdminReports from './pages/admin/AdminReports';
 import AdminMonths from './pages/admin/AdminMonths';
 import AdminMasiSalary from './pages/admin/AdminMasiSalary';
 import AdminBirthdays from './pages/admin/AdminBirthdays';
+import AdminMarketDuty from './pages/admin/AdminMarketDuty';
 import AdminPurge from './pages/admin/AdminPurge';
 import AdminExpensesHistory from './pages/admin/AdminExpensesHistory';
 import ManagerLayout from './pages/manager/ManagerLayout';
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="masi-salary" element={<AdminMasiSalary />} />
           <Route path="expenses-history" element={<AdminExpensesHistory />} />
           <Route path="birthdays" element={<AdminBirthdays />} />
+          <Route path="market-duty" element={<AdminMarketDuty />} />
           <Route path="purge" element={<AdminPurge />} />
         </Route>
 

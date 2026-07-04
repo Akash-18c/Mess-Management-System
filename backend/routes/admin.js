@@ -8,6 +8,7 @@ const GroceryExpense = require('../models/GroceryExpense');
 const OtherExpense = require('../models/OtherExpense');
 const Bill = require('../models/Bill');
 const MasiSalary = require('../models/MasiSalary');
+const MarketDuty = require('../models/MarketDuty');
 const { auth, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
@@ -425,6 +426,49 @@ router.get('/birthdays/upcoming', async (req, res) => {
       return { _id: m._id, name: rn(m.name), birthday: m.birthday, daysLeft: diffDays };
     });
     res.json(upcoming);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// --- Market Duty ---
+router.get('/market-duty', async (req, res) => {
+  try {
+    const duties = await MarketDuty.find({ isActive: true })
+      .populate('memberId', 'name phone')
+      .sort({ dayOfWeek: 1, meal: 1 });
+    res.json(duties);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+router.post('/market-duty', async (req, res) => {
+  try {
+    const duty = await MarketDuty.create({ ...req.body, createdBy: req.user._id });
+    const populated = await duty.populate('memberId', 'name phone');
+    res.status(201).json(populated);
+  } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
+router.put('/market-duty/:id', async (req, res) => {
+  try {
+    const duty = await MarketDuty.findByIdAndUpdate(req.params.id, req.body, { new: true })
+      .populate('memberId', 'name phone');
+    res.json(duty);
+  } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
+router.delete('/market-duty/:id', async (req, res) => {
+  try {
+    await MarketDuty.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Deleted' });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Public read for manager/admin notification scheduler
+router.get('/market-duty/all', async (req, res) => {
+  try {
+    const duties = await MarketDuty.find({ isActive: true })
+      .populate('memberId', 'name phone')
+      .sort({ dayOfWeek: 1 });
+    res.json(duties);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 

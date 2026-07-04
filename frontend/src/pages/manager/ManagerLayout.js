@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, UtensilsCrossed, ShoppingCart, CreditCard, FileText, LogOut, Menu, Receipt } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import useMarketDutyNotifier from '../../hooks/useMarketDutyNotifier';
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
@@ -21,6 +22,7 @@ export default function ManagerLayout() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const handleLogout = () => { logout(); navigate('/login'); };
+  useMarketDutyNotifier();
 
   useEffect(() => {
     const el = mainRef.current;
