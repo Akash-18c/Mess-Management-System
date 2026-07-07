@@ -77,7 +77,6 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
       <td class="right">&#8377;${mealRate.toFixed(2)}</td>
       <td class="right">&#8377;${m.mealCost?.toFixed(2) ?? m.totalMealCost.toFixed(2)}</td>
       <td class="right"${gas > 0 ? ' style="color:#ea580c;font-weight:600"' : ''}>&#8377;${gas.toFixed(2)}</td>
-      <td class="right"${rice > 0 ? ' style="color:#65a30d;font-weight:600"' : ''}>&#8377;${rice.toFixed(2)}</td>
       <td class="right"${otherShared > 0 ? ' style="color:#ea580c;font-weight:600"' : ''}>&#8377;${otherShared.toFixed(2)}</td>
       <td class="right"${otherChg > 0 ? ' style="color:#db2777;font-weight:600"' : ''}>&#8377;${otherChg.toFixed(2)}</td>
       <td class="right">&#8377;${masiSalary.toFixed(2)}</td>
@@ -187,7 +186,6 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
         <th class="right">Per Meal</th>
         <th class="right">Meal Cost</th>
         <th class="right">Gas</th>
-        <th class="right">Rice</th>
         <th class="right">Other Exp</th>
         <th class="right">Other Chg</th>
         <th class="right">Masi</th>
