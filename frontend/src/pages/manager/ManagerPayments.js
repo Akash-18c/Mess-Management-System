@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, X, Pencil, ChevronDown, ChevronUp, Banknote, Smartphone, Building2 } from 'lucide-react';
+import { Plus, Trash2, X, Pencil, ChevronDown, ChevronUp, Banknote, Smartphone, Building2, HandCoins } from 'lucide-react';
 import api from '../../api';
 
 const now   = new Date();
@@ -52,6 +52,7 @@ const AVATAR_COLORS = [
 export default function ManagerPayments() {
   const [payments,       setPayments]       = useState([]);
   const [members,        setMembers]        = useState([]);
+  const [borrows,        setBorrows]        = useState([]);
   const [modal,          setModal]          = useState(false);
   const [editId,         setEditId]         = useState(null);
   const [form,           setForm]           = useState(EMPTY);
@@ -64,6 +65,7 @@ export default function ManagerPayments() {
   const load = useCallback(() => {
     api.get(`/payments/${MONTH}/${YEAR}`).then(r => setPayments(r.data)).catch(() => {});
     api.get('/members').then(r => setMembers(r.data)).catch(() => {});
+    api.get('/borrows').then(r => setBorrows(r.data.filter(b => !b.returned))).catch(() => {});
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -230,10 +232,13 @@ export default function ManagerPayments() {
       ) : (
         <div className="space-y-3">
           {groups.map(({ member, payments: mPayments }, idx) => {
-            const id     = member?._id;
-            const name   = rn(member?.name);
-            const mTotal = mPayments.reduce((s, p) => s + p.amount, 0);
-            const isOpen = !!expanded[id];
+            const id       = member?._id;
+            const name     = rn(member?.name);
+            const mTotal   = mPayments.reduce((s, p) => s + p.amount, 0);
+            const mBorrows = borrows.filter(b => (b.memberId?._id || b.memberId)?.toString() === id?.toString());
+            const mBorrow  = mBorrows.reduce((s, b) => s + b.amount, 0);
+            const netBal   = mTotal - mBorrow;
+            const isOpen   = !!expanded[id];
             const [avatarBg, avatarClr] = AVATAR_COLORS[idx % AVATAR_COLORS.length];
 
             return (
@@ -257,7 +262,12 @@ export default function ManagerPayments() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-lg font-bold text-green-400">₹{mTotal.toFixed(0)}</span>
+                    <div className="text-right">
+                      <span className="text-lg font-bold text-green-400">₹{netBal.toFixed(0)}</span>
+                      {mBorrow > 0 && (
+                        <p className="text-[10px] text-orange-400 font-semibold">-₹{mBorrow.toFixed(0)} borrow</p>
+                      )}
+                    </div>
                     <button onClick={e => { e.stopPropagation(); openAdd(id); }}
                       className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-95"
                       style={{ background: 'rgba(16,185,129,0.18)', border: '1px solid rgba(16,185,129,0.40)', color: '#34d399' }}>
@@ -317,11 +327,46 @@ export default function ManagerPayments() {
                       );
                     })}
 
+                    {/* Borrow deduction rows */}
+                    {mBorrows.map((b) => (
+                      <div key={b._id} className="px-4 py-3 flex items-center gap-3"
+                        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(251,146,60,0.04)' }}>
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{ background: 'rgba(251,146,60,0.15)', border: '1px solid rgba(251,146,60,0.35)' }}>
+                          <HandCoins size={15} style={{ color: '#fb923c' }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                            style={{ background: 'rgba(251,146,60,0.15)', color: '#fb923c', border: '1px solid rgba(251,146,60,0.35)' }}>
+                            Borrow
+                          </span>
+                          <p className="text-slate-400 text-xs mt-1">
+                            {new Date(b.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {b.reason ? <span className="text-slate-500"> · {b.reason}</span> : null}
+                          </p>
+                        </div>
+                        <span className="text-base font-bold text-orange-400 flex-shrink-0">-₹{b.amount.toFixed(0)}</span>
+                      </div>
+                    ))}
+
                     {/* Member total footer */}
-                    <div className="flex items-center justify-between px-4 py-2.5"
-                      style={{ background: 'rgba(16,185,129,0.06)', borderTop: '1px solid rgba(16,185,129,0.18)' }}>
-                      <span className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Total Paid</span>
-                      <span className="text-sm font-bold text-green-400">₹{mTotal.toFixed(2)}</span>
+                    <div className="px-4 py-2.5" style={{ background: 'rgba(16,185,129,0.06)', borderTop: '1px solid rgba(16,185,129,0.18)' }}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Total Paid</span>
+                        <span className="text-sm font-bold text-green-400">₹{mTotal.toFixed(2)}</span>
+                      </div>
+                      {mBorrow > 0 && (
+                        <>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-xs text-orange-400 font-semibold uppercase tracking-wide">Borrowed</span>
+                            <span className="text-sm font-bold text-orange-400">-₹{mBorrow.toFixed(2)}</span>
+                          </div>
+                          <div className="flex items-center justify-between mt-1.5 pt-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                            <span className="text-xs text-white font-bold uppercase tracking-wide">Net Balance</span>
+                            <span className="text-sm font-bold" style={{ color: netBal >= 0 ? '#34d399' : '#f87171' }}>₹{netBal.toFixed(2)}</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
