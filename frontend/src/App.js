@@ -22,6 +22,7 @@ import ManagerPayments from './pages/manager/ManagerPayments';
 import ManagerBills from './pages/manager/ManagerBills';
 import ManagerOtherCharges from './pages/manager/ManagerOtherCharges';
 import ManagerMarketDuty from './pages/manager/ManagerMarketDuty';
+import ManagerBorrows from './pages/manager/ManagerBorrows';
 import MemberLayout from './pages/member/MemberLayout';
 import MemberDashboard from './pages/member/MemberDashboard';
 import MemberHistory from './pages/member/MemberHistory';
@@ -83,6 +84,7 @@ export default function App() {
           <Route path="bills" element={<ManagerBills />} />
           <Route path="charges" element={<ManagerOtherCharges />} />
           <Route path="market-duty" element={<ManagerMarketDuty />} />
+          <Route path="borrows" element={<ManagerBorrows />} />
         </Route>
 
         <Route path="/member" element={<ProtectedRoute roles={['member', 'manager', 'admin']}><MemberLayout /></ProtectedRoute>}>

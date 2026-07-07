@@ -111,9 +111,9 @@ export default function ManagerOtherCharges() {
       <div className="rounded-2xl p-4" style={cardGlass}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
               style={{ background: 'rgba(245,158,11,0.18)', border: '1px solid rgba(245,158,11,0.35)' }}>
-              🧾
+              <Receipt size={20} style={{ color: '#fbbf24' }} />
             </div>
             <div>
               <h1 className="font-bold text-white text-base">Other Charges</h1>
@@ -184,7 +184,7 @@ export default function ManagerOtherCharges() {
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm font-semibold">{c.reason}</p>
                       <p className="text-slate-400 text-xs mt-0.5">
-                        📅 {new Date(c.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {new Date(c.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
                     <span className="text-base font-bold text-amber-400 flex-shrink-0">₹{c.amount.toFixed(0)}</span>
@@ -222,7 +222,7 @@ export default function ManagerOtherCharges() {
           <div className="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl overflow-hidden" style={modalGlass}>
             <div className="flex items-center justify-between px-5 py-4"
               style={{ borderBottom: '1px solid rgba(255,255,255,0.10)' }}>
-              <h2 className="font-bold text-white text-sm">{editId ? '✏️ Edit Charge' : '🧾 Add Charge'}</h2>
+              <h2 className="font-bold text-white text-sm">{editId ? 'Edit Charge' : 'Add Charge'}</h2>
               <button onClick={() => setModal(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-xl"
                 style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', color: '#94a3b8' }}>

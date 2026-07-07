@@ -57,6 +57,8 @@ app.use('/api/bills',   require('./routes/bills'));
 app.use('/api/member',  require('./routes/member'));
 app.use('/api/summary', require('./routes/summary'));
 app.use('/api/gas',     require('./routes/gas'));
+app.use('/api/borrow',  require('./routes/borrow'));
+app.use('/api/borrows',  require('./routes/borrows'));
 
 // ── Health / keep-alive ping ──
 app.get('/health', (req, res) => res.json({ status: 'ok', ts: Date.now() }));

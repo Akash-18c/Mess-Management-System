@@ -35,9 +35,9 @@ const inputStyle = {
 };
 
 const METHODS = {
-  Cash: { icon: Banknote,   bg: 'rgba(52,211,153,0.18)',  color: '#34d399', border: 'rgba(52,211,153,0.45)',  label: 'Cash', emoji: '💵' },
-  UPI:  { icon: Smartphone, bg: 'rgba(96,165,250,0.18)',  color: '#60a5fa', border: 'rgba(96,165,250,0.45)',  label: 'UPI',  emoji: '📱' },
-  Bank: { icon: Building2,  bg: 'rgba(167,139,250,0.18)', color: '#a78bfa', border: 'rgba(167,139,250,0.45)', label: 'Bank', emoji: '🏦' },
+  Cash: { icon: Banknote,   bg: 'rgba(52,211,153,0.18)',  color: '#34d399', border: 'rgba(52,211,153,0.45)',  label: 'Cash' },
+  UPI:  { icon: Smartphone, bg: 'rgba(96,165,250,0.18)',  color: '#60a5fa', border: 'rgba(96,165,250,0.45)',  label: 'UPI'  },
+  Bank: { icon: Building2,  bg: 'rgba(167,139,250,0.18)', color: '#a78bfa', border: 'rgba(167,139,250,0.45)', label: 'Bank' },
 };
 
 const AVATAR_COLORS = [
@@ -133,9 +133,9 @@ export default function ManagerPayments() {
       <div className="rounded-2xl p-4" style={card}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
               style={{ background: 'rgba(16,185,129,0.18)', border: '1px solid rgba(16,185,129,0.35)' }}>
-              💳
+              <Banknote size={20} style={{ color: '#34d399' }} />
             </div>
             <div>
               <h1 className="font-bold text-white text-base">Payments</h1>
@@ -174,7 +174,7 @@ export default function ManagerPayments() {
                     border: `1px solid ${isActive ? ms.border : 'rgba(255,255,255,0.12)'}`,
                     color: isActive ? ms.color : '#94a3b8',
                   }}>
-                  {ms.emoji} {key} ₹{amt.toFixed(0)}
+                  {key} ₹{amt.toFixed(0)}
                   <ChevronDown size={11} style={{ transform: isActive ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
                 </button>
               );
@@ -188,7 +188,7 @@ export default function ManagerPayments() {
             <div className="px-3 py-2 flex items-center justify-between"
               style={{ borderBottom: `1px solid ${METHODS[activeMethod].border}`, background: METHODS[activeMethod].bg }}>
               <span className="text-xs font-bold" style={{ color: METHODS[activeMethod].color }}>
-                {METHODS[activeMethod].emoji} {activeMethod} Payments
+                {activeMethod} Payments
               </span>
               <span className="text-xs font-bold" style={{ color: METHODS[activeMethod].color }}>
                 ₹{methodPayments.reduce((s, p) => s + p.amount, 0).toFixed(0)}
@@ -223,7 +223,7 @@ export default function ManagerPayments() {
       {/* ── Member Groups ── */}
       {groups.length === 0 ? (
         <div className="rounded-2xl p-12 text-center" style={card}>
-          <p className="text-4xl mb-3">💳</p>
+          <Banknote size={36} className="text-slate-500 mx-auto mb-3" />
           <p className="text-white font-semibold text-sm">No payments recorded yet</p>
           <p className="text-slate-500 text-xs mt-1">Tap "Record" to add a payment</p>
         </div>
@@ -290,11 +290,11 @@ export default function ManagerPayments() {
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-bold px-2 py-0.5 rounded-full"
                                 style={{ background: ms.bg, color: ms.color, border: `1px solid ${ms.border}` }}>
-                                {ms.emoji} {p.method || 'Cash'}
+                                {p.method || 'Cash'}
                               </span>
                             </div>
                             <p className="text-slate-400 text-xs mt-1">
-                              📅 {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                               {p.note ? <span className="text-slate-500"> · {p.note}</span> : null}
                             </p>
                           </div>
@@ -339,7 +339,7 @@ export default function ManagerPayments() {
 
             <div className="flex items-center justify-between px-5 py-4"
               style={{ borderBottom: '1px solid rgba(255,255,255,0.10)' }}>
-              <h2 className="font-bold text-white text-sm">{editId ? '✏️ Edit Payment' : '💳 Record Payment'}</h2>
+              <h2 className="font-bold text-white text-sm">{editId ? 'Edit Payment' : 'Record Payment'}</h2>
               <button onClick={() => setModal(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-xl"
                 style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', color: '#94a3b8' }}>
@@ -375,7 +375,7 @@ export default function ManagerPayments() {
                           boxShadow: sel ? `0 0 12px ${ms.bg}` : 'none',
                         }}>
                         <MIcon size={18} />
-                        <span>{ms.emoji} {key}</span>
+                        <span>{key}</span>
                       </button>
                     );
                   })}

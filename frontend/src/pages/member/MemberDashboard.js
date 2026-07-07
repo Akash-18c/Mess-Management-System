@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { UtensilsCrossed, IndianRupee, TrendingUp, Wallet, Calendar, ChevronDown, Sparkles, AlertCircle } from 'lucide-react';
+import { UtensilsCrossed, IndianRupee, TrendingUp, Wallet, Calendar, ChevronDown, Sparkles, AlertCircle, HandCoins } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
@@ -41,6 +41,7 @@ export default function MemberDashboard() {
   const [allSummaries,  setAllSummaries]  = useState([]);
   const [monthData,     setMonthData]     = useState(null);
   const [myCharges,     setMyCharges]     = useState([]);
+  const [myBorrows,     setMyBorrows]     = useState([]);
   const [dropdownOpen,  setDropdownOpen]  = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(() => getNow().m);
   const [selectedYear,  setSelectedYear]  = useState(() => getNow().y);
@@ -77,6 +78,7 @@ export default function MemberDashboard() {
   useEffect(() => {
     api.get('/member/dashboard').then(r => setData(r.data));
     api.get('/summary/list').then(r => setAllSummaries(r.data)).catch(() => {});
+    api.get('/borrows/my').then(r => setMyBorrows(r.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -141,6 +143,42 @@ export default function MemberDashboard() {
     <div className="space-y-4 pb-8">
       {/* ── Birthday Banner ── */}
       <BirthdayBanner />
+
+      {/* ── Borrow Alert ── */}
+      {myBorrows.length > 0 && (
+        <div className="rounded-2xl overflow-hidden"
+          style={{
+            background: 'rgba(251,146,60,0.07)',
+            border: '1px solid rgba(251,146,60,0.35)',
+            boxShadow: '0 4px 20px rgba(251,146,60,0.12)',
+          }}>
+          <div className="flex items-center gap-3 px-4 py-3"
+            style={{ borderBottom: myBorrows.length > 1 ? '1px solid rgba(251,146,60,0.15)' : 'none', background: 'rgba(251,146,60,0.10)' }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(251,146,60,0.20)', border: '1px solid rgba(251,146,60,0.40)' }}>
+              <HandCoins size={17} style={{ color: '#fb923c' }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-orange-300">You have borrowed money</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Total outstanding: <span className="text-orange-400 font-bold">₹{myBorrows.reduce((s, b) => s + b.amount, 0).toFixed(2)}</span>
+              </p>
+            </div>
+          </div>
+          {myBorrows.map((b, i) => (
+            <div key={b._id} className="flex items-center justify-between px-4 py-2.5"
+              style={{ borderBottom: i < myBorrows.length - 1 ? '1px solid rgba(251,146,60,0.10)' : 'none' }}>
+              <div className="min-w-0">
+                <p className="text-white text-sm font-medium">{b.reason || 'Borrowed from mess'}</p>
+                <p className="text-slate-500 text-xs">
+                  {new Date(b.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+              </div>
+              <span className="text-orange-400 font-bold text-sm ml-4 flex-shrink-0">₹{b.amount.toFixed(2)}</span>
+            </div>
+          ))}
+        </div>
+      )}
       {/* ── Header row ── */}
       <div className="flex items-center justify-between gap-3">
         {/* Title */}
