@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Banknote, IndianRupee, Scale, UtensilsCrossed, TrendingUp, Download, ChefHat, RefreshCw } from 'lucide-react';
+import { Banknote, IndianRupee, Scale, UtensilsCrossed, TrendingUp, Download, ChefHat, RefreshCw, AlertTriangle } from 'lucide-react';
 import api from '../api';
 import useAuthStore from '../store/authStore';
 
@@ -486,6 +486,33 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
           </div>
         ))}
       </div>
+
+      {/* ── Low Fund Alert ── */}
+      {messBalance < 2000 && (
+        <div className="rounded-2xl px-4 py-3 flex items-center gap-3"
+          style={{
+            background: 'rgba(251,191,36,0.08)',
+            border: '1px solid rgba(251,191,36,0.30)',
+            boxShadow: '0 0 24px rgba(251,191,36,0.08)',
+          }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.30)' }}>
+            <AlertTriangle size={16} className="text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-amber-300 font-bold text-sm leading-tight">Mess Fund is Low</p>
+            <p className="text-amber-500 text-xs mt-0.5">
+              {messBalance < 0
+                ? `Deficit of ₹${Math.abs(messBalance).toFixed(2)} — please contribute to the mess fund`
+                : `Only ₹${messBalance.toFixed(2)} remaining — please contribute to the mess fund`
+              }
+            </p>
+          </div>
+          <span className="text-amber-400 font-bold text-sm tabular-nums flex-shrink-0">
+            {messBalance < 0 ? `-₹${Math.abs(messBalance).toFixed(2)}` : `₹${messBalance.toFixed(2)}`}
+          </span>
+        </div>
+      )}
 
       {/* ── Gas + Rice Bag + Other Expenses ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
