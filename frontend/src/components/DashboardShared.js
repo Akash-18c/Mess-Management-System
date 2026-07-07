@@ -73,7 +73,7 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
     return `<tr class="${i % 2 === 0 ? 'even' : ''}">
       <td><span class="avatar">${name[0].toUpperCase()}</span>${name}${roleTag}</td>
       <td class="center">${m.totalMeals}</td>
-      <td class="center"${guestMeals > 0 ? ' style="color:#c084fc;font-weight:600"' : ''}>${guestMeals}</td>
+      ${guestMeals > 0 ? `<td class="center" style="color:#c084fc;font-weight:600">${guestMeals}</td>` : '<td class="center" style="color:#94a3b8">—</td>'}
       <td class="right">&#8377;${mealRate.toFixed(2)}</td>
       <td class="right">&#8377;${m.mealCost?.toFixed(2) ?? m.totalMealCost.toFixed(2)}</td>
       <td class="right"${gas > 0 ? ' style="color:#ea580c;font-weight:600"' : ''}>&#8377;${gas.toFixed(2)}</td>
