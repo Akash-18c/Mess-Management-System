@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, X, Pencil, ChevronDown, ChevronUp, Banknote, Smartphone, Building2, Check } from 'lucide-react';
+import { Plus, Trash2, X, Pencil, ChevronDown, ChevronUp, Banknote, Smartphone, Building2 } from 'lucide-react';
 import api from '../../api';
 
 const now   = new Date();
@@ -9,12 +9,10 @@ const YEAR  = now.getFullYear();
 const EMPTY = { memberId: '', amount: '', method: 'Cash', date: now.toISOString().slice(0, 10), note: '' };
 const rn    = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
-const cardGlass = {
-  background: 'rgba(255,255,255,0.18)',
-  backdropFilter: 'blur(40px)',
-  WebkitBackdropFilter: 'blur(40px)',
-  border: '1px solid rgba(255,255,255,0.28)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.35)',
+const card = {
+  background: 'rgba(15,20,35,0.85)',
+  border: '1px solid rgba(255,255,255,0.10)',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.40)',
 };
 
 const modalGlass = {
@@ -37,9 +35,9 @@ const inputStyle = {
 };
 
 const METHODS = {
-  Cash: { icon: Banknote,    bg: 'rgba(52,211,153,0.18)',  color: '#34d399', border: 'rgba(52,211,153,0.45)',  label: 'Cash',  emoji: '💵' },
-  UPI:  { icon: Smartphone,  bg: 'rgba(96,165,250,0.18)',  color: '#60a5fa', border: 'rgba(96,165,250,0.45)',  label: 'UPI',   emoji: '📱' },
-  Bank: { icon: Building2,   bg: 'rgba(167,139,250,0.18)', color: '#a78bfa', border: 'rgba(167,139,250,0.45)', label: 'Bank',  emoji: '🏦' },
+  Cash: { icon: Banknote,   bg: 'rgba(52,211,153,0.18)',  color: '#34d399', border: 'rgba(52,211,153,0.45)',  label: 'Cash', emoji: '💵' },
+  UPI:  { icon: Smartphone, bg: 'rgba(96,165,250,0.18)',  color: '#60a5fa', border: 'rgba(96,165,250,0.45)',  label: 'UPI',  emoji: '📱' },
+  Bank: { icon: Building2,  bg: 'rgba(167,139,250,0.18)', color: '#a78bfa', border: 'rgba(167,139,250,0.45)', label: 'Bank', emoji: '🏦' },
 };
 
 const AVATAR_COLORS = [
@@ -52,13 +50,14 @@ const AVATAR_COLORS = [
 ];
 
 export default function ManagerPayments() {
-  const [payments, setPayments] = useState([]);
-  const [members,  setMembers]  = useState([]);
-  const [modal,    setModal]    = useState(false);
-  const [editId,   setEditId]   = useState(null);
-  const [form,     setForm]     = useState(EMPTY);
-  const [loading,  setLoading]  = useState(false);
-  const [expanded, setExpanded] = useState({});
+  const [payments,       setPayments]       = useState([]);
+  const [members,        setMembers]        = useState([]);
+  const [modal,          setModal]          = useState(false);
+  const [editId,         setEditId]         = useState(null);
+  const [form,           setForm]           = useState(EMPTY);
+  const [loading,        setLoading]        = useState(false);
+  const [expanded,       setExpanded]       = useState({});
+  const [activeMethod,   setActiveMethod]   = useState(null); // for method breakdown
 
   const f = v => setForm(p => ({ ...p, ...v }));
 
@@ -83,7 +82,7 @@ export default function ManagerPayments() {
 
   const total = payments.reduce((s, p) => s + p.amount, 0);
 
-  const openAdd = (memberId = '') => { setEditId(null); setForm({ ...EMPTY, memberId }); setModal(true); };
+  const openAdd  = (memberId = '') => { setEditId(null); setForm({ ...EMPTY, memberId }); setModal(true); };
   const openEdit = (p) => {
     setEditId(p._id);
     setForm({ memberId: p.memberId?._id || '', amount: p.amount, method: p.method || 'Cash', date: p.date?.slice(0, 10) || now.toISOString().slice(0, 10), note: p.note || '' });
@@ -119,17 +118,19 @@ export default function ManagerPayments() {
 
   const toggleExpand = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
 
-  // Find member name for cash display
   const selectedMember = members.find(m => m._id === form.memberId);
   const selectedName   = selectedMember ? rn(selectedMember.name) : '';
+
+  // Payments filtered by active method for breakdown
+  const methodPayments = activeMethod
+    ? payments.filter(p => (p.method || 'Cash') === activeMethod)
+    : [];
 
   return (
     <div className="space-y-4">
 
       {/* ── Header ── */}
-      <div className="relative rounded-2xl overflow-hidden p-4" style={cardGlass}>
-        <div className="absolute top-0 left-0 right-0 h-px"
-          style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
+      <div className="rounded-2xl p-4" style={card}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
@@ -138,37 +139,81 @@ export default function ManagerPayments() {
             </div>
             <div>
               <h1 className="font-bold text-white text-base">Payments</h1>
-              <p className="text-slate-300 text-xs opacity-70">Advance payments from members</p>
+              <p className="text-slate-400 text-xs">Advance payments from members</p>
             </div>
           </div>
           <button onClick={() => openAdd()}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-transform flex-shrink-0"
-            style={{ background: 'rgba(16,185,129,0.22)', border: '1px solid rgba(16,185,129,0.55)', color: '#34d399', boxShadow: '0 0 16px rgba(16,185,129,0.18)' }}>
+            style={{ background: 'rgba(16,185,129,0.22)', border: '1px solid rgba(16,185,129,0.55)', color: '#34d399' }}>
             <Plus size={15} /> Record
           </button>
         </div>
       </div>
 
-      {/* ── Total collected ── */}
-      <div className="relative rounded-2xl overflow-hidden p-4" style={{ ...cardGlass, border: '1px solid rgba(52,211,153,0.40)' }}>
-        <div className="absolute top-0 left-0 right-0 h-px"
-          style={{ background: 'linear-gradient(90deg,transparent,rgba(52,211,153,0.70),transparent)' }} />
-        <p className="text-xs text-slate-300 opacity-70 mb-1 uppercase tracking-wide font-semibold">Total Collected</p>
+      {/* ── Total Collected ── */}
+      <div className="rounded-2xl p-4" style={{ ...card, border: '1px solid rgba(52,211,153,0.30)' }}>
+        <p className="text-xs text-slate-400 mb-1 uppercase tracking-wide font-semibold">Total Collected</p>
         <p className="text-3xl font-bold text-green-400">₹{total.toFixed(2)}</p>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-slate-500 mt-1">
           {payments.length} payment{payments.length !== 1 ? 's' : ''} · {groups.length} member{groups.length !== 1 ? 's' : ''}
         </p>
-        {/* Method breakdown */}
+
+        {/* Method breakdown buttons */}
         {payments.length > 0 && (
           <div className="flex gap-2 mt-3 flex-wrap">
             {Object.entries(METHODS).map(([key, ms]) => {
               const amt = payments.filter(p => (p.method || 'Cash') === key).reduce((s, p) => s + p.amount, 0);
               if (!amt) return null;
+              const isActive = activeMethod === key;
               return (
-                <span key={key} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
-                  style={{ background: ms.bg, border: `1px solid ${ms.border}`, color: ms.color }}>
+                <button key={key}
+                  onClick={() => setActiveMethod(isActive ? null : key)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all"
+                  style={{
+                    background: isActive ? ms.bg : 'rgba(255,255,255,0.06)',
+                    border: `1px solid ${isActive ? ms.border : 'rgba(255,255,255,0.12)'}`,
+                    color: isActive ? ms.color : '#94a3b8',
+                  }}>
                   {ms.emoji} {key} ₹{amt.toFixed(0)}
-                </span>
+                  <ChevronDown size={11} style={{ transform: isActive ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Method breakdown panel */}
+        {activeMethod && methodPayments.length > 0 && (
+          <div className="mt-3 rounded-xl overflow-hidden" style={{ border: `1px solid ${METHODS[activeMethod].border}`, background: 'rgba(0,0,0,0.30)' }}>
+            <div className="px-3 py-2 flex items-center justify-between"
+              style={{ borderBottom: `1px solid ${METHODS[activeMethod].border}`, background: METHODS[activeMethod].bg }}>
+              <span className="text-xs font-bold" style={{ color: METHODS[activeMethod].color }}>
+                {METHODS[activeMethod].emoji} {activeMethod} Payments
+              </span>
+              <span className="text-xs font-bold" style={{ color: METHODS[activeMethod].color }}>
+                ₹{methodPayments.reduce((s, p) => s + p.amount, 0).toFixed(0)}
+              </span>
+            </div>
+            {methodPayments.sort((a, b) => b.amount - a.amount).map((p, i) => {
+              const name = rn(p.memberId?.name);
+              return (
+                <div key={p._id} className="flex items-center justify-between px-3 py-2.5"
+                  style={{ borderBottom: i < methodPayments.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                      style={{ background: METHODS[activeMethod].bg, color: METHODS[activeMethod].color }}>
+                      {name?.[0]?.toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-white text-xs font-semibold">{name}</p>
+                      <p className="text-slate-500 text-xs">
+                        {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        {p.note ? ` · ${p.note}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-bold" style={{ color: METHODS[activeMethod].color }}>₹{p.amount.toFixed(0)}</span>
+                </div>
               );
             })}
           </div>
@@ -177,30 +222,26 @@ export default function ManagerPayments() {
 
       {/* ── Member Groups ── */}
       {groups.length === 0 ? (
-        <div className="relative rounded-2xl overflow-hidden p-12 text-center" style={cardGlass}>
-          <div className="absolute top-0 left-0 right-0 h-px"
-            style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
+        <div className="rounded-2xl p-12 text-center" style={card}>
           <p className="text-4xl mb-3">💳</p>
           <p className="text-white font-semibold text-sm">No payments recorded yet</p>
-          <p className="text-slate-400 text-xs mt-1">Tap "Record" to add a payment</p>
+          <p className="text-slate-500 text-xs mt-1">Tap "Record" to add a payment</p>
         </div>
       ) : (
         <div className="space-y-3">
           {groups.map(({ member, payments: mPayments }, idx) => {
-            const id       = member?._id;
-            const name     = rn(member?.name);
-            const mTotal   = mPayments.reduce((s, p) => s + p.amount, 0);
-            const isOpen   = !!expanded[id];
+            const id     = member?._id;
+            const name   = rn(member?.name);
+            const mTotal = mPayments.reduce((s, p) => s + p.amount, 0);
+            const isOpen = !!expanded[id];
             const [avatarBg, avatarClr] = AVATAR_COLORS[idx % AVATAR_COLORS.length];
 
             return (
-              <div key={id} className="relative rounded-2xl overflow-hidden" style={cardGlass}>
-                <div className="absolute top-0 left-0 right-0 h-px"
-                  style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
+              <div key={id} className="rounded-2xl overflow-hidden" style={card}>
 
                 {/* Member row */}
                 <div className="flex items-center justify-between gap-2 px-4 py-3 cursor-pointer"
-                  style={{ background: isOpen ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.08)' }}
+                  style={{ background: isOpen ? 'rgba(255,255,255,0.04)' : 'transparent' }}
                   onClick={() => toggleExpand(id)}>
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold flex-shrink-0"
@@ -209,7 +250,7 @@ export default function ManagerPayments() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-white font-bold text-sm">{name}</p>
-                      <p className="text-slate-400 text-xs mt-0.5">
+                      <p className="text-slate-500 text-xs mt-0.5">
                         {mPayments.length} payment{mPayments.length !== 1 ? 's' : ''}
                         {member?.room ? ` · Room ${member.room}` : ''}
                       </p>
@@ -223,61 +264,54 @@ export default function ManagerPayments() {
                       <Plus size={14} />
                     </button>
                     {isOpen
-                      ? <ChevronUp size={16} className="text-slate-400" />
-                      : <ChevronDown size={16} className="text-slate-400" />}
+                      ? <ChevronUp size={16} className="text-slate-500" />
+                      : <ChevronDown size={16} className="text-slate-500" />}
                   </div>
                 </div>
 
-                {/* Expanded list */}
+                {/* Expanded payment history */}
                 {isOpen && (
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                     {mPayments.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).map((p, i) => {
-                      const ms = METHODS[p.method || 'Cash'] || METHODS.Cash;
+                      const ms    = METHODS[p.method || 'Cash'] || METHODS.Cash;
                       const MIcon = ms.icon;
                       return (
-                        <div key={p._id} className="px-4 py-3"
-                          style={{ borderBottom: i < mPayments.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none', background: i % 2 === 0 ? 'rgba(0,0,0,0.10)' : 'transparent' }}>
+                        <div key={p._id} className="px-4 py-3 flex items-center gap-3"
+                          style={{ borderBottom: i < mPayments.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
 
-                          {/* Method badge + amount row */}
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
-                              style={{ background: ms.bg, border: `1px solid ${ms.border}`, color: ms.color }}>
-                              <MIcon size={11} /> {ms.emoji} {p.method || 'Cash'}
-                            </span>
-                            <span className="text-base font-bold text-green-400">₹{p.amount.toFixed(0)}</span>
+                          {/* Method icon circle */}
+                          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{ background: ms.bg, border: `1px solid ${ms.border}` }}>
+                            <MIcon size={15} style={{ color: ms.color }} />
                           </div>
 
-                          {/* Cash: show name + amount prominently */}
-                          {(p.method === 'Cash' || !p.method) && (
-                            <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl"
-                              style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.20)' }}>
-                              <Banknote size={13} className="text-green-400 flex-shrink-0" />
-                              <span className="text-green-300 text-xs font-semibold">{name}</span>
-                              <span className="text-slate-400 text-xs">paid</span>
-                              <span className="text-green-400 text-xs font-bold ml-auto">₹{p.amount.toFixed(2)} cash</span>
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                                style={{ background: ms.bg, color: ms.color, border: `1px solid ${ms.border}` }}>
+                                {ms.emoji} {p.method || 'Cash'}
+                              </span>
                             </div>
-                          )}
+                            <p className="text-slate-400 text-xs mt-1">
+                              📅 {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              {p.note ? <span className="text-slate-500"> · {p.note}</span> : null}
+                            </p>
+                          </div>
 
-                          {/* Date + note + actions */}
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="text-slate-400 text-xs">
-                                📅 {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                              </p>
-                              {p.note && <p className="text-slate-500 text-xs mt-0.5 truncate">📝 {p.note}</p>}
-                            </div>
-                            <div className="flex gap-1.5 flex-shrink-0">
-                              <button onClick={() => openEdit(p)}
-                                className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-95"
-                                style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.30)', color: '#60a5fa' }}>
-                                <Pencil size={12} />
-                              </button>
-                              <button onClick={() => handleDelete(p._id)}
-                                className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-95"
-                                style={{ background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.30)', color: '#f87171' }}>
-                                <Trash2 size={12} />
-                              </button>
-                            </div>
+                          {/* Amount + actions */}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-base font-bold text-green-400">₹{p.amount.toFixed(0)}</span>
+                            <button onClick={() => openEdit(p)}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center active:scale-95"
+                              style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.30)', color: '#60a5fa' }}>
+                              <Pencil size={11} />
+                            </button>
+                            <button onClick={() => handleDelete(p._id)}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center active:scale-95"
+                              style={{ background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.30)', color: '#f87171' }}>
+                              <Trash2 size={11} />
+                            </button>
                           </div>
                         </div>
                       );
@@ -285,7 +319,7 @@ export default function ManagerPayments() {
 
                     {/* Member total footer */}
                     <div className="flex items-center justify-between px-4 py-2.5"
-                      style={{ background: 'rgba(52,211,153,0.06)', borderTop: '1px solid rgba(52,211,153,0.18)' }}>
+                      style={{ background: 'rgba(16,185,129,0.06)', borderTop: '1px solid rgba(16,185,129,0.18)' }}>
                       <span className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Total Paid</span>
                       <span className="text-sm font-bold text-green-400">₹{mTotal.toFixed(2)}</span>
                     </div>
@@ -324,7 +358,7 @@ export default function ManagerPayments() {
                 </select>
               </div>
 
-              {/* Payment Method — 3 big buttons */}
+              {/* Payment Method */}
               <div>
                 <label className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-2 block">Payment Method</label>
                 <div className="grid grid-cols-3 gap-2">
@@ -348,7 +382,7 @@ export default function ManagerPayments() {
                 </div>
               </div>
 
-              {/* Cash preview — name + amount */}
+              {/* Cash preview */}
               {form.method === 'Cash' && selectedName && form.amount && (
                 <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
                   style={{ background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.30)' }}>

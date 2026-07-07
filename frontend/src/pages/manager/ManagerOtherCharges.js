@@ -9,11 +9,9 @@ const YEAR  = now.getFullYear();
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || '—'); };
 
 const cardGlass = {
-  background: 'rgba(255,255,255,0.18)',
-  backdropFilter: 'blur(40px)',
-  WebkitBackdropFilter: 'blur(40px)',
-  border: '1px solid rgba(255,255,255,0.28)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.35)',
+  background: 'rgba(15,20,35,0.85)',
+  border: '1px solid rgba(255,255,255,0.10)',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.40)',
 };
 
 const modalGlass = {
@@ -110,9 +108,7 @@ export default function ManagerOtherCharges() {
     <div className="space-y-4">
 
       {/* ── Header ── */}
-      <div className="relative rounded-2xl overflow-hidden p-4" style={cardGlass}>
-        <div className="absolute top-0 left-0 right-0 h-px"
-          style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
+      <div className="rounded-2xl p-4" style={cardGlass}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
@@ -134,9 +130,7 @@ export default function ManagerOtherCharges() {
 
       {/* ── Summary pill ── */}
       {charges.length > 0 && (
-        <div className="relative rounded-2xl overflow-hidden p-4" style={{ ...cardGlass, border: '1px solid rgba(245,158,11,0.35)' }}>
-          <div className="absolute top-0 left-0 right-0 h-px"
-            style={{ background: 'linear-gradient(90deg,transparent,rgba(245,158,11,0.60),transparent)' }} />
+        <div className="rounded-2xl p-4" style={{ ...cardGlass, border: '1px solid rgba(245,158,11,0.30)' }}>
           <p className="text-xs text-slate-300 opacity-70 mb-1 uppercase tracking-wide font-semibold">Total Charges</p>
           <p className="text-3xl font-bold text-amber-400">₹{total.toFixed(2)}</p>
           <p className="text-xs text-slate-400 mt-1">{charges.length} charge{charges.length !== 1 ? 's' : ''} · {Object.keys(grouped).length} member{Object.keys(grouped).length !== 1 ? 's' : ''}</p>
@@ -145,12 +139,10 @@ export default function ManagerOtherCharges() {
 
       {/* ── Member Cards ── */}
       {Object.keys(grouped).length === 0 ? (
-        <div className="relative rounded-2xl overflow-hidden p-12 text-center" style={cardGlass}>
-          <div className="absolute top-0 left-0 right-0 h-px"
-            style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
+        <div className="rounded-2xl p-12 text-center" style={cardGlass}>
           <Receipt size={36} className="text-slate-500 mx-auto mb-3" />
           <p className="text-white font-semibold text-sm">No charges yet</p>
-          <p className="text-slate-400 text-xs mt-1">Tap "Add" to add a charge for a member</p>
+          <p className="text-slate-500 text-xs mt-1">Tap "Add" to add a charge for a member</p>
         </div>
       ) : (
         Object.values(grouped).map(({ member, items, idx }) => {
@@ -159,9 +151,7 @@ export default function ManagerOtherCharges() {
           const [avatarBg, avatarClr] = AVATAR_COLORS[idx % AVATAR_COLORS.length];
 
           return (
-            <div key={member?._id} className="relative rounded-2xl overflow-hidden" style={cardGlass}>
-              <div className="absolute top-0 left-0 right-0 h-px"
-                style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
+            <div key={member?._id} className="rounded-2xl overflow-hidden" style={cardGlass}>
 
               {/* Member header */}
               <div className="flex items-center justify-between px-4 py-3"
