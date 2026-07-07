@@ -141,7 +141,7 @@ export default function MemberDashboard() {
     <div className="space-y-4 pb-8">
       {/* ── Birthday Banner ── */}
       <BirthdayBanner />
-      {/* ── Header row ── */}}
+      {/* ── Header row ── */}
       <div className="flex items-center justify-between gap-3">
         {/* Title */}
         <div>
