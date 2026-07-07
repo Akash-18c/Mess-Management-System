@@ -29,6 +29,9 @@ async function recalcSummary(month, year) {
   // grandTotal = grocery + paid gas + paid rice + paid other — used for Total Spent display
   const grandTotal = parseFloat((groceryTotal + gasPaidTotal + ricePaidTotal + otherOnlyPaid).toFixed(2));
 
+  // mealRate uses only grocery + rice + other (NOT gas — gas is charged separately per member)
+  const mealBaseTotal = parseFloat((groceryTotal + ricePaidTotal + otherOnlyPaid).toFixed(2));
+
   let totalMeals = 0;
   meals.forEach((m) => {
     if (m.lunch)  totalMeals++;
@@ -36,7 +39,7 @@ async function recalcSummary(month, year) {
     totalMeals += m.guestMeals || 0;
   });
 
-  const mealRate = totalMeals > 0 ? parseFloat((grandTotal / totalMeals).toFixed(2)) : 0;
+  const mealRate = totalMeals > 0 ? parseFloat((mealBaseTotal / totalMeals).toFixed(2)) : 0;
   const gasPerMember        = activeMembers > 0 ? parseFloat((gasPaidTotal  / activeMembers).toFixed(2)) : 0;
   const ricePerMember       = 0; // folded into mealRate via grandTotal
   const otherPaidPerMember  = activeMembers > 0 ? parseFloat((otherOnlyPaid / activeMembers).toFixed(2)) : 0;
