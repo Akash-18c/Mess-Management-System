@@ -100,13 +100,15 @@ export default function MemberDashboard() {
   const { lunch, dinner, mealRate, estimatedBill, myOtherCharges, masiPerMember, advance,
           totalCollected, memberMealCounts, summary, individualCosts, gasCharge, riceCharge } = data;
 
-  const totalMeals   = lunch + dinner;
-  const myRow        = individualCosts?.find(c => c._id?.toString() === user?._id?.toString());
-  const masiSalary   = myRow?.masiSalary   ?? masiPerMember ?? 0;
-  const myOther      = myRow?.otherCharges ?? myOtherCharges ?? 0;
-  const myGasCharge  = myRow?.gasCharge    ?? gasCharge  ?? 0;
-  const myRiceCharge = myRow?.riceCharge   ?? riceCharge ?? 0;
-  const due          = estimatedBill + masiSalary + myOther + myGasCharge + myRiceCharge - advance;
+  const totalMeals    = lunch + dinner;
+  const myRow         = individualCosts?.find(c => c._id?.toString() === user?._id?.toString());
+  const masiSalary    = myRow?.masiSalary   ?? masiPerMember ?? 0;
+  const myOther       = myRow?.otherCharges ?? myOtherCharges ?? 0;
+  const myGasCharge   = myRow?.gasCharge    ?? gasCharge  ?? 0;
+  const myRiceCharge  = myRow?.riceCharge   ?? riceCharge ?? 0;
+  const totalBorrow   = myBorrows.reduce((s, b) => s + b.amount, 0);
+  const effectiveAdv  = advance - totalBorrow;
+  const due           = estimatedBill + masiSalary + myOther + myGasCharge + myRiceCharge - effectiveAdv;
 
   const activeSummary         = isCurrentMonth ? summary         : monthData?.summary;
   const activeTotalCollected  = isCurrentMonth ? totalCollected  : (monthData?.totalCollected ?? 0);
@@ -396,7 +398,9 @@ export default function MemberDashboard() {
                 icon: Wallet,
                 label: due > 0 ? 'I Owe' : 'My Credit',
                 value: `₹${Math.abs(due).toFixed(2)}`,
-                sub: `Advance paid: ₹${advance.toFixed(2)}`,
+                sub: totalBorrow > 0
+                  ? `Paid ₹${advance.toFixed(0)} · Borrowed ₹${totalBorrow.toFixed(0)}`
+                  : `Advance paid: ₹${advance.toFixed(2)}`,
                 accent: due > 0 ? '#f87171' : '#4ade80',
                 bg: due > 0 ? 'rgba(248,113,113,0.08)' : 'rgba(74,222,128,0.08)',
                 border: due > 0 ? 'rgba(248,113,113,0.15)' : 'rgba(74,222,128,0.15)',
