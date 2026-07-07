@@ -26,8 +26,8 @@ async function recalcSummary(month, year) {
   const ricePaidTotal   = parseFloat(paidRice.reduce((s, e) => s + e.amount, 0).toFixed(2));
   const otherOnlyPaid   = parseFloat(paidOtherOnly.reduce((s, e) => s + e.amount, 0).toFixed(2));
 
-  // mealRate includes grocery + paid rice bag — rice bag folded into grocery pool
-  const grandTotal = parseFloat((groceryTotal + ricePaidTotal).toFixed(2));
+  // grandTotal = grocery + paid rice + paid other (non-gas) — used for Total Spent display
+  const grandTotal = parseFloat((groceryTotal + ricePaidTotal + otherOnlyPaid).toFixed(2));
 
   let totalMeals = 0;
   meals.forEach((m) => {
@@ -42,7 +42,7 @@ async function recalcSummary(month, year) {
   const otherPaidPerMember  = activeMembers > 0 ? parseFloat((otherOnlyPaid / activeMembers).toFixed(2)) : 0;
 
   const totalCollected = parseFloat(payments.reduce((s, p) => s + p.amount, 0).toFixed(2));
-  const messBalance = parseFloat((totalCollected - groceryTotal - otherPaidTotal).toFixed(2));
+  const messBalance = parseFloat((totalCollected - grandTotal).toFixed(2));
 
   await MonthlySummary.findOneAndUpdate(
     { month, year },
