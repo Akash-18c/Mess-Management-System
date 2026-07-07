@@ -224,6 +224,7 @@ export default function ManagerBills() {
                   {[
                     { h: 'Member',       cls: 'text-left  pl-4' },
                     { h: 'Meals',        cls: 'text-right' },
+                    { h: 'Guest',        cls: 'text-right' },
                     { h: 'Per Meal',     cls: 'text-right' },
                     { h: 'Meal Cost',    cls: 'text-right' },
                     { h: 'Gas',          cls: 'text-right' },
@@ -260,6 +261,7 @@ export default function ManagerBills() {
                         </div>
                       </td>
                       <td className="py-2.5 px-2 text-right text-white font-semibold">{b.mealCount}</td>
+                      <td className="py-2.5 px-2 text-right" style={{ color: (b.guestMeals||0) > 0 ? '#c084fc' : '#475569' }}>{b.guestMeals||0}</td>
                       <td className="py-2.5 px-2 text-right text-amber-400">₹{mealRate.toFixed(2)}</td>
                       <td className="py-2.5 px-2 text-right text-slate-200">₹{(b.mealCost ?? (b.mealCount * mealRate)).toFixed(2)}</td>
                       <td className="py-2.5 px-2 text-right" style={{ color: (b.gasCharge||0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.gasCharge||0).toFixed(2)}</td>

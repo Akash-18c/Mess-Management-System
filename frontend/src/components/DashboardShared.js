@@ -63,6 +63,8 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
     const name = rn(m.name);
     const roleTag = m.role === 'admin' ? ' <span class="role-admin">Admin</span>' : m.role === 'manager' ? ' <span class="role-mgr">Mgr</span>' : '';
     const due = m.due;
+    const guestMeals = m.guestMeals || 0;
+    const guestCharge = m.guestCharge || 0;
     const masiSalary = m.masiSalary || 0;
     const otherShared = m.otherSharedCharge || 0;
     const gas        = m.gasCharge    || 0;
@@ -71,6 +73,7 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
     return `<tr class="${i % 2 === 0 ? 'even' : ''}">
       <td><span class="avatar">${name[0].toUpperCase()}</span>${name}${roleTag}</td>
       <td class="center">${m.totalMeals}</td>
+      <td class="center"${guestMeals > 0 ? ' style="color:#c084fc;font-weight:600"' : ''}>${guestMeals}</td>
       <td class="right">&#8377;${mealRate.toFixed(2)}</td>
       <td class="right">&#8377;${m.mealCost?.toFixed(2) ?? m.totalMealCost.toFixed(2)}</td>
       <td class="right"${gas > 0 ? ' style="color:#ea580c;font-weight:600"' : ''}>&#8377;${gas.toFixed(2)}</td>
@@ -180,6 +183,7 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
       <tr>
         <th>Member</th>
         <th class="center">Meals</th>
+        <th class="center">Guest</th>
         <th class="right">Per Meal</th>
         <th class="right">Meal Cost</th>
         <th class="right">Gas</th>
