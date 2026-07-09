@@ -68,7 +68,11 @@ router.put('/members/:id', async (req, res) => {
 router.get('/credentials', async (req, res) => {
   try {
     const members = await User.find().select('name email plainPassword role isActive').sort({ createdAt: -1 });
-    res.json(members);
+    const result = members.map(m => ({
+      ...m.toObject(),
+      plainPassword: m.plainPassword || 'mess1234',
+    }));
+    res.json(result);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 

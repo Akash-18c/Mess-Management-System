@@ -344,6 +344,9 @@ export default function AdminMembers() {
               </button>
             </div>
             <div className="overflow-y-auto" style={{ maxHeight: '70vh' }}>
+              {credentials.length === 0 && (
+                <p className="text-slate-500 text-sm text-center py-8">No members found</p>
+              )}
               {credentials.map((c, i) => {
                 const ac = roleAccent[c.role] || roleAccent.member;
                 const shown = showPassMap[c._id];
@@ -361,7 +364,7 @@ export default function AdminMembers() {
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="font-mono text-sm tabular-nums"
                         style={{ color: '#fbbf24', letterSpacing: shown ? '0.05em' : '0.2em' }}>
-                        {shown ? (c.plainPassword || '—') : '••••••'}
+                        {shown ? (c.plainPassword || 'mess1234') : '••••••'}
                       </span>
                       <button onClick={() => setShowPassMap(p => ({ ...p, [c._id]: !p[c._id] }))}
                         className="w-7 h-7 flex items-center justify-center rounded-lg"
