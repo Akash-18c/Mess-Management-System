@@ -80,6 +80,7 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
       <td class="right"${otherShared > 0 ? ' style="color:#ea580c;font-weight:600"' : ''}>&#8377;${otherShared.toFixed(2)}</td>
       <td class="right"${otherChg > 0 ? ' style="color:#db2777;font-weight:600"' : ''}>&#8377;${otherChg.toFixed(2)}</td>
       <td class="right">&#8377;${masiSalary.toFixed(2)}</td>
+      <td class="right"><strong>&#8377;${(m.totalMealCost ?? (m.mealCost + masiSalary + (m.gasCharge||0) + (m.otherSharedCharge||0) + otherChg)).toFixed(2)}</strong></td>
       <td class="right">&#8377;${m.moneyGiven.toFixed(2)}</td>
       <td class="right ${due >= 0 ? 'pos' : 'neg'}">${due >= 0 ? '+' : ''}&#8377;${Math.abs(due).toFixed(2)}</td>
     </tr>`;
@@ -189,6 +190,7 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
         <th class="right">Other Exp</th>
         <th class="right">Other Chg</th>
         <th class="right">Masi</th>
+        <th class="right">Total Bill</th>
         <th class="right">Amount Paid</th>
         <th class="right">Balance</th>
       </tr>

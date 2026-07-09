@@ -231,6 +231,7 @@ export default function ManagerBills() {
                     { h: 'Other Exp',    cls: 'text-right' },
                     { h: 'Other Chg',    cls: 'text-right' },
                     { h: 'Masi',         cls: 'text-right' },
+                    { h: 'Total Bill',    cls: 'text-right' },
                     { h: 'Advance',      cls: 'text-right' },
                     { h: 'Due / Refund', cls: 'text-right pr-4' },
                   ].map(({ h, cls }) => (
@@ -268,6 +269,7 @@ export default function ManagerBills() {
                       <td className="py-2.5 px-2 text-right" style={{ color: (b.otherSharedCharge||0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.otherSharedCharge||0).toFixed(2)}</td>
                       <td className="py-2.5 px-2 text-right" style={{ color: (b.otherCharges||0) > 0 ? '#f472b6' : '#475569' }}>₹{(b.otherCharges||0).toFixed(2)}</td>
                       <td className="py-2.5 px-2 text-right text-slate-400">₹{(b.masiSalary||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right font-bold text-white">₹{(b.totalBill??0).toFixed(2)}</td>
                       <td className="py-2.5 px-2 text-right text-green-400">₹{(b.advance||0).toFixed(2)}</td>
                       <td className="py-2.5 px-2 pr-4 text-right">
                         <span className="font-bold px-2 py-0.5 rounded-lg text-[11px]" style={{
