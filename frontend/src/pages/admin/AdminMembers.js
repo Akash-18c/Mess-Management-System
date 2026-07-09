@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Pencil, UserCheck, UserX, Trash2, X, ShieldCheck, Sparkles, KeyRound } from 'lucide-react';
+import { Plus, Pencil, UserCheck, UserX, Trash2, X, ShieldCheck, Sparkles, KeyRound, Eye, EyeOff, Lock } from 'lucide-react';
 import api from '../../api';
 
 const EMPTY = { name: '', email: '', password: '', phone: '', room: '', joinDate: '', role: 'member' };
@@ -36,8 +36,22 @@ export default function AdminMembers() {
   const [form,          setForm]          = useState(EMPTY);
   const [loading,       setLoading]       = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [pinModal,      setPinModal]      = useState(false);
+  const [pin,           setPin]           = useState('');
+  const [pinError,      setPinError]      = useState('');
+  const [credentials,   setCredentials]   = useState(null);
+  const [showPassMap,   setShowPassMap]   = useState({});
 
-  const load = () => api.get('/admin/members').then(r => setMembers(r.data));
+  const openCredentials = () => { setPinModal(true); setPin(''); setPinError(''); };
+  const submitPin = async () => {
+    if (pin !== '99077') { setPinError('Incorrect code. Try again.'); setPin(''); return; }
+    try {
+      const r = await api.get('/admin/credentials');
+      setCredentials(r.data);
+      setPinModal(false);
+    } catch { setPinError('Failed to load credentials.'); }
+  };
+
   useEffect(() => { load(); }, []);
 
   const openAdd  = () => { setEditing(null); setForm(EMPTY); setModal(true); };
@@ -184,9 +198,15 @@ export default function AdminMembers() {
             {active.length} active · {inactive.length} disabled
           </p>
         </div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-1.5 text-xs px-3 py-2 flex-shrink-0">
-          <Plus size={14} /> Add Member
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button onClick={openCredentials} className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl flex-shrink-0"
+            style={{ background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24', WebkitTapHighlightColor: 'transparent' }}>
+            <Eye size={13} /> View Credentials
+          </button>
+          <button onClick={openAdd} className="btn-primary flex items-center gap-1.5 text-xs px-3 py-2 flex-shrink-0">
+            <Plus size={14} /> Add Member
+          </button>
+        </div>
       </div>
 
       {members.length === 0 && (
@@ -267,6 +287,90 @@ export default function AdminMembers() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── PIN Modal ── */}
+      {pinModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ background: 'rgba(0,0,0,0.80)', backdropFilter: 'blur(6px)' }}>
+          <div className="w-full sm:max-w-xs rounded-t-3xl sm:rounded-2xl p-5 space-y-4" style={modalGlass}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Lock size={15} className="text-amber-400" />
+                <h2 className="font-bold text-white text-sm">Enter Access Code</h2>
+              </div>
+              <button onClick={() => setPinModal(false)}
+                className="w-7 h-7 flex items-center justify-center rounded-xl text-slate-400"
+                style={{ background: 'rgba(255,255,255,0.06)', WebkitTapHighlightColor: 'transparent' }}>
+                <X size={14} />
+              </button>
+            </div>
+            <input
+              className="input text-center text-lg tracking-widest"
+              type="password" maxLength={10}
+              placeholder="Enter code"
+              value={pin}
+              onChange={e => { setPin(e.target.value); setPinError(''); }}
+              onKeyDown={e => e.key === 'Enter' && submitPin()}
+              autoFocus
+            />
+            {pinError && <p className="text-red-400 text-xs text-center">{pinError}</p>}
+            <div className="flex gap-3">
+              <button onClick={() => setPinModal(false)} className="btn-secondary flex-1 text-sm">Cancel</button>
+              <button onClick={submitPin} className="btn-primary flex-1 text-sm">Unlock</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Credentials Modal ── */}
+      {credentials && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ background: 'rgba(0,0,0,0.80)', backdropFilter: 'blur(6px)' }}>
+          <div className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl overflow-hidden" style={modalGlass}>
+            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="flex items-center gap-2">
+                <KeyRound size={15} className="text-amber-400" />
+                <h2 className="font-bold text-white text-sm">Member Credentials</h2>
+              </div>
+              <button onClick={() => { setCredentials(null); setShowPassMap({}); }}
+                className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400"
+                style={{ background: 'rgba(255,255,255,0.06)', WebkitTapHighlightColor: 'transparent' }}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className="overflow-y-auto" style={{ maxHeight: '70vh' }}>
+              {credentials.map((c, i) => {
+                const ac = roleAccent[c.role] || roleAccent.member;
+                const shown = showPassMap[c._id];
+                return (
+                  <div key={c._id} className="flex items-center gap-3 px-5 py-3.5"
+                    style={{ borderBottom: i < credentials.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', opacity: c.isActive ? 1 : 0.45 }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
+                      style={{ background: ac.avatarBg, border: `1px solid ${ac.border}`, color: ac.text }}>
+                      {realName(c.name)?.[0]?.toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-semibold text-sm truncate">{realName(c.name)}</p>
+                      <p className="text-slate-500 text-xs truncate">{c.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="font-mono text-sm tabular-nums"
+                        style={{ color: '#fbbf24', letterSpacing: shown ? '0.05em' : '0.2em' }}>
+                        {shown ? (c.plainPassword || '—') : '••••••'}
+                      </span>
+                      <button onClick={() => setShowPassMap(p => ({ ...p, [c._id]: !p[c._id] }))}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg"
+                        style={{ background: 'rgba(255,255,255,0.06)', WebkitTapHighlightColor: 'transparent' }}>
+                        {shown ? <EyeOff size={13} className="text-slate-400" /> : <Eye size={13} className="text-slate-400" />}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

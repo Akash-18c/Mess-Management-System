@@ -48,8 +48,9 @@ router.get('/members', async (req, res) => {
 router.post('/members', async (req, res) => {
   try {
     const { name, email, password, phone, room, joinDate, role } = req.body;
-    const hashed = await bcrypt.hash(password || 'mess1234', 10);
-    const user = await User.create({ name, email, password: hashed, phone, room, joinDate, role: role || 'member' });
+    const plain = password || 'mess1234';
+    const hashed = await bcrypt.hash(plain, 10);
+    const user = await User.create({ name, email, password: hashed, plainPassword: plain, phone, room, joinDate, role: role || 'member' });
     res.status(201).json({ ...user.toObject(), password: undefined });
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
@@ -57,10 +58,18 @@ router.post('/members', async (req, res) => {
 router.put('/members/:id', async (req, res) => {
   try {
     const { password, ...data } = req.body;
-    if (password) data.password = await bcrypt.hash(password, 10);
+    if (password) { data.password = await bcrypt.hash(password, 10); data.plainPassword = password; }
     const user = await User.findByIdAndUpdate(req.params.id, data, { new: true }).select('-password');
     res.json(user);
   } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
+// Credentials view — PIN protected, admin only
+router.get('/credentials', async (req, res) => {
+  try {
+    const members = await User.find().select('name email plainPassword role isActive').sort({ createdAt: -1 });
+    res.json(members);
+  } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
 router.delete('/members/:id', async (req, res) => {
