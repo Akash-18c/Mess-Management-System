@@ -15,9 +15,14 @@ async function recalcSummary(month, year) {
   ]);
 
   const paidOthers = allOthers.filter(o => o.status === 'Paid');
-  const paidGas  = paidOthers.filter(o => o.categoryName === 'Gas Cylinder');
-  const paidRice = paidOthers.filter(o => o.categoryName === 'Rice Bag');
+  const paidGas      = paidOthers.filter(o => o.categoryName === 'Gas Cylinder');
+  const paidRice     = paidOthers.filter(o => o.categoryName === 'Rice Bag');
   const paidOtherOnly = paidOthers.filter(o => o.categoryName !== 'Gas Cylinder' && o.categoryName !== 'Rice Bag');
+
+  // Due (unpaid) non-gas expenses — still real costs, included in mealRate
+  const dueOthers     = allOthers.filter(o => o.status !== 'Paid');
+  const dueRice       = dueOthers.filter(o => o.categoryName === 'Rice Bag');
+  const dueOtherOnly  = dueOthers.filter(o => o.categoryName !== 'Gas Cylinder' && o.categoryName !== 'Rice Bag');
 
   const groceryTotal    = parseFloat(groceries.reduce((s, e) => s + e.total, 0).toFixed(2));
   const otherTotal      = parseFloat(allOthers.reduce((s, e) => s + e.amount, 0).toFixed(2));
@@ -25,12 +30,17 @@ async function recalcSummary(month, year) {
   const gasPaidTotal    = parseFloat(paidGas.reduce((s, e) => s + e.amount, 0).toFixed(2));
   const ricePaidTotal   = parseFloat(paidRice.reduce((s, e) => s + e.amount, 0).toFixed(2));
   const otherOnlyPaid   = parseFloat(paidOtherOnly.reduce((s, e) => s + e.amount, 0).toFixed(2));
+  const riceDueTotal    = parseFloat(dueRice.reduce((s, e) => s + e.amount, 0).toFixed(2));
+  const otherOnlyDue    = parseFloat(dueOtherOnly.reduce((s, e) => s + e.amount, 0).toFixed(2));
 
-  // grandTotal = grocery + paid gas + paid rice + paid other — used for Total Spent display
+  // grandTotal = grocery + paid gas + paid rice + paid other — used for Total Spent display (paid only)
   const grandTotal = parseFloat((groceryTotal + gasPaidTotal + ricePaidTotal + otherOnlyPaid).toFixed(2));
 
-  // mealRate uses only grocery + rice + other (NOT gas — gas is charged separately per member)
-  const mealBaseTotal = parseFloat((groceryTotal + ricePaidTotal + otherOnlyPaid).toFixed(2));
+  // mealBaseTotal includes ALL rice + other (paid + due) so due expenses are reflected in mealRate
+  const mealBaseTotal = parseFloat((groceryTotal + ricePaidTotal + riceDueTotal + otherOnlyPaid + otherOnlyDue).toFixed(2));
+
+  // otherPaidPerMember uses ALL non-gas other expenses (paid + due) so bills reflect full cost
+  const otherAllPerMember = activeMembers > 0 ? parseFloat(((otherOnlyPaid + otherOnlyDue) / activeMembers).toFixed(2)) : 0;
 
   let totalMeals = 0;
   meals.forEach((m) => {
@@ -40,9 +50,9 @@ async function recalcSummary(month, year) {
   });
 
   const mealRate = totalMeals > 0 ? parseFloat((mealBaseTotal / totalMeals).toFixed(2)) : 0;
-  const gasPerMember        = activeMembers > 0 ? parseFloat((gasPaidTotal  / activeMembers).toFixed(2)) : 0;
-  const ricePerMember       = 0; // folded into mealRate via grandTotal
-  const otherPaidPerMember  = activeMembers > 0 ? parseFloat((otherOnlyPaid / activeMembers).toFixed(2)) : 0;
+  const gasPerMember        = activeMembers > 0 ? parseFloat((gasPaidTotal / activeMembers).toFixed(2)) : 0;
+  const ricePerMember       = 0;
+  const otherPaidPerMember  = otherAllPerMember; // includes due expenses so bills are accurate
 
   const totalCollected = parseFloat(payments.reduce((s, p) => s + p.amount, 0).toFixed(2));
   const messBalance = parseFloat((totalCollected - grandTotal).toFixed(2));
