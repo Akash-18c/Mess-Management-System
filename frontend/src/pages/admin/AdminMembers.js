@@ -42,6 +42,8 @@ export default function AdminMembers() {
   const [credentials,   setCredentials]   = useState(null);
   const [showPassMap,   setShowPassMap]   = useState({});
 
+  const load = async () => { try { const r = await api.get('/admin/members'); setMembers(r.data); } catch {} };
+
   const openCredentials = () => { setPinModal(true); setPin(''); setPinError(''); };
   const submitPin = async () => {
     if (pin !== '99077') { setPinError('Incorrect code. Try again.'); setPin(''); return; }
