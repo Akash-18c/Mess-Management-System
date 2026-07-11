@@ -47,15 +47,16 @@ export default function AdminMasiSalary() {
   }, []);
 
   useEffect(() => {
-    api.get('/admin/members').then(r => setMembers(r.data.filter(m => m.isActive))).catch(() => {});
-  }, []);
-
-  useEffect(() => {
     setEditing(false);
     setConfirmDelete(false);
-    api.get(`/admin/masi-salary/${month}/${year}`)
-      .then(r => { setRecord(r.data); setAmount(r.data.totalAmount > 0 ? String(r.data.totalAmount) : ''); })
-      .catch(() => { setRecord(null); setAmount(''); });
+    Promise.all([
+      api.get('/admin/members'),
+      api.get(`/admin/masi-salary/${month}/${year}`),
+    ]).then(([mr, sr]) => {
+      setMembers(mr.data.filter(m => m.isActive));
+      setRecord(sr.data);
+      setAmount(sr.data.totalAmount > 0 ? String(sr.data.totalAmount) : '');
+    }).catch(() => { setRecord(null); setAmount(''); });
   }, [month, year]);
 
   const handleSave = async () => {

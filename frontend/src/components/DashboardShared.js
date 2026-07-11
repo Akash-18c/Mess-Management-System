@@ -435,28 +435,64 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
 
       {/* ── Low Fund Alert ── */}
       {messBalance < 2000 && (
-        <div className="rounded-2xl px-4 py-3 flex items-center gap-3"
+        <div className="rounded-2xl overflow-hidden relative"
           style={{
-            background: 'rgba(251,191,36,0.08)',
-            border: '1px solid rgba(251,191,36,0.30)',
-            boxShadow: '0 0 24px rgba(251,191,36,0.08)',
+            background: messBalance < 0
+              ? 'linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(220,38,38,0.06) 100%)'
+              : 'linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.05) 100%)',
+            border: messBalance < 0 ? '1px solid rgba(239,68,68,0.35)' : '1px solid rgba(251,191,36,0.35)',
+            boxShadow: messBalance < 0
+              ? '0 0 40px rgba(239,68,68,0.10), inset 0 1px 0 rgba(255,255,255,0.06)'
+              : '0 0 40px rgba(251,191,36,0.10), inset 0 1px 0 rgba(255,255,255,0.06)',
           }}>
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.30)' }}>
-            <AlertTriangle size={16} className="text-amber-400" />
+          {/* animated glow strip */}
+          <div className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: messBalance < 0 ? 'linear-gradient(90deg,transparent,rgba(239,68,68,0.8),transparent)' : 'linear-gradient(90deg,transparent,rgba(251,191,36,0.8),transparent)' }} />
+          <div className="flex items-center gap-4 px-4 py-3.5">
+            {/* pulsing icon */}
+            <div className="relative flex-shrink-0">
+              <div className="absolute inset-0 rounded-2xl animate-ping opacity-20"
+                style={{ background: messBalance < 0 ? '#ef4444' : '#f59e0b' }} />
+              <div className="relative w-11 h-11 rounded-2xl flex items-center justify-center"
+                style={{
+                  background: messBalance < 0 ? 'rgba(239,68,68,0.18)' : 'rgba(251,191,36,0.18)',
+                  border: messBalance < 0 ? '1px solid rgba(239,68,68,0.40)' : '1px solid rgba(251,191,36,0.40)',
+                }}>
+                <AlertTriangle size={18} style={{ color: messBalance < 0 ? '#f87171' : '#fbbf24' }} />
+              </div>
+            </div>
+            {/* text */}
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm leading-tight"
+                style={{ color: messBalance < 0 ? '#fca5a5' : '#fde68a' }}>
+                {messBalance < 0 ? '⚠️ Mess Fund in Deficit' : '⚠️ Mess Fund Running Low'}
+              </p>
+              <p className="text-xs mt-0.5 leading-relaxed"
+                style={{ color: messBalance < 0 ? 'rgba(252,165,165,0.70)' : 'rgba(253,230,138,0.65)' }}>
+                {messBalance < 0
+                  ? `Expenses exceed collections by ₹${Math.abs(messBalance).toFixed(2)} — members need to contribute`
+                  : `Only ₹${messBalance.toFixed(2)} left in the fund — please top up soon`
+                }
+              </p>
+            </div>
+            {/* amount badge */}
+            <div className="flex-shrink-0 text-right">
+              <div className="rounded-xl px-3 py-1.5"
+                style={{
+                  background: messBalance < 0 ? 'rgba(239,68,68,0.15)' : 'rgba(251,191,36,0.15)',
+                  border: messBalance < 0 ? '1px solid rgba(239,68,68,0.30)' : '1px solid rgba(251,191,36,0.30)',
+                }}>
+                <p className="font-black text-base tabular-nums leading-none"
+                  style={{ color: messBalance < 0 ? '#f87171' : '#fbbf24' }}>
+                  {messBalance < 0 ? '-' : '+'}₹{Math.abs(messBalance).toFixed(2)}
+                </p>
+                <p className="text-[9px] font-semibold uppercase tracking-wider mt-0.5"
+                  style={{ color: messBalance < 0 ? 'rgba(248,113,113,0.6)' : 'rgba(251,191,36,0.6)' }}>
+                  {messBalance < 0 ? 'deficit' : 'balance'}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-amber-300 font-bold text-sm leading-tight">Mess Fund is Low</p>
-            <p className="text-amber-500 text-xs mt-0.5">
-              {messBalance < 0
-                ? `Deficit of ₹${Math.abs(messBalance).toFixed(2)} — please contribute to the mess fund`
-                : `Only ₹${messBalance.toFixed(2)} remaining — please contribute to the mess fund`
-              }
-            </p>
-          </div>
-          <span className="text-amber-400 font-bold text-sm tabular-nums flex-shrink-0">
-            {messBalance < 0 ? `-₹${Math.abs(messBalance).toFixed(2)}` : `₹${messBalance.toFixed(2)}`}
-          </span>
         </div>
       )}
 
