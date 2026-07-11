@@ -292,8 +292,8 @@ export default function AdminMasiSalary() {
           <div className="grid grid-cols-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             {[
               { icon: IndianRupee, label: 'Per Member',    value: `₹${(record.perMemberAmount || 0).toFixed(2)}`, color: '#4ade80',  bg: 'rgba(74,222,128,0.08)' },
-              { icon: Users,       label: 'Members',       value: record.memberCount || members.length,            color: '#60a5fa',  bg: 'rgba(96,165,250,0.08)' },
-              { icon: IndianRupee, label: 'Total Charged', value: `₹${((record.perMemberAmount || 0) * (record.memberCount || members.length)).toFixed(2)}`, color: '#f472b6', bg: 'rgba(244,114,182,0.08)' },
+              { icon: Users,       label: 'Members',       value: members.length,            color: '#60a5fa',  bg: 'rgba(96,165,250,0.08)' },
+              { icon: IndianRupee, label: 'Total Charged', value: `₹${((record.perMemberAmount || 0) * members.length).toFixed(2)}`, color: '#f472b6', bg: 'rgba(244,114,182,0.08)' },
             ].map(({ icon: Icon, label, value, color, bg }, i) => (
               <div key={label} className="py-4 px-2 sm:px-4 text-center"
                 style={{ borderRight: i < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
