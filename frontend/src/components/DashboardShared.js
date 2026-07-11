@@ -434,67 +434,91 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
     <div className="space-y-5">
 
       {/* ── Low Fund Alert ── */}
-      {messBalance < 2000 && (
-        <div className="rounded-2xl overflow-hidden relative"
-          style={{
-            background: messBalance < 0
-              ? 'linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(220,38,38,0.06) 100%)'
-              : 'linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.05) 100%)',
-            border: messBalance < 0 ? '1px solid rgba(239,68,68,0.35)' : '1px solid rgba(251,191,36,0.35)',
-            boxShadow: messBalance < 0
-              ? '0 0 40px rgba(239,68,68,0.10), inset 0 1px 0 rgba(255,255,255,0.06)'
-              : '0 0 40px rgba(251,191,36,0.10), inset 0 1px 0 rgba(255,255,255,0.06)',
-          }}>
-          {/* animated glow strip */}
-          <div className="absolute top-0 left-0 right-0 h-px"
-            style={{ background: messBalance < 0 ? 'linear-gradient(90deg,transparent,rgba(239,68,68,0.8),transparent)' : 'linear-gradient(90deg,transparent,rgba(251,191,36,0.8),transparent)' }} />
-          <div className="flex items-center gap-4 px-4 py-3.5">
-            {/* pulsing icon */}
-            <div className="relative flex-shrink-0">
-              <div className="absolute inset-0 rounded-2xl animate-ping opacity-20"
-                style={{ background: messBalance < 0 ? '#ef4444' : '#f59e0b' }} />
-              <div className="relative w-11 h-11 rounded-2xl flex items-center justify-center"
-                style={{
-                  background: messBalance < 0 ? 'rgba(239,68,68,0.18)' : 'rgba(251,191,36,0.18)',
-                  border: messBalance < 0 ? '1px solid rgba(239,68,68,0.40)' : '1px solid rgba(251,191,36,0.40)',
-                }}>
-                <AlertTriangle size={18} style={{ color: messBalance < 0 ? '#f87171' : '#fbbf24' }} />
+      {messBalance < 2000 && (() => {
+        const isDeficit = messBalance < 0;
+        const c = isDeficit
+          ? { from: '#ef4444', to: '#dc2626', glow: 'rgba(239,68,68,0.22)', border: 'rgba(239,68,68,0.40)', textHead: '#fca5a5', textSub: 'rgba(252,165,165,0.72)', badge: 'rgba(239,68,68,0.18)', strip: 'rgba(239,68,68,0.9)' }
+          : { from: '#f59e0b', to: '#d97706', glow: 'rgba(251,191,36,0.18)', border: 'rgba(251,191,36,0.42)', textHead: '#fde68a', textSub: 'rgba(253,230,138,0.68)', badge: 'rgba(251,191,36,0.16)', strip: 'rgba(251,191,36,0.9)' };
+        return (
+          <div className="rounded-2xl overflow-hidden relative"
+            style={{
+              background: `linear-gradient(135deg, rgba(${isDeficit?'239,68,68':'251,191,36'},0.10) 0%, rgba(${isDeficit?'15,10,10':'15,12,5'},0.60) 100%)`,
+              border: `1px solid ${c.border}`,
+              boxShadow: `0 4px 32px ${c.glow}, 0 1px 0 rgba(255,255,255,0.06) inset`,
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+            }}>
+
+            {/* top shimmer line */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl"
+              style={{ background: `linear-gradient(90deg, transparent 0%, ${c.strip} 40%, ${c.from} 60%, transparent 100%)`, opacity: 0.7 }} />
+
+            {/* noise texture overlay */}
+            <div className="absolute inset-0 rounded-2xl pointer-events-none"
+              style={{ background: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.03\'/%3E%3C/svg%3E")', opacity: 0.4 }} />
+
+            <div className="relative flex items-center gap-3 sm:gap-4 px-4 py-4">
+
+              {/* pulsing icon */}
+              <div className="relative flex-shrink-0">
+                <div className="absolute inset-0 rounded-2xl animate-ping"
+                  style={{ background: c.from, opacity: 0.15, animationDuration: '2s' }} />
+                <div className="absolute inset-[-4px] rounded-[18px] animate-pulse"
+                  style={{ background: `radial-gradient(circle, ${c.glow} 0%, transparent 70%)`, animationDuration: '3s' }} />
+                <div className="relative w-12 h-12 rounded-2xl flex items-center justify-center"
+                  style={{
+                    background: `linear-gradient(135deg, ${c.badge}, rgba(0,0,0,0.2))`,
+                    border: `1.5px solid ${c.border}`,
+                    boxShadow: `0 0 16px ${c.glow}`,
+                  }}>
+                  <AlertTriangle size={20} style={{ color: c.from, filter: `drop-shadow(0 0 6px ${c.glow})` }} />
+                </div>
               </div>
-            </div>
-            {/* text */}
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm leading-tight"
-                style={{ color: messBalance < 0 ? '#fca5a5' : '#fde68a' }}>
-                {messBalance < 0 ? '⚠️ Mess Fund in Deficit' : '⚠️ Mess Fund Running Low'}
-              </p>
-              <p className="text-xs mt-0.5 leading-relaxed"
-                style={{ color: messBalance < 0 ? 'rgba(252,165,165,0.70)' : 'rgba(253,230,138,0.65)' }}>
-                {messBalance < 0
-                  ? `Expenses exceed collections by ₹${Math.abs(messBalance).toFixed(2)} — members need to contribute`
-                  : `Only ₹${messBalance.toFixed(2)} left in the fund — please top up soon`
-                }
-              </p>
-            </div>
-            {/* amount badge */}
-            <div className="flex-shrink-0 text-right">
-              <div className="rounded-xl px-3 py-1.5"
-                style={{
-                  background: messBalance < 0 ? 'rgba(239,68,68,0.15)' : 'rgba(251,191,36,0.15)',
-                  border: messBalance < 0 ? '1px solid rgba(239,68,68,0.30)' : '1px solid rgba(251,191,36,0.30)',
-                }}>
-                <p className="font-black text-base tabular-nums leading-none"
-                  style={{ color: messBalance < 0 ? '#f87171' : '#fbbf24' }}>
-                  {messBalance < 0 ? '-' : '+'}₹{Math.abs(messBalance).toFixed(2)}
-                </p>
-                <p className="text-[9px] font-semibold uppercase tracking-wider mt-0.5"
-                  style={{ color: messBalance < 0 ? 'rgba(248,113,113,0.6)' : 'rgba(251,191,36,0.6)' }}>
-                  {messBalance < 0 ? 'deficit' : 'balance'}
+
+              {/* text block */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-black text-sm tracking-tight leading-none"
+                    style={{ color: c.textHead, textShadow: `0 0 20px ${c.glow}` }}>
+                    {isDeficit ? 'Mess Fund in Deficit' : 'Mess Fund Running Low'}
+                  </p>
+                  <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                    style={{ background: c.badge, color: c.from, border: `1px solid ${c.border}` }}>
+                    {isDeficit ? 'URGENT' : 'WARNING'}
+                  </span>
+                </div>
+                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: c.textSub }}>
+                  {isDeficit
+                    ? `Expenses exceed collections by ₹${Math.abs(messBalance).toFixed(2)} — members need to top up`
+                    : `Only ₹${messBalance.toFixed(2)} remaining — please contribute to the mess fund`
+                  }
                 </p>
               </div>
+
+              {/* amount pill */}
+              <div className="flex-shrink-0">
+                <div className="rounded-2xl px-3.5 py-2.5 text-center"
+                  style={{
+                    background: `linear-gradient(135deg, ${c.badge}, rgba(0,0,0,0.25))`,
+                    border: `1.5px solid ${c.border}`,
+                    boxShadow: `0 0 20px ${c.glow}, inset 0 1px 0 rgba(255,255,255,0.08)`,
+                    minWidth: '72px',
+                  }}>
+                  <p className="font-black text-lg tabular-nums leading-none"
+                    style={{ color: c.from, textShadow: `0 0 12px ${c.glow}`, letterSpacing: '-0.02em' }}>
+                    {isDeficit ? '-' : '+'}₹{Math.abs(messBalance).toFixed(0)}
+                  </p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest mt-1"
+                    style={{ color: c.textSub }}>
+                    {isDeficit ? 'deficit' : 'balance'}
+                  </p>
+                </div>
+              </div>
+
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── Welcome Banner ── */}
       <div className="rounded-2xl p-4" style={{
