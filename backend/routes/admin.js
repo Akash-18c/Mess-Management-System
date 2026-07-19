@@ -455,6 +455,10 @@ router.delete('/purge-all-meals', async (req, res) => {
   try {
     const Meal = require('../models/Meal');
     const result = await Meal.deleteMany({});
+    await MonthlySummary.updateMany({}, {
+      totalMeals: 0, totalLunch: 0, totalDinner: 0, guestMeals: 0,
+      mealRate: 0, totalExpenses: 0,
+    });
     res.json({ message: 'All meal records deleted', deleted: { meals: result.deletedCount } });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
