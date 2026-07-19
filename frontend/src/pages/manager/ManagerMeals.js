@@ -70,12 +70,9 @@ export default function ManagerMeals() {
   const rangeStart = activeMonthCfg?.startDate || null;
   const rangeEnd   = activeMonthCfg?.endDate   || null;
 
-  // Period is editable if today falls within the active date range (or no range set = full month)
-  const todayInRange = (() => {
-    if (!rangeStart && !rangeEnd) return isLiveMonth;
-    return todayLocal >= (rangeStart || '0000-00-00') && todayLocal <= (rangeEnd || '9999-99-99');
-  })();
-  const canEdit = todayInRange && !!activeMonthCfg;
+  // Page is editable if the period is open (activeMonthCfg exists)
+  // The date range only controls which calendar days are selectable, not page-level editing
+  const canEdit = !!activeMonthCfg;
 
   const isDateInRange = (dateStr) => {
     if (!rangeStart && !rangeEnd) return true;
