@@ -6,13 +6,31 @@ const Payment = require('../models/Payment');
 const User = require('../models/User');
 
 async function recalcSummary(month, year) {
-  const [groceries, allOthers, meals, payments, activeMembers] = await Promise.all([
+  // Fetch the summary first to get startDate/endDate for cross-month periods
+  const existingSummary = await MonthlySummary.findOne({ month, year });
+
+  const [groceries, allOthers, payments, activeMembers] = await Promise.all([
     GroceryExpense.find({ month, year }),
     OtherExpense.find({ month, year }),
-    Meal.find({ month, year, isOff: false }),
     Payment.find({ month, year }),
     User.countDocuments({ isActive: true }),
   ]);
+
+  // Build meal query: if period has startDate/endDate, query by date range
+  // This ensures cross-month periods (e.g. Jul19–Aug31 stored as month:7) count all dates
+  let mealQuery;
+  if (existingSummary?.startDate && existingSummary?.endDate) {
+    mealQuery = {
+      date: {
+        $gte: new Date(existingSummary.startDate + 'T00:00:00.000Z'),
+        $lte: new Date(existingSummary.endDate   + 'T23:59:59.999Z'),
+      },
+      isOff: false,
+    };
+  } else {
+    mealQuery = { month, year, isOff: false };
+  }
+  const meals = await Meal.find(mealQuery);
 
   const paidOthers    = allOthers.filter(o => o.status === 'Paid');
   const dueOthers     = allOthers.filter(o => o.status !== 'Paid');
