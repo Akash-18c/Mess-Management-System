@@ -252,7 +252,7 @@ router.get('/all-payments/:month/:year', async (req, res) => {
 router.get('/my-assignment', async (req, res) => {
   try {
     const MonthAssignment = require('../models/MonthAssignment');
-    const assignment = await MonthAssignment.findOne({ managerId: req.user._id });
+    const assignment = await MonthAssignment.findOne({ managerId: req.user._id }).sort({ year: -1, month: -1 });
     res.json(assignment ? { month: assignment.month, year: assignment.year } : null);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -260,8 +260,15 @@ router.get('/my-assignment', async (req, res) => {
 // Active mess periods — readable by all roles (manager needs this to enable meal editing)
 router.get('/active-months', async (req, res) => {
   try {
-    const summaries = await MonthlySummary.find({ isOpen: true, isClosed: false }).sort({ year: -1, month: -1 });
-    res.json(summaries.map(s => ({ month: s.month, year: s.year, startDate: s.startDate || null, endDate: s.endDate || null })));
+    const today = new Date().toISOString().slice(0, 10);
+    const summaries = await MonthlySummary.find({ isClosed: false }).sort({ year: -1, month: -1 });
+    // A period is active if explicitly opened OR today falls within its startDate–endDate
+    const active = summaries.filter(s =>
+      s.isOpen ||
+      (s.startDate && s.endDate && today >= s.startDate && today <= s.endDate) ||
+      (s.startDate && !s.endDate && today >= s.startDate)
+    );
+    res.json(active.map(s => ({ month: s.month, year: s.year, startDate: s.startDate || null, endDate: s.endDate || null })));
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 

@@ -421,8 +421,14 @@ router.get('/months', async (req, res) => {
 // Get open months for manager (used by manager to know which months they can edit)
 router.get('/active-months', async (req, res) => {
   try {
-    const summaries = await MonthlySummary.find({ isOpen: true, isClosed: false }).sort({ year: -1, month: -1 });
-    res.json(summaries.map(s => ({ month: s.month, year: s.year, startDate: s.startDate || null, endDate: s.endDate || null })));
+    const today = new Date().toISOString().slice(0, 10);
+    const summaries = await MonthlySummary.find({ isClosed: false }).sort({ year: -1, month: -1 });
+    const active = summaries.filter(s =>
+      s.isOpen ||
+      (s.startDate && s.endDate && today >= s.startDate && today <= s.endDate) ||
+      (s.startDate && !s.endDate && today >= s.startDate)
+    );
+    res.json(active.map(s => ({ month: s.month, year: s.year, startDate: s.startDate || null, endDate: s.endDate || null })));
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
