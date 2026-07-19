@@ -57,6 +57,7 @@ export default function ManagerMeals() {
   const [selectedDate, setSelectedDate] = useState(todayLocal);
   const [activeMonths, setActiveMonths] = useState([]);
   const [myAssignment, setMyAssignment] = useState(null);
+  const [dataReady, setDataReady]       = useState(false);
   const pendingRef  = useRef({});
   const calendarRef = useRef(null);
 
@@ -110,6 +111,7 @@ export default function ManagerMeals() {
       setMembers(Array.isArray(memsRes.data) ? memsRes.data : []);
       setActiveMonths(Array.isArray(activeRes.data) ? activeRes.data : []);
       setMyAssignment(assignRes.data || null);
+      setDataReady(true);
       const map = {};
       const meals = Array.isArray(mealsRes.data) ? mealsRes.data : [];
       meals.forEach(m => {
@@ -212,7 +214,7 @@ export default function ManagerMeals() {
         <div>
           <h1 className="text-base font-bold text-white">Daily Meals</h1>
           <p className="text-[10px] text-slate-500 mt-0.5">
-            {canEdit ? 'Mark attendance for each member' : 'View only — outside active period'}
+            {canEdit ? 'Mark attendance for each member' : dataReady ? 'View only — outside active period' : ''}
           </p>
         </div>
         <div className="flex items-center gap-1 rounded-xl p-1"
@@ -265,7 +267,7 @@ export default function ManagerMeals() {
         </div>
       </div>
 
-      {!canEdit && (
+      {dataReady && !canEdit && (
         <div className="rounded-2xl px-4 py-2.5 flex items-center gap-2"
           style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)' }}>
           <span className="text-amber-400">👁</span>

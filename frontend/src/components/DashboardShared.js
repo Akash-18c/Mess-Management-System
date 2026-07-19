@@ -397,8 +397,12 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
   const year  = selectedYear  || now.getFullYear();
 
   const [liveSummary, setLiveSummary] = useState(summary);
+  const [summaryReady, setSummaryReady] = useState(!!summary);
 
-  useEffect(() => { setLiveSummary(summary); }, [summary]);
+  useEffect(() => {
+    setLiveSummary(summary);
+    if (summary !== undefined) setSummaryReady(true);
+  }, [summary]);
 
   const refreshSummary = useCallback(async () => {
     try {
@@ -434,7 +438,7 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
     <div className="space-y-5">
 
       {/* ── Low Fund Alert ── */}
-      {messBalance < 2000 && (() => {
+      {summaryReady && messBalance < 2000 && (() => {
         const isDeficit = messBalance < 0;
         const c = isDeficit
           ? { from: '#ef4444', glow: 'rgba(239,68,68,0.20)', border: 'rgba(239,68,68,0.38)', textHead: '#fca5a5', textSub: 'rgba(252,165,165,0.65)', badge: 'rgba(239,68,68,0.15)', strip: 'rgba(239,68,68,0.85)' }

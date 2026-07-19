@@ -261,6 +261,13 @@ export default function MemberHistory() {
                     {s?.isClosed && <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded-full font-bold"
                       style={{ background: 'rgba(248,113,113,0.12)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.22)' }}>Closed</span>}
                   </p>
+                  {(s?.startDate || s?.endDate) && (
+                    <p className="text-teal-500 text-[10px] font-semibold mt-0.5">
+                      {s.startDate ? new Date(s.startDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '?'}
+                      {' → '}
+                      {s.endDate ? new Date(s.endDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '?'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Right stats — responsive */}

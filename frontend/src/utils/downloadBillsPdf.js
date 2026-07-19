@@ -25,9 +25,12 @@ function loadImage(src) {
   });
 }
 
-function generate({ bills, summary, month, year }) {
+function generate({ bills, summary, month, year, managerName, rangeStart, rangeEnd }) {
   const mealRate = summary?.mealRate || 0;
   const monthLabel = `${MONTHS_FULL[month - 1]} ${year}`;
+  const periodLabel = (rangeStart || rangeEnd)
+    ? `${rangeStart ? new Date(rangeStart+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '?'} – ${rangeEnd ? new Date(rangeEnd+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '?'}`
+    : monthLabel;
 
   return Promise.all([loadImage('/messy-logo.png'), loadImage('/Stamp.png')]).then(([logoData, stampData]) => {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -70,9 +73,16 @@ function generate({ bills, summary, month, year }) {
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100, 116, 139);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, PW / 2, 35, { align: 'center' });
+    if (periodLabel !== monthLabel) {
+      doc.text(`Period: ${periodLabel}`, PW / 2, 34, { align: 'center' });
+      if (managerName) doc.text(`Manager: ${managerName}`, PW / 2, 38.5, { align: 'center' });
+      doc.text(`Generated: ${new Date().toLocaleString()}`, PW / 2, managerName ? 43 : 38.5, { align: 'center' });
+    } else {
+      if (managerName) doc.text(`Manager: ${managerName}`, PW / 2, 34, { align: 'center' });
+      doc.text(`Generated: ${new Date().toLocaleString()}`, PW / 2, managerName ? 38.5 : 34, { align: 'center' });
+    }
 
-    const cardY = 44;
+    const cardY = (rangeStart || rangeEnd || managerName) ? 52 : 44;
     const cards = [
       { label: 'Meal Rate',   value: `Rs ${mealRate.toFixed(2)}`,                   color: [52, 211, 153] },
       { label: 'Total Meals', value: String(summary?.totalMeals || 0),              color: [96, 165, 250] },

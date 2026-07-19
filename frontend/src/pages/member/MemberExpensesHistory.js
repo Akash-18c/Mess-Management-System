@@ -24,6 +24,7 @@ export default function MemberExpensesHistory() {
   const [tab,       setTab]       = useState('grocery');
   const [groceries, setGroceries] = useState([]);
   const [others,    setOthers]    = useState([]);
+  const [summary,   setSummary]   = useState(null);
   const [selDate,   setSelDate]   = useState('all');
   const [dateOpen,  setDateOpen]  = useState(false);
   const [monthOpen, setMonthOpen] = useState(false);
@@ -42,6 +43,7 @@ export default function MemberExpensesHistory() {
   const load = useCallback(() => {
     api.get(`/expenses/grocery/${month}/${year}`).then(r => setGroceries(r.data)).catch(() => {});
     api.get(`/expenses/other/${month}/${year}`).then(r => setOthers(r.data)).catch(() => {});
+    api.get(`/summary/${month}/${year}`).then(r => setSummary(r.data)).catch(() => setSummary(null));
   }, [month, year]);
 
   useEffect(() => { load(); setSelDate('all'); }, [load]);
@@ -87,6 +89,13 @@ export default function MemberExpensesHistory() {
         <div>
           <h1 className="text-base font-bold text-white leading-tight">Expenses History</h1>
           <p className="text-[10px] text-slate-500">Monthly grocery &amp; other expenses</p>
+          {(summary?.startDate || summary?.endDate) && (
+            <p className="text-[10px] text-teal-400 font-semibold mt-0.5">
+              {summary.startDate ? new Date(summary.startDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '?'}
+              {' → '}
+              {summary.endDate ? new Date(summary.endDate+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '?'}
+            </p>
+          )}
         </div>
       </div>
 
