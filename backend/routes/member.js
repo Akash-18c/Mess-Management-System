@@ -248,6 +248,23 @@ router.get('/all-payments/:month/:year', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// Manager's own assignment (so manager can edit even without an explicit open-month record)
+router.get('/my-assignment', async (req, res) => {
+  try {
+    const MonthAssignment = require('../models/MonthAssignment');
+    const assignment = await MonthAssignment.findOne({ managerId: req.user._id });
+    res.json(assignment ? { month: assignment.month, year: assignment.year } : null);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Active mess periods — readable by all roles (manager needs this to enable meal editing)
+router.get('/active-months', async (req, res) => {
+  try {
+    const summaries = await MonthlySummary.find({ isOpen: true, isClosed: false }).sort({ year: -1, month: -1 });
+    res.json(summaries.map(s => ({ month: s.month, year: s.year, startDate: s.startDate || null, endDate: s.endDate || null })));
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 // Market duty — readable by all roles
 router.get('/market-duty', async (req, res) => {
   try {

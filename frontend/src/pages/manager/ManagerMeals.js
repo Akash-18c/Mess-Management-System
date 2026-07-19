@@ -59,6 +59,7 @@ export default function ManagerMeals() {
   const [mealData, setMealData]         = useState({});
   const [selectedDate, setSelectedDate] = useState(todayLocal);
   const [activeMonths, setActiveMonths] = useState([]);
+  const [myAssignment, setMyAssignment] = useState(null);
   const pendingRef  = useRef({});
   const calendarRef = useRef(null);
 
@@ -70,9 +71,8 @@ export default function ManagerMeals() {
   const rangeStart = activeMonthCfg?.startDate || null;
   const rangeEnd   = activeMonthCfg?.endDate   || null;
 
-  // Page is editable if the period is open (activeMonthCfg exists)
-  // The date range only controls which calendar days are selectable, not page-level editing
-  const canEdit = !!activeMonthCfg;
+  // Editable if: explicit open-month record exists OR manager has an assignment for this month
+  const canEdit = !!activeMonthCfg || (myAssignment?.month === month && myAssignment?.year === year);
 
   const isDateInRange = (dateStr) => {
     if (!rangeStart && !rangeEnd) return true;
@@ -82,13 +82,15 @@ export default function ManagerMeals() {
   };
 
   const loadData = useCallback(async () => {
-    const [memsRes, mealsRes, activeRes] = await Promise.all([
+    const [memsRes, mealsRes, activeRes, assignRes] = await Promise.all([
       api.get('/members'),
       api.get(`/meals/${month}/${year}`),
-      api.get('/admin/active-months'),
+      api.get('/active-months'),
+      api.get('/member/my-assignment'),
     ]);
     setMembers(memsRes.data);
     setActiveMonths(activeRes.data || []);
+    setMyAssignment(assignRes.data || null);
     const map = {};
     mealsRes.data.forEach(m => {
       map[`${m.memberId?._id}_${m.date?.slice(0,10)}`] = m;
