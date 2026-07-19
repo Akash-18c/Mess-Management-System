@@ -63,11 +63,23 @@ export default function ManagerMeals() {
   const isLiveMonth = month === curMonth && year === curYear;
   const daysInMonth = new Date(year, month, 0).getDate();
 
-  const activeMonthCfg = activeMonths.find(m => m.month === month && m.year === year);
+  // Match active period by month/year OR by date range overlapping the viewed month
+  const activeMonthCfg = activeMonths.find(m => {
+    if (m.month === month && m.year === year) return true;
+    // cross-month period: check if viewed month overlaps startDate–endDate
+    if (m.startDate || m.endDate) {
+      const viewStart = `${year}-${String(month).padStart(2,'0')}-01`;
+      const viewEnd   = `${year}-${String(month).padStart(2,'0')}-${String(new Date(year, month, 0).getDate()).padStart(2,'0')}`;
+      const s = m.startDate || viewStart;
+      const e = m.endDate   || viewEnd;
+      return s <= viewEnd && e >= viewStart;
+    }
+    return false;
+  });
   const rangeStart = activeMonthCfg?.startDate || null;
   const rangeEnd   = activeMonthCfg?.endDate   || null;
 
-  // canEdit: open-month record exists OR manager has assignment for this month
+  // canEdit: active period covers this month OR manager is assigned for this month
   const canEdit = !!activeMonthCfg || (myAssignment?.month === month && myAssignment?.year === year);
 
   // A date is in range only if within admin-set start/end (if set)
