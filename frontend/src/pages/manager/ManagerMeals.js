@@ -19,27 +19,25 @@ const glass = {
 // onTouchEnd fires the action only if the finger didn't scroll (dy < 10px).
 // onClick is a no-op fallback for desktop (touch already handled it via flag).
 function useSafeTap(action, disabled = false) {
-  const origin = useRef(null);
-  const fired  = useRef(false);
+  const origin    = useRef(null);
+  const lastTouch = useRef(0);
 
   const onTouchStart = (e) => {
     if (disabled) return;
     origin.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    fired.current = false;
   };
   const onTouchEnd = (e) => {
     if (disabled || !origin.current) return;
     const dy = Math.abs(e.changedTouches[0].clientY - origin.current.y);
     const dx = Math.abs(e.changedTouches[0].clientX - origin.current.x);
     origin.current = null;
-    if (dy > 10 || dx > 10) return; // was a scroll, ignore
-    e.preventDefault();
-    fired.current = true;
+    if (dy > 10 || dx > 10) return;
+    lastTouch.current = Date.now();
     action();
   };
   const onClick = () => {
     if (disabled) return;
-    if (fired.current) { fired.current = false; return; } // already fired by touch
+    if (Date.now() - lastTouch.current < 500) return; // already fired by touch
     action();
   };
 
