@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { RefreshCw, ChevronDown, Calendar, Check, Download } from 'lucide-react';
+import { RefreshCw, ChevronDown, Calendar, Check } from 'lucide-react';
 import api from '../../api';
 import useActivePeriod from '../../hooks/useActivePeriod';
-import { downloadBillsPdf } from '../../utils/downloadBillsPdf';
 
 const now = new Date();
 const CUR_MONTH = now.getMonth() + 1;
@@ -42,9 +41,7 @@ export default function ManagerBills() {
   const [year,       setYear]       = useState(CUR_YEAR);
   const [bills,      setBills]      = useState([]);
   const [summary,    setSummary]    = useState(null);
-  const [managerName, setManagerName] = useState('');
   const [generating, setGenerating] = useState(false);
-  const [pdfBusy,    setPdfBusy]    = useState(false);
   const [dropOpen,   setDropOpen]   = useState(false);
   const dropRef = useRef(null);
 
@@ -71,11 +68,6 @@ export default function ManagerBills() {
   const load = useCallback(() => {
     api.get(`/bills/${month}/${year}`).then(r => setBills(Array.isArray(r.data) ? r.data : [])).catch(() => {});
     api.get(`/summary/${month}/${year}`).then(r => setSummary(r.data)).catch(() => {});
-    // fetch manager name for this month
-    api.get('/admin/assignments').then(r => {
-      const a = r.data.find(a => a.month === month && a.year === year);
-      setManagerName(a?.managerId?.name ? a.managerId.name.replace(/^\w+\s*\((.+)\)$/, '$1') : '');
-    }).catch(() => {});
   }, [month, year]);
 
   useEffect(() => { load(); }, [load]);
@@ -99,22 +91,13 @@ export default function ManagerBills() {
     }
   };
 
-  const handlePdf = async () => {
-    if (pdfBusy || !bills.length) return;
-    setPdfBusy(true);
-    try {
-      await downloadBillsPdf({ bills, summary, month, year, managerName, rangeStart, rangeEnd });
-    } catch { toast.error('PDF failed'); }
-    finally { setPdfBusy(false); }
-  };
-
   const mealRate = summary?.mealRate || 0;
 
   return (
     <div className="space-y-4">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between gap-2 rounded-2xl p-3 px-4" style={glass}>
+      <div className="flex items-center justify-between gap-3 rounded-2xl p-3 px-4" style={glass}>
         <div>
           <h1 className="text-base font-bold text-white leading-tight">Bills</h1>
           <p className="text-[10px] text-slate-500 mt-0.5">Generate &amp; view member bills</p>
@@ -126,20 +109,15 @@ export default function ManagerBills() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button onClick={handlePdf} disabled={pdfBusy || !bills.length}
-            className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95 disabled:opacity-40"
-            style={{ background:'rgba(52,211,153,0.15)', border:'1px solid rgba(52,211,153,0.30)', WebkitTapHighlightColor:'transparent' }}>
-            <Download size={13} className={pdfBusy?'animate-spin':''} />
-            PDF
-          </button>
-          <button onClick={generateBills} disabled={generating}
-            className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95 disabled:opacity-60 flex-shrink-0"
-            style={{ background:'linear-gradient(135deg,#8b5cf6,#7c3aed)', WebkitTapHighlightColor:'transparent', transition:'transform 0.1s', boxShadow:'0 4px 14px rgba(139,92,246,0.30)' }}>
-            <RefreshCw size={13} className={generating?'animate-spin':''} />
-            {generating?'Generating…':'Generate'}
-          </button>
-        </div>
+        <button
+          onClick={generateBills}
+          disabled={generating}
+          className="flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-2 rounded-xl active:scale-95 disabled:opacity-60 flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', WebkitTapHighlightColor: 'transparent', transition: 'transform 0.1s', boxShadow: '0 4px 14px rgba(139,92,246,0.30)' }}
+        >
+          <RefreshCw size={13} className={generating ? 'animate-spin' : ''} />
+          {generating ? 'Generating…' : 'Generate'}
+        </button>
       </div>
 
       {/* ── Month Dropdown ── */}
@@ -264,74 +242,85 @@ export default function ManagerBills() {
         ))}
       </div>
 
-      {/* ── Bills ── */}
-      <div className="space-y-2">
+      {/* ── Bills Table ── */}
+      <div className="rounded-2xl overflow-hidden" style={glass}>
         {bills.length === 0 ? (
-          <div className="rounded-2xl py-14 flex flex-col items-center gap-3" style={glass}>
+          <div className="py-14 flex flex-col items-center gap-3">
             <span className="text-4xl">🧾</span>
             <p className="text-slate-500 text-sm">No bills for {selectedLabel}</p>
             <p className="text-slate-600 text-xs">Tap "Generate" to calculate bills</p>
           </div>
-        ) : bills.map((b, i) => {
-          const due    = b.dueAmount ?? 0;
-          const isDue  = due > 0;
-          const name   = rn(b.memberId?.name);
-          return (
-            <div key={b._id} className="rounded-2xl px-4 py-3" style={glass}>
-              {/* Row 1: avatar + name + due/refund badge */}
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                  style={{ background:'rgba(167,139,250,0.18)', border:'1px solid rgba(167,139,250,0.25)' }}>
-                  {name?.[0]?.toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-bold text-sm truncate">{name}</p>
-                  {b.memberId?.room && <p className="text-[10px] text-slate-500">Room {b.memberId.room}</p>}
-                </div>
-                <div className="flex-shrink-0 text-right">
-                  <span className="font-bold text-sm px-3 py-1 rounded-xl block" style={{
-                    background: isDue ? 'rgba(248,113,113,0.12)' : 'rgba(52,211,153,0.12)',
-                    color: isDue ? '#f87171' : '#34d399',
-                    border: isDue ? '1px solid rgba(248,113,113,0.25)' : '1px solid rgba(52,211,153,0.25)',
-                  }}>
-                    {isDue ? `Due ₹${due.toFixed(2)}` : `Refund ₹${Math.abs(due).toFixed(2)}`}
-                  </span>
-                </div>
-              </div>
-              {/* Row 2: stat pills */}
-              <div className="grid grid-cols-3 gap-1.5 mb-2">
-                {[
-                  { label:'Meals',      val: b.mealCount,                                  color:'#e2e8f0' },
-                  { label:'Total Bill', val:`₹${(b.totalBill??0).toFixed(2)}`,             color:'#fbbf24' },
-                  { label:'Advance',   val:`₹${(b.advance||0).toFixed(2)}`,               color:'#4ade80' },
-                ].map(({label,val,color})=>(
-                  <div key={label} className="rounded-xl py-2 px-2 text-center"
-                    style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>
-                    <p className="text-[10px] text-slate-500 mb-0.5">{label}</p>
-                    <p className="text-xs font-bold tabular-nums" style={{color}}>{val}</p>
-                  </div>
-                ))}
-              </div>
-              {/* Row 3: breakdown details */}
-              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-                {[
-                  { label:'Per Meal', val:`₹${mealRate.toFixed(2)}`,                      color:'#fbbf24' },
-                  { label:'Meal Cost',val:`₹${(b.mealCost??(b.mealCount*mealRate)).toFixed(2)}`, color:'#e2e8f0' },
-                  (b.guestMeals||0)>0 && { label:'Guest',  val:b.guestMeals,              color:'#c084fc' },
-                  (b.gasCharge||0)>0  && { label:'Gas',    val:`₹${b.gasCharge.toFixed(2)}`, color:'#fb923c' },
-                  (b.otherSharedCharge||0)>0 && { label:'Other Exp', val:`₹${b.otherSharedCharge.toFixed(2)}`, color:'#fb923c' },
-                  (b.otherCharges||0)>0 && { label:'Other Chg', val:`₹${b.otherCharges.toFixed(2)}`, color:'#f472b6' },
-                  (b.masiSalary||0)>0 && { label:'Masi',  val:`₹${b.masiSalary.toFixed(2)}`, color:'#94a3b8' },
-                ].filter(Boolean).map(({label,val,color})=>(
-                  <span key={label} className="text-[10px] tabular-nums">
-                    <span className="text-slate-500">{label}: </span>
-                    <span className="font-semibold" style={{color}}>{val}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full" style={{ fontSize: '12px', minWidth: '720px' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
+                  {[
+                    { h: 'Member',       cls: 'text-left  pl-4' },
+                    { h: 'Meals',        cls: 'text-right' },
+                    { h: 'Guest',        cls: 'text-right' },
+                    { h: 'Per Meal',     cls: 'text-right' },
+                    { h: 'Meal Cost',    cls: 'text-right' },
+                    { h: 'Gas',          cls: 'text-right' },
+                    { h: 'Other Exp',    cls: 'text-right' },
+                    { h: 'Other Chg',    cls: 'text-right' },
+                    { h: 'Masi',         cls: 'text-right' },
+                    { h: 'Total Bill',   cls: 'text-right' },
+                    { h: 'Advance',      cls: 'text-right' },
+                    { h: 'Due / Refund', cls: 'text-right pr-4' },
+                  ].map(({ h, cls }) => (
+                    <th key={h} className={`py-2.5 px-2 text-slate-500 font-semibold text-[10px] uppercase tracking-wide ${cls}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {bills.map((b, i) => {
+                  const due   = b.dueAmount ?? 0;
+                  const isDue = due > 0;
+                  const name  = rn(b.memberId?.name);
+                  return (
+                    <tr key={b._id} style={{
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      background: i % 2 !== 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
+                    }}>
+                      <td className="py-2.5 px-2 pl-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                            style={{ background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.25)' }}>
+                            {name?.[0]?.toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-white font-semibold truncate" style={{ maxWidth: '80px' }}>{name}</p>
+                            {b.memberId?.room && <p className="text-[9px] text-slate-600">Rm {b.memberId.room}</p>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-2 text-right text-white font-semibold">{b.mealCount}</td>
+                      <td className="py-2.5 px-2 text-right" style={{ color: (b.guestMeals||0) > 0 ? '#c084fc' : '#475569' }}>{b.guestMeals||0}</td>
+                      <td className="py-2.5 px-2 text-right text-amber-400">₹{mealRate.toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right text-slate-200">₹{(b.mealCost ?? (b.mealCount * mealRate)).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right" style={{ color: (b.gasCharge||0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.gasCharge||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right" style={{ color: (b.otherSharedCharge||0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.otherSharedCharge||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right" style={{ color: (b.otherCharges||0) > 0 ? '#f472b6' : '#475569' }}>₹{(b.otherCharges||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right text-slate-400">₹{(b.masiSalary||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right font-bold text-white">₹{(b.totalBill??0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right text-green-400">₹{(b.advance||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 pr-4 text-right">
+                        <span className="font-bold px-2 py-0.5 rounded-lg text-[11px]" style={{
+                          background: isDue ? 'rgba(248,113,113,0.12)' : 'rgba(52,211,153,0.12)',
+                          color: isDue ? '#f87171' : '#34d399',
+                          border: isDue ? '1px solid rgba(248,113,113,0.20)' : '1px solid rgba(52,211,153,0.20)',
+                        }}>
+                          {isDue ? `₹${due.toFixed(2)}` : `-₹${Math.abs(due).toFixed(2)}`}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

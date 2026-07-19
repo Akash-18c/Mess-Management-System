@@ -368,16 +368,13 @@ export default function ManagerExpenses() {
                         </div>
                         {/* Items */}
                         <div className="divide-y divide-white/5">
-                          {dateGroup.lunch.map((g, idx) => (
+                          {dateGroup.lunch.map((g) => (
                             <div key={g._id} className="flex items-center gap-2 px-3 py-2 text-[11px]">
                               <div className="flex-1 min-w-0">
                                 <p className="text-slate-200 font-medium truncate">{g.item}</p>
                                 {g.buyerName && <p className="text-[9px] text-slate-500 truncate">{g.buyerName}</p>}
                               </div>
                               <span className="text-green-400 font-bold flex-shrink-0">₹{(g.total || g.unitPrice || 0).toFixed(0)}</span>
-                              <button onClick={() => { if (window.confirm('Delete?')) { api.delete(`/expenses/grocery/${g._id}`); toast.success('Deleted'); load(); } }} className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(248,113,113,0.10)' }}>
-                                <Trash2 size={10} className="text-red-400" />
-                              </button>
                             </div>
                           ))}
                         </div>
@@ -400,16 +397,13 @@ export default function ManagerExpenses() {
                         </div>
                         {/* Items */}
                         <div className="divide-y divide-white/5">
-                          {dateGroup.dinner.map((g, idx) => (
+                          {dateGroup.dinner.map((g) => (
                             <div key={g._id} className="flex items-center gap-2 px-3 py-2 text-[11px]">
                               <div className="flex-1 min-w-0">
                                 <p className="text-slate-200 font-medium truncate">{g.item}</p>
                                 {g.buyerName && <p className="text-[9px] text-slate-500 truncate">{g.buyerName}</p>}
                               </div>
                               <span className="text-green-400 font-bold flex-shrink-0">₹{(g.total || g.unitPrice || 0).toFixed(0)}</span>
-                              <button onClick={() => { if (window.confirm('Delete?')) { api.delete(`/expenses/grocery/${g._id}`); toast.success('Deleted'); load(); } }} className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(248,113,113,0.10)' }}>
-                                <Trash2 size={10} className="text-red-400" />
-                              </button>
                             </div>
                           ))}
                         </div>
