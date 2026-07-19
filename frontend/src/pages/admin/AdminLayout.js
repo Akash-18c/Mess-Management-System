@@ -95,8 +95,8 @@ export default function AdminLayout() {
     <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #070c1a 0%, #050b16 50%, #070c1a 100%)' }}>
       {/* Ambient background */}
       <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '-15%', left: '10%', width: '50vw', height: '50vw', maxWidth: 600, maxHeight: 600, background: 'radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 65%)', borderRadius: '50%', filter: 'blur(60px)' }} />
-        <div style={{ position: 'absolute', bottom: '-10%', right: '5%', width: '40vw', height: '40vw', maxWidth: 480, maxHeight: 480, background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 65%)', borderRadius: '50%', filter: 'blur(60px)' }} />
+        <div style={{ position: 'absolute', top: '-15%', left: '10%', width: '50vw', height: '50vw', maxWidth: 600, maxHeight: 600, background: 'radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 65%)', borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', bottom: '-10%', right: '5%', width: '40vw', height: '40vw', maxWidth: 480, maxHeight: 480, background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 65%)', borderRadius: '50%' }} />
       </div>
 
       <aside className="hidden lg:flex flex-col w-64 relative z-10 flex-shrink-0" style={sidebarStyle}>
@@ -121,7 +121,7 @@ export default function AdminLayout() {
           </div>
           <span className="badge-admin">Admin</span>
         </header>
-        <main className="flex-1 overflow-y-auto"><div className="p-4 lg:p-6"><Outlet /></div></main>
+        <main className="flex-1 overflow-y-auto bg-[#070c1a]"><div className="p-4 lg:p-6"><Outlet /></div></main>
       </div>
     </div>
   );

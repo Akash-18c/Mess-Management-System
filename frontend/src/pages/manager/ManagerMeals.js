@@ -8,10 +8,9 @@ const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 const glass = {
-  background: 'rgba(255,255,255,0.04)',
-  backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+  background: 'rgba(255,255,255,0.06)',
   border: '1px solid rgba(255,255,255,0.10)',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
 };
 
 // ── Scroll-safe tap hook ──────────────────────────────────────────────────────
@@ -64,20 +63,29 @@ export default function ManagerMeals() {
   const isLiveMonth = month === curMonth && year === curYear;
   const daysInMonth = new Date(year, month, 0).getDate();
 
-  // Get the active month config (startDate/endDate) for current month
   const activeMonthCfg = activeMonths.find(m => m.month === month && m.year === year);
   const rangeStart = activeMonthCfg?.startDate || null;
   const rangeEnd   = activeMonthCfg?.endDate   || null;
 
-  // Editable if: explicit open-month record exists OR manager has an assignment for this month
+  // canEdit: open-month record exists OR manager has assignment for this month
   const canEdit = !!activeMonthCfg || (myAssignment?.month === month && myAssignment?.year === year);
 
+  // A date is in range only if within admin-set start/end (if set)
   const isDateInRange = (dateStr) => {
     if (!rangeStart && !rangeEnd) return true;
     if (rangeStart && dateStr < rangeStart) return false;
     if (rangeEnd   && dateStr > rangeEnd)   return false;
     return true;
   };
+
+  // When month/assignment loads, snap selectedDate into range if it's outside
+  useEffect(() => {
+    if (!rangeStart && !rangeEnd) return;
+    if (!isDateInRange(selectedDate)) {
+      setSelectedDate(rangeStart || todayLocal);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rangeStart, rangeEnd]);
 
   const loadData = useCallback(async () => {
     const [memsRes, mealsRes, activeRes, assignRes] = await Promise.all([
