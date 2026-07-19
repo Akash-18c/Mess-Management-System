@@ -355,18 +355,23 @@ router.post('/close-month/:month/:year', async (req, res) => {
 // Open a month for manager access
 router.post('/open-month/:month/:year', async (req, res) => {
   try {
-    const { month, year } = req.params;
     const { managerId, startDate, endDate } = req.body;
+    // If startDate provided, derive month/year from it (supports cross-month ranges)
+    let month = parseInt(req.params.month);
+    let year  = parseInt(req.params.year);
+    if (startDate) {
+      const d = new Date(startDate + 'T00:00:00');
+      month = d.getMonth() + 1;
+      year  = d.getFullYear();
+    }
     const updateFields = { isOpen: true, isClosed: false, openedAt: new Date() };
-    if (startDate) updateFields.startDate = startDate;
-    if (endDate)   updateFields.endDate   = endDate;
-    // upsert summary with isOpen=true
+    updateFields.startDate = startDate || null;
+    updateFields.endDate   = endDate   || null;
     const summary = await MonthlySummary.findOneAndUpdate(
       { month, year },
       updateFields,
       { new: true, upsert: true }
     );
-    // assign manager if provided
     if (managerId) {
       const existing = await MonthAssignment.findOne({ month, year });
       if (existing) {

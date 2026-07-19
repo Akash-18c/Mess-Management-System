@@ -58,18 +58,40 @@ export default function ManagerMeals() {
   const [members, setMembers]           = useState([]);
   const [mealData, setMealData]         = useState({});
   const [selectedDate, setSelectedDate] = useState(todayLocal);
+  const [activeMonths, setActiveMonths] = useState([]);
   const pendingRef  = useRef({});
   const calendarRef = useRef(null);
 
   const isLiveMonth = month === curMonth && year === curYear;
   const daysInMonth = new Date(year, month, 0).getDate();
 
+  // Get the active month config (startDate/endDate) for current month
+  const activeMonthCfg = activeMonths.find(m => m.month === month && m.year === year);
+  const rangeStart = activeMonthCfg?.startDate || null;
+  const rangeEnd   = activeMonthCfg?.endDate   || null;
+
+  // Period is editable if today falls within the active date range (or no range set = full month)
+  const todayInRange = (() => {
+    if (!rangeStart && !rangeEnd) return isLiveMonth;
+    return todayLocal >= (rangeStart || '0000-00-00') && todayLocal <= (rangeEnd || '9999-99-99');
+  })();
+  const canEdit = todayInRange && !!activeMonthCfg;
+
+  const isDateInRange = (dateStr) => {
+    if (!rangeStart && !rangeEnd) return true;
+    if (rangeStart && dateStr < rangeStart) return false;
+    if (rangeEnd   && dateStr > rangeEnd)   return false;
+    return true;
+  };
+
   const loadData = useCallback(async () => {
-    const [memsRes, mealsRes] = await Promise.all([
+    const [memsRes, mealsRes, activeRes] = await Promise.all([
       api.get('/members'),
       api.get(`/meals/${month}/${year}`),
+      api.get('/admin/active-months'),
     ]);
     setMembers(memsRes.data);
+    setActiveMonths(activeRes.data || []);
     const map = {};
     mealsRes.data.forEach(m => {
       map[`${m.memberId?._id}_${m.date?.slice(0,10)}`] = m;
@@ -113,7 +135,7 @@ export default function ManagerMeals() {
   };
 
   const toggleMeal = (memberId, type) => {
-    if (!isLiveMonth) return;
+    if (!canEdit) return;
     const key = `${memberId}_${selectedDate}`;
     const cur = mealData[key] || {};
     if (cur.isOff) return;
@@ -123,7 +145,7 @@ export default function ManagerMeals() {
   };
 
   const toggleOff = (memberId) => {
-    if (!isLiveMonth) return;
+    if (!canEdit) return;
     const key = `${memberId}_${selectedDate}`;
     const cur = mealData[key] || {};
     const isOff = !cur.isOff;
@@ -133,7 +155,7 @@ export default function ManagerMeals() {
   };
 
   const changeGuest = (memberId, delta) => {
-    if (!isLiveMonth) return;
+    if (!canEdit) return;
     const key = `${memberId}_${selectedDate}`;
     const cur = mealData[key] || {};
     if (cur.isOff) return;
@@ -148,7 +170,8 @@ export default function ManagerMeals() {
   const days = Array.from({ length: daysInMonth }, (_, i) => {
     const d = new Date(year, month-1, i+1);
     const p = n => String(n).padStart(2,'0');
-    return { num: i+1, dateStr: `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`, dayIdx: d.getDay() };
+    const dateStr = `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+    return { num: i+1, dateStr, dayIdx: d.getDay(), inRange: isDateInRange(dateStr) };
   });
 
   const p2 = n => String(n).padStart(2,'0');
@@ -167,7 +190,7 @@ export default function ManagerMeals() {
         <div>
           <h1 className="text-base font-bold text-white">Daily Meals</h1>
           <p className="text-[10px] text-slate-500 mt-0.5">
-            {isLiveMonth ? 'Mark attendance for each member' : 'View only — current month only'}
+            {canEdit ? 'Mark attendance for each member' : 'View only — outside active period'}
           </p>
         </div>
         <div className="flex items-center gap-1 rounded-xl p-1"
@@ -184,7 +207,7 @@ export default function ManagerMeals() {
       <div className="rounded-2xl px-2 py-2" style={glass}>
         <div ref={calendarRef} className="flex gap-0.5 overflow-x-auto"
           style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {days.map(({ num, dateStr, dayIdx }) => {
+          {days.map(({ num, dateStr, dayIdx, inRange }) => {
             const isSel   = dateStr === selectedDate;
             const isToday = dateStr === todayStr;
             const hasMeal = members.some(m => {
@@ -193,7 +216,7 @@ export default function ManagerMeals() {
             });
             return (
               <CalDay key={num} num={num} dayIdx={dayIdx} isSel={isSel} isToday={isToday}
-                hasMeal={hasMeal} onSelect={() => setSelectedDate(dateStr)} />
+                hasMeal={hasMeal} inRange={inRange} onSelect={() => inRange && setSelectedDate(dateStr)} />
             );
           })}
         </div>
@@ -220,11 +243,11 @@ export default function ManagerMeals() {
         </div>
       </div>
 
-      {!isLiveMonth && (
+      {!canEdit && (
         <div className="rounded-2xl px-4 py-2.5 flex items-center gap-2"
           style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)' }}>
           <span className="text-amber-400">👁</span>
-          <p className="text-amber-300 text-xs font-medium">View only — editing allowed in current month only</p>
+          <p className="text-amber-300 text-xs font-medium">View only — editing allowed within the active mess period only</p>
         </div>
       )}
 
@@ -241,7 +264,7 @@ export default function ManagerMeals() {
               key={m._id}
               member={m}
               data={mealData[`${m._id}_${selectedDate}`] || {}}
-              isLive={isLiveMonth}
+              isLive={canEdit}
               onToggleMeal={toggleMeal}
               onToggleOff={toggleOff}
               onChangeGuest={changeGuest}
@@ -265,13 +288,15 @@ function MonthBtn({ action, children }) {
 }
 
 // ── Calendar day button ───────────────────────────────────────────────────────
-function CalDay({ num, dayIdx, isSel, isToday, hasMeal, onSelect }) {
-  const tap = useSafeTap(onSelect);
+function CalDay({ num, dayIdx, isSel, isToday, hasMeal, inRange, onSelect }) {
+  const tap = useSafeTap(onSelect, !inRange);
   return (
     <button {...tap} data-today={isToday ? 'true' : undefined}
       className="flex flex-col items-center flex-shrink-0 rounded-xl"
       style={{
         width: 44, padding: '7px 4px',
+        opacity: inRange === false ? 0.25 : 1,
+        cursor: inRange === false ? 'not-allowed' : 'pointer',
         background: isSel
           ? 'linear-gradient(160deg,#10b981,#059669)'
           : isToday
