@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import api from '../../api';
+import useActivePeriod from '../../hooks/useActivePeriod';
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
@@ -36,6 +37,23 @@ export default function MemberMeals() {
   const [mealData, setMealData] = useState({});
   const [selectedDate, setSelectedDate] = useState(todayLocal);
 
+  const { period } = useActivePeriod();
+  const rangeStart = period?.startDate || null;
+  const rangeEnd   = period?.endDate   || null;
+
+  // Sync to active period month when it loads
+  useEffect(() => {
+    if (period) { setMonth(period.month); setYear(period.year); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period?.month, period?.year]);
+
+  const isDateInRange = (dateStr) => {
+    if (!rangeStart && !rangeEnd) return true;
+    if (rangeStart && dateStr < rangeStart) return false;
+    if (rangeEnd   && dateStr > rangeEnd)   return false;
+    return true;
+  };
+
   const daysInMonth = new Date(year, month, 0).getDate();
 
   const loadData = useCallback(async () => {
@@ -65,7 +83,7 @@ export default function MemberMeals() {
     const d = new Date(year, month - 1, i + 1);
     const pad = n => String(n).padStart(2, '0');
     const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    return { num: i + 1, dateStr, dayIdx: d.getDay() };
+    return { num: i + 1, dateStr, dayIdx: d.getDay(), inRange: isDateInRange(dateStr) };
   });
 
   const pad = n => String(n).padStart(2, '0');
@@ -111,10 +129,21 @@ export default function MemberMeals() {
         <p className="text-blue-300 text-xs font-medium">View only — only the manager can edit meal records</p>
       </div>
 
+      {/* ── Period banner ── */}
+      {rangeStart && rangeEnd && (
+        <div className="rounded-xl px-4 py-2.5 flex items-center gap-2"
+          style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.18)' }}>
+          <span className="text-green-400 text-xs">📅</span>
+          <p className="text-green-300 text-xs font-medium">
+            Active period: {new Date(rangeStart+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'})} → {new Date(rangeEnd+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+          </p>
+        </div>
+      )}
+
       {/* ── Calendar Date Strip ── */}
       <div className="rounded-2xl p-3" style={calGlass}>
         <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }} ref={calendarRef}>
-          {days.map(({ num, dateStr, dayIdx }) => {
+          {days.map(({ num, dateStr, dayIdx, inRange }) => {
             const isSel   = dateStr === selectedDate;
             const isToday = dateStr === todayStr;
             const isSun   = dayIdx === 0;
@@ -126,11 +155,13 @@ export default function MemberMeals() {
               <button
                 key={num}
                 data-today={isToday ? 'true' : undefined}
-                onTouchEnd={touch(() => setSelectedDate(dateStr))}
-                onClick={click(() => setSelectedDate(dateStr))}
+                onTouchEnd={touch(() => inRange && setSelectedDate(dateStr))}
+                onClick={click(() => inRange && setSelectedDate(dateStr))}
                 className="flex flex-col items-center flex-shrink-0 rounded-xl"
                 style={{
                   width: '40px', padding: '7px 3px',
+                  opacity: inRange === false ? 0.25 : 1,
+                  cursor: inRange === false ? 'not-allowed' : 'pointer',
                   background: isSel ? 'linear-gradient(135deg,#10b981,#059669)' : isToday ? 'rgba(16,185,129,0.10)' : 'rgba(255,255,255,0.03)',
                   border: isSel ? '1px solid rgba(16,185,129,0.6)' : isToday ? '1px solid rgba(16,185,129,0.20)' : '1px solid rgba(255,255,255,0.06)',
                   boxShadow: isSel ? '0 4px 12px rgba(16,185,129,0.30)' : 'none',

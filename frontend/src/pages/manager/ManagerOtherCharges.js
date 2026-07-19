@@ -2,10 +2,9 @@ import React, { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, Pencil, X, Check, Receipt } from 'lucide-react';
 import api from '../../api';
+import useActivePeriod from '../../hooks/useActivePeriod';
 
-const now   = new Date();
-const MONTH = now.getMonth() + 1;
-const YEAR  = now.getFullYear();
+const now = new Date();
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || '—'); };
 
 const cardGlass = {
@@ -33,8 +32,6 @@ const inputStyle = {
   outline: 'none',
 };
 
-const EMPTY = { memberId: '', reason: '', amount: '', date: now.toISOString().slice(0, 10) };
-
 const AVATAR_COLORS = [
   ['rgba(245,158,11,0.25)', '#fbbf24'],
   ['rgba(16,185,129,0.25)', '#34d399'],
@@ -45,23 +42,38 @@ const AVATAR_COLORS = [
 ];
 
 export default function ManagerOtherCharges() {
+  const { period } = useActivePeriod();
+  const MONTH = period?.month || now.getMonth() + 1;
+  const YEAR  = period?.year  || now.getFullYear();
+  const rangeStart = period?.startDate || null;
+  const rangeEnd   = period?.endDate   || null;
+
+  const clampDate = (d) => {
+    if (!d) return rangeStart || now.toISOString().slice(0, 10);
+    if (rangeStart && d < rangeStart) return rangeStart;
+    if (rangeEnd   && d > rangeEnd)   return rangeEnd;
+    return d;
+  };
+
+  const makeEmpty = () => ({ memberId: '', reason: '', amount: '', date: clampDate(now.toISOString().slice(0, 10)) });
+
   const [charges, setCharges] = useState([]);
   const [members, setMembers] = useState([]);
   const [modal,   setModal]   = useState(false);
   const [editId,  setEditId]  = useState(null);
-  const [form,    setForm]    = useState(EMPTY);
+  const [form,    setForm]    = useState({ memberId: '', reason: '', amount: '', date: now.toISOString().slice(0, 10) });
   const [loading, setLoading] = useState(false);
 
   const f = v => setForm(p => ({ ...p, ...v }));
 
   const load = useCallback(() => {
     api.get(`/expenses/charges/${MONTH}/${YEAR}`).then(r => setCharges(r.data)).catch(() => {});
-    api.get('/members').then(r => setMembers(r.data.filter(m => m.isActive && m.role !== 'admin'))).catch(() => {});
-  }, []);
+    api.get('/member/members-list').then(r => setMembers(r.data.filter(m => m.isActive && m.role !== 'admin'))).catch(() => {});
+  }, [MONTH, YEAR]);
 
   useEffect(() => { load(); }, [load]);
 
-  const openAdd  = () => { setEditId(null); setForm(EMPTY); setModal(true); };
+  const openAdd  = () => { setEditId(null); setForm(makeEmpty()); setModal(true); };
   const openEdit = (c) => {
     setEditId(c._id);
     setForm({ memberId: c.memberId?._id || c.memberId, reason: c.reason, amount: c.amount, date: c.date?.slice(0, 10) || now.toISOString().slice(0, 10) });
@@ -96,7 +108,7 @@ export default function ManagerOtherCharges() {
   };
 
   const grouped = {};
-  charges.forEach((c, i) => {
+  charges.forEach((c) => {
     const mid = c.memberId?._id || c.memberId;
     if (!grouped[mid]) grouped[mid] = { member: c.memberId, items: [], idx: Object.keys(grouped).length };
     grouped[mid].items.push(c);
@@ -127,6 +139,17 @@ export default function ManagerOtherCharges() {
           </button>
         </div>
       </div>
+
+      {/* ── Period banner ── */}
+      {rangeStart && rangeEnd && (
+        <div className="rounded-xl px-4 py-2.5 flex items-center gap-2"
+          style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)' }}>
+          <span className="text-amber-400 text-xs">📅</span>
+          <p className="text-amber-300 text-xs font-medium">
+            Active period: {new Date(rangeStart+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'})} → {new Date(rangeEnd+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+          </p>
+        </div>
+      )}
 
       {/* ── Summary pill ── */}
       {charges.length > 0 && (
@@ -168,7 +191,7 @@ export default function ManagerOtherCharges() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-bold text-amber-400">₹{memberTotal.toFixed(0)}</span>
-                  <button onClick={() => { setEditId(null); setForm({ ...EMPTY, memberId: member?._id }); setModal(true); }}
+                  <button onClick={() => { setEditId(null); setForm({ ...makeEmpty(), memberId: member?._id }); setModal(true); }}
                     className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-95"
                     style={{ background: 'rgba(245,158,11,0.18)', border: '1px solid rgba(245,158,11,0.35)', color: '#fbbf24' }}>
                     <Plus size={14} />
@@ -231,6 +254,18 @@ export default function ManagerOtherCharges() {
             </div>
 
             <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
+
+              {/* Period info */}
+              {rangeStart && rangeEnd && (
+                <div className="rounded-xl px-3 py-2 flex items-center gap-2"
+                  style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.20)' }}>
+                  <span className="text-amber-400 text-xs">📅</span>
+                  <p className="text-amber-300 text-xs font-medium">
+                    Period: {new Date(rangeStart+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'})} → {new Date(rangeEnd+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+                  </p>
+                </div>
+              )}
+
               {!editId && (
                 <div>
                   <label className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-2 block">Member</label>
@@ -274,6 +309,7 @@ export default function ManagerOtherCharges() {
                 <div>
                   <label className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1.5 block">Date</label>
                   <input style={{ ...inputStyle, colorScheme: 'dark' }} type="date"
+                    min={rangeStart || undefined} max={rangeEnd || undefined}
                     value={form.date} onChange={e => f({ date: e.target.value })} required />
                 </div>
               </div>

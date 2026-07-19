@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { RefreshCw, ChevronDown, Calendar, Check } from 'lucide-react';
 import api from '../../api';
+import useActivePeriod from '../../hooks/useActivePeriod';
 
 const now = new Date();
 const CUR_MONTH = now.getMonth() + 1;
@@ -30,6 +31,12 @@ function buildMonthOptions() {
 }
 
 export default function ManagerBills() {
+  const { period } = useActivePeriod();
+  const activePeriodMonth = period?.month || CUR_MONTH;
+  const activePeriodYear  = period?.year  || CUR_YEAR;
+  const rangeStart = period?.startDate || null;
+  const rangeEnd   = period?.endDate   || null;
+
   const [month,      setMonth]      = useState(CUR_MONTH);
   const [year,       setYear]       = useState(CUR_YEAR);
   const [bills,      setBills]      = useState([]);
@@ -38,9 +45,17 @@ export default function ManagerBills() {
   const [dropOpen,   setDropOpen]   = useState(false);
   const dropRef = useRef(null);
 
+  // Sync to active period when it loads
+  useEffect(() => {
+    if (period) { setMonth(period.month); setYear(period.year); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period?.month, period?.year]);
+
+  // Month options: active period month + past 12 (for history)
   const monthOpts = buildMonthOptions();
   const selectedLabel = `${MONTHS_FULL[month - 1]} ${year}`;
-  const isCurrent = month === CUR_MONTH && year === CUR_YEAR;
+  const isCurrent = month === activePeriodMonth && year === activePeriodYear;
+  const isActivePeriod = month === activePeriodMonth && year === activePeriodYear;
 
   // close on outside click/touch
   useEffect(() => {
@@ -119,8 +134,14 @@ export default function ManagerBills() {
               <p className="text-white font-bold text-sm leading-tight">{selectedLabel}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {isCurrent && (
+            <div className="flex items-center gap-2 flex-shrink-0">
+            {isActivePeriod && (
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }}>
+                ACTIVE
+              </span>
+            )}
+            {isCurrent && !isActivePeriod && (
               <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
                 style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }}>
                 LIVE
@@ -176,7 +197,13 @@ export default function ManagerBills() {
                       <span className="text-xs text-slate-600">{y}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {isCur && (
+                      {m === activePeriodMonth && y === activePeriodYear && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                          style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.20)' }}>
+                          ACTIVE
+                        </span>
+                      )}
+                      {m === CUR_MONTH && y === CUR_YEAR && !(m === activePeriodMonth && y === activePeriodYear) && (
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
                           style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.20)' }}>
                           LIVE

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, X, ShoppingCart, Layers, ChevronDown, Pencil, Calendar, Search } from 'lucide-react';
 import api from '../../api';
+import useActivePeriod from '../../hooks/useActivePeriod';
 
 const now = new Date();
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -12,8 +13,9 @@ const OTHER_CATS = [
   { id: 'Other',        emoji: '📦', label: 'Other'        },
 ];
 
-const EMPTY_G = { item:'', unitPrice:'', buyerName:'', date: now.toISOString().slice(0,10), meal:'Lunch' };
-const EMPTY_O = { categoryName:'Gas Cylinder', description:'', amount:'', paidBy:'', date: now.toISOString().slice(0,10), note:'', status:'Due' };
+const todayStr = now.toISOString().slice(0,10);
+const EMPTY_G = { item:'', unitPrice:'', buyerName:'', date: todayStr, meal:'Lunch' };
+const EMPTY_O = { categoryName:'Gas Cylinder', description:'', amount:'', paidBy:'', date: todayStr, note:'', status:'Due' };
 
 const glass = {
   background: 'rgba(255,255,255,0.04)',
@@ -50,6 +52,12 @@ function StatusBadge({ status, onClick }) {
 }
 
 export default function ManagerExpenses() {
+  const { period } = useActivePeriod();
+  const periodMonth = period?.month || now.getMonth() + 1;
+  const periodYear  = period?.year  || now.getFullYear();
+  const rangeStart  = period?.startDate || null;
+  const rangeEnd    = period?.endDate   || null;
+
   const [month,      setMonth]      = useState(now.getMonth() + 1);
   const [year,       setYear]       = useState(now.getFullYear());
   const [tab,        setTab]        = useState('grocery');
@@ -81,6 +89,12 @@ export default function ManagerExpenses() {
     api.get(`/expenses/grocery/${month}/${year}`).then(r => setGroceries(r.data)).catch(() => {});
     api.get(`/expenses/other/${month}/${year}`).then(r => setOthers(r.data)).catch(() => {});
   }, [month, year]);
+
+  // Sync month/year to active period when it loads
+  useEffect(() => {
+    if (period) { setMonth(period.month); setYear(period.year); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period?.month, period?.year]);
 
   useEffect(() => { load(); setSelDate('all'); }, [load]);
 
@@ -121,20 +135,28 @@ export default function ManagerExpenses() {
   const groups = buildGroups(filteredGroceries);
   const dateGroups = buildDateGroups(filteredGroceries);
 
-  // month options: current month + past 12
-  const monthOpts = [];
-  for (let i = 0; i <= 12; i++) {
-    let m = now.getMonth() + 1 - i, y = now.getFullYear();
-    while (m <= 0) { m += 12; y--; }
-    monthOpts.push({ m, y });
-  }
+  // month options: only the active period month (if set), else current + past 12
+  const monthOpts = period
+    ? [{ m: period.month, y: period.year }]
+    : (() => { const opts = []; for (let i = 0; i <= 12; i++) { let m = now.getMonth()+1-i, y = now.getFullYear(); while(m<=0){m+=12;y--;} opts.push({m,y}); } return opts; })();
 
   const gTotal = filteredGroceries.reduce((s,g) => s + (g.total||g.unitPrice||0), 0);
   const oTotal = filteredOthers.reduce((s,o) => s + o.amount, 0);
 
+  // Clamp a date string to the active period range
+  const clampDate = (d) => {
+    if (!d) return rangeStart || todayStr;
+    if (rangeStart && d < rangeStart) return rangeStart;
+    if (rangeEnd   && d > rangeEnd)   return rangeEnd;
+    return d;
+  };
+
   const openAdd = () => {
     setEditId(null);
-    setForm(tab === 'grocery' ? EMPTY_G : EMPTY_O);
+    const defaultDate = clampDate(todayStr);
+    setForm(tab === 'grocery'
+      ? { ...EMPTY_G, date: defaultDate }
+      : { ...EMPTY_O, date: defaultDate });
     setModal(true);
   };
 
@@ -455,6 +477,16 @@ export default function ManagerExpenses() {
             </div>
 
             <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3 overflow-y-auto max-h-[80vh]">
+              {/* Period info banner */}
+              {rangeStart && rangeEnd && (
+                <div className="rounded-xl px-3 py-2 flex items-center gap-2"
+                  style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.20)' }}>
+                  <span className="text-green-400 text-xs">📅</span>
+                  <p className="text-green-300 text-xs font-medium">
+                    Period: {new Date(rangeStart+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'})} → {new Date(rangeEnd+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+                  </p>
+                </div>
+              )}
               {tab === 'grocery' ? (
                 <>
                   <div>
@@ -468,7 +500,9 @@ export default function ManagerExpenses() {
                     </div>
                     <div>
                       <label className="label text-xs">Date</label>
-                      <input className="input" type="date" value={form.date} onChange={e => f({ date: e.target.value })} required />
+                      <input className="input" type="date" value={form.date}
+                        min={rangeStart || undefined} max={rangeEnd || undefined}
+                        onChange={e => f({ date: e.target.value })} required />
                     </div>
                   </div>
                   <div>
@@ -525,7 +559,9 @@ export default function ManagerExpenses() {
                     </div>
                     <div>
                       <label className="label text-xs">Date</label>
-                      <input className="input" type="date" value={form.date} onChange={e => f({ date: e.target.value })} required />
+                      <input className="input" type="date" value={form.date}
+                        min={rangeStart || undefined} max={rangeEnd || undefined}
+                        onChange={e => f({ date: e.target.value })} required />
                     </div>
                     <div>
                       <label className="label text-xs">Paid By <span className="text-slate-600">(optional)</span></label>

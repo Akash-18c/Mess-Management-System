@@ -2,10 +2,9 @@ import React, { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, X, Pencil, ChevronDown, ChevronUp, Banknote, Smartphone, Building2 } from 'lucide-react';
 import api from '../../api';
+import useActivePeriod from '../../hooks/useActivePeriod';
 
-const now   = new Date();
-const MONTH = now.getMonth() + 1;
-const YEAR  = now.getFullYear();
+const now = new Date();
 const EMPTY = { memberId: '', amount: '', method: 'Cash', date: now.toISOString().slice(0, 10), note: '' };
 const rn    = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
@@ -50,6 +49,19 @@ const AVATAR_COLORS = [
 ];
 
 export default function ManagerPayments() {
+  const { period } = useActivePeriod();
+  const MONTH = period?.month || now.getMonth() + 1;
+  const YEAR  = period?.year  || now.getFullYear();
+  const rangeStart = period?.startDate || null;
+  const rangeEnd   = period?.endDate   || null;
+
+  const clampDate = (d) => {
+    if (!d) return rangeStart || now.toISOString().slice(0, 10);
+    if (rangeStart && d < rangeStart) return rangeStart;
+    if (rangeEnd   && d > rangeEnd)   return rangeEnd;
+    return d;
+  };
+
   const [payments,       setPayments]       = useState([]);
   const [members,        setMembers]        = useState([]);
   const [modal,          setModal]          = useState(false);
@@ -63,8 +75,8 @@ export default function ManagerPayments() {
 
   const load = useCallback(() => {
     api.get(`/payments/${MONTH}/${YEAR}`).then(r => setPayments(r.data)).catch(() => {});
-    api.get('/members').then(r => setMembers(r.data)).catch(() => {});
-  }, []);
+    api.get('/member/members-list').then(r => setMembers(r.data)).catch(() => {});
+  }, [MONTH, YEAR]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { const t = setInterval(load, 30000); return () => clearInterval(t); }, [load]);
@@ -82,7 +94,7 @@ export default function ManagerPayments() {
 
   const total = payments.reduce((s, p) => s + p.amount, 0);
 
-  const openAdd  = (memberId = '') => { setEditId(null); setForm({ ...EMPTY, memberId }); setModal(true); };
+  const openAdd  = (memberId = '') => { setEditId(null); setForm({ ...EMPTY, memberId, date: clampDate(now.toISOString().slice(0,10)) }); setModal(true); };
   const openEdit = (p) => {
     setEditId(p._id);
     setForm({ memberId: p.memberId?._id || '', amount: p.amount, method: p.method || 'Cash', date: p.date?.slice(0, 10) || now.toISOString().slice(0, 10), note: p.note || '' });
@@ -403,6 +415,7 @@ export default function ManagerPayments() {
                 <div>
                   <label className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1.5 block">Date</label>
                   <input style={{ ...inputStyle, colorScheme: 'dark' }} type="date"
+                    min={rangeStart || undefined} max={rangeEnd || undefined}
                     value={form.date} onChange={e => f({ date: e.target.value })} required />
                 </div>
               </div>
