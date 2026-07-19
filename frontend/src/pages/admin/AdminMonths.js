@@ -1,10 +1,10 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Lock, Unlock, Plus, X, CalendarDays, Sparkles, Pencil, Trash2, UserCog, ArrowRight } from 'lucide-react';
 import api from '../../api';
 
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || 'â€”'); };
+const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || '—'); };
 const fmtDate = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '?';
 const fmtShort = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '?';
 
@@ -54,7 +54,6 @@ export default function AdminMonths() {
     setModal('edit');
   };
 
-  // Derive month/year from startDate
   const deriveMonthYear = (startDate) => {
     if (!startDate) return { month: now.getMonth() + 1, year: now.getFullYear() };
     const d = new Date(startDate + 'T00:00:00');
@@ -75,14 +74,14 @@ export default function AdminMonths() {
         startDate: form.startDate,
         endDate:   form.endDate,
       });
-      toast.success(modal === 'edit' ? 'Period updated' : `Mess period opened`);
+      toast.success(modal === 'edit' ? 'Period updated' : 'Mess period opened');
       setModal(false); load();
     } catch (err) { toast.error(err.response?.data?.message || 'Error'); }
     finally { setLoading(false); }
   };
 
   const closeMonth = async (month, year) => {
-    if (!window.confirm(`Lock this mess period? This will prevent manager edits.`)) return;
+    if (!window.confirm('Lock this mess period? This will prevent manager edits.')) return;
     try { await api.post(`/admin/close-month/${month}/${year}`); toast.success('Period locked'); load(); }
     catch { toast.error('Error'); }
   };
@@ -107,14 +106,14 @@ export default function AdminMonths() {
   const closedMonths = months.filter(m => m.isClosed);
 
   const periodLabel = (m) => {
-    if (m.startDate && m.endDate) return `${fmtShort(m.startDate)} â†’ ${fmtShort(m.endDate)}`;
+    if (m.startDate && m.endDate) return `${fmtShort(m.startDate)} → ${fmtShort(m.endDate)}`;
     return `${MONTHS_FULL[m.month - 1]} ${m.year}`;
   };
 
   return (
     <div className="space-y-5">
 
-      {/* â”€â”€ Header â”€â”€ */}
+      {/* Header */}
       <div className="rounded-2xl p-4 px-5 flex items-center justify-between gap-3" style={glass}>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -127,31 +126,31 @@ export default function AdminMonths() {
               lineHeight: 1.2,
             }}>Month Control</h1>
           </div>
-          <p className="text-slate-500 text-[11px] mt-0.5 pl-5">Set mess periods with custom date ranges Â· Lock to finalize</p>
+          <p className="text-slate-500 text-[11px] mt-0.5 pl-5">Set mess periods with custom date ranges · Lock to finalize</p>
         </div>
         <button onClick={openAdd} className="btn-primary flex items-center gap-1.5 text-xs px-3 py-2 flex-shrink-0">
           <Plus size={14} /> New Period
         </button>
       </div>
 
-      {/* â”€â”€ How it works info â”€â”€ */}
+      {/* Info banner */}
       <div className="rounded-xl px-4 py-3 flex items-start gap-3"
         style={{ background: 'rgba(45,212,191,0.06)', border: '1px solid rgba(45,212,191,0.18)' }}>
         <CalendarDays size={14} className="text-teal-400 flex-shrink-0 mt-0.5" />
         <p className="text-slate-400 text-xs leading-relaxed">
           Set a <span className="text-teal-300 font-semibold">start date</span> and <span className="text-teal-300 font-semibold">end date</span> for each mess period.
-          The period can span across months â€” e.g. <span className="text-white">23 Jul â†’ 31 Aug</span>.
+          The period can span across months — e.g. <span className="text-white">23 Jul → 31 Aug</span>.
           Meal entry and all reports will be restricted to this date range.
         </p>
       </div>
 
-      {/* â”€â”€ Active / Open â”€â”€ */}
+      {/* Active Periods */}
       <div>
         <p className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mb-2.5 pl-1">Active Periods</p>
         <div className="space-y-2">
           {openMonths.length === 0 && (
             <div className="rounded-2xl py-8 text-center text-slate-600 text-sm" style={glass}>
-              No active periods â€” click "New Period" to open one
+              No active periods — click "New Period" to open one
             </div>
           )}
           {openMonths.map(m => (
@@ -164,7 +163,6 @@ export default function AdminMonths() {
                     <CalendarDays size={16} style={{ color: '#34d399' }} />
                   </div>
                   <div className="min-w-0">
-                    {/* Date range â€” prominent */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
                       {m.startDate && m.endDate ? (
@@ -181,11 +179,10 @@ export default function AdminMonths() {
                         ACTIVE
                       </span>
                     </div>
-                    {/* Sub info */}
                     <p className="text-[11px] text-slate-500 mt-1">
                       {MONTHS_FULL[m.month - 1]} {m.year}
-                      {m.manager && <span> Â· Manager: <span className="text-slate-300">{rn(m.manager.name)}</span></span>}
-                      {!m.manager && <span> Â· <span className="text-slate-600">No manager assigned</span></span>}
+                      {m.manager && <span> · Manager: <span className="text-slate-300">{rn(m.manager.name)}</span></span>}
+                      {!m.manager && <span> · <span className="text-slate-600">No manager assigned</span></span>}
                     </p>
                   </div>
                 </div>
@@ -213,7 +210,7 @@ export default function AdminMonths() {
         </div>
       </div>
 
-      {/* â”€â”€ Locked Periods â”€â”€ */}
+      {/* Locked Periods */}
       {closedMonths.length > 0 && (
         <div>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2.5 pl-1">Locked Periods</p>
@@ -254,10 +251,10 @@ export default function AdminMonths() {
                             </span>
                             <span className="text-slate-300 text-sm">{rn(m.manager.name)}</span>
                           </div>
-                        ) : <span className="text-slate-600 text-sm">â€”</span>}
+                        ) : <span className="text-slate-600 text-sm">—</span>}
                       </td>
                       <td className="py-3 px-4 text-slate-400 text-sm hidden md:table-cell">
-                        {m.closedAt ? new Date(m.closedAt).toLocaleDateString('en-IN') : 'â€”'}
+                        {m.closedAt ? new Date(m.closedAt).toLocaleDateString('en-IN') : '—'}
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-end gap-1.5">
@@ -282,7 +279,7 @@ export default function AdminMonths() {
         </div>
       )}
 
-      {/* â”€â”€ Add / Edit Modal â”€â”€ */}
+      {/* Add / Edit Modal */}
       {modal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
           style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
@@ -304,7 +301,7 @@ export default function AdminMonths() {
 
             <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
 
-              {/* Date range â€” required */}
+              {/* Date range */}
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Mess Period Dates <span className="text-red-400">*</span></p>
                 <div className="grid grid-cols-2 gap-3">
@@ -325,7 +322,7 @@ export default function AdminMonths() {
                     style={{ background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.20)' }}>
                     <ArrowRight size={12} className="text-teal-400 flex-shrink-0" />
                     <p className="text-teal-300 text-xs font-semibold">
-                      {fmtDate(form.startDate)} â†’ {fmtDate(form.endDate)}
+                      {fmtDate(form.startDate)} → {fmtDate(form.endDate)}
                     </p>
                     <span className="text-slate-500 text-[10px] ml-auto">
                       {Math.ceil((new Date(form.endDate) - new Date(form.startDate)) / 86400000) + 1} days
@@ -348,21 +345,21 @@ export default function AdminMonths() {
                 <div className="relative">
                   <select className="input appearance-none pr-8 cursor-pointer" value={form.managerId}
                     onChange={e => setForm({ ...form, managerId: e.target.value })}>
-                    <option value="">â€” No Manager â€”</option>
+                    <option value="">— No Manager —</option>
                     {members.map(m => (
                       <option key={m._id} value={m._id}>
-                        {rn(m.name)}{m.room ? ` Â· Room ${m.room}` : ''}
+                        {rn(m.name)}{m.room ? ` · Room ${m.room}` : ''}
                       </option>
                     ))}
                   </select>
-                  <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">â–¾</div>
+                  <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">▾</div>
                 </div>
               </div>
 
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setModal(false)} className="btn-secondary flex-1 text-sm">Cancel</button>
                 <button type="submit" className="btn-primary flex-1 text-sm" disabled={loading}>
-                  {loading ? 'Savingâ€¦' : modal === 'edit' ? 'Update' : 'Open Period'}
+                  {loading ? 'Saving...' : modal === 'edit' ? 'Update' : 'Open Period'}
                 </button>
               </div>
             </form>
@@ -370,7 +367,7 @@ export default function AdminMonths() {
         </div>
       )}
 
-      {/* â”€â”€ Delete Confirm â”€â”€ */}
+      {/* Delete Confirm */}
       {delConfirm && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
           style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
@@ -389,4 +386,3 @@ export default function AdminMonths() {
     </div>
   );
 }
-

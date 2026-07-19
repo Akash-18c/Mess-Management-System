@@ -114,15 +114,22 @@ function CustomSelect({ value, onChange, options, placeholder = '— Select —'
 export default function AdminAssignments() {
   const [assignments, setAssignments] = useState([]);
   const [members,     setMembers]     = useState([]);
+  const [openPeriods, setOpenPeriods] = useState([]);
   const [modal,       setModal]       = useState(false);
-  const [editing,     setEditing]     = useState(null);
-  const [form,        setForm]        = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), managerId: '' });
+  const [editing,     setEditing]     = useState(null); // period object being edited
+  const [form,        setForm]        = useState({ periodKey: '', managerId: '' });
   const [loading,     setLoading]     = useState(false);
   const [delConfirm,  setDelConfirm]  = useState(null);
+
+  const fmtShort = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '?';
+  const periodLabel = (p) => p.startDate && p.endDate
+    ? `${fmtShort(p.startDate)} → ${fmtShort(p.endDate)}`
+    : `${MONTHS[p.month - 1]} ${p.year}`;
 
   const load = () => Promise.all([
     api.get('/admin/assignments').then(r => setAssignments(r.data)),
     api.get('/admin/members').then(r => setMembers(r.data.filter(m => m.isActive && m.role !== 'admin'))),
+    api.get('/admin/months').then(r => setOpenPeriods(r.data.filter(m => m.isOpen && !m.isClosed))),
   ]);
   useEffect(() => { load(); }, []);
 
@@ -132,10 +139,13 @@ export default function AdminAssignments() {
     setLoading(true);
     try {
       if (editing) {
-        await api.put(`/admin/assignments/${editing}`, { managerId: form.managerId });
+        // reassign manager on existing period via open-month
+        await api.post(`/admin/open-month/${editing.month}/${editing.year}`, { managerId: form.managerId });
         toast.success('Manager reassigned');
       } else {
-        await api.post('/admin/assignments', form);
+        if (!form.periodKey) return toast.error('Please select a period');
+        const [month, year] = form.periodKey.split('-').map(Number);
+        await api.post(`/admin/open-month/${month}/${year}`, { managerId: form.managerId });
         toast.success('Manager assigned');
       }
       setModal(false); load();
@@ -144,21 +154,19 @@ export default function AdminAssignments() {
     } finally { setLoading(false); }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (a) => {
     try {
-      await api.delete(`/admin/assignments/${id}`);
-      toast.success('Assignment revoked');
+      // unassign by posting open-month with no managerId
+      await api.post(`/admin/open-month/${a.month}/${a.year}`, { managerId: null });
+      toast.success('Manager unassigned');
       setDelConfirm(null); load();
     } catch { toast.error('Error'); }
   };
 
-  const openAdd  = () => { setEditing(null); setForm({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), managerId: '' }); setModal(true); };
-  const openEdit = (a) => { setEditing(a._id); setForm({ month: a.month, year: a.year, managerId: a.managerId._id }); setModal(true); };
+  const openAdd  = () => { setEditing(null); setForm({ periodKey: '', managerId: '' }); setModal(true); };
+  const openEdit = (a) => { setEditing(a); setForm({ periodKey: `${a.month}-${a.year}`, managerId: a.managerId?._id || '' }); setModal(true); };
 
-  // Build year options
-  const currentYear = new Date().getFullYear();
-  const yearOpts = Array.from({ length: 5 }, (_, i) => ({ value: currentYear - 1 + i, label: String(currentYear - 1 + i) }));
-  const monthOpts = MONTHS.map((m, i) => ({ value: i + 1, label: m }));
+  const periodOpts = openPeriods.map(p => ({ value: `${p.month}-${p.year}`, label: periodLabel(p) }));
   const memberOpts = members.map(m => ({
     value: m._id,
     label: rn(m.name) + (m.room ? ` · Room ${m.room}` : ''),
@@ -217,7 +225,7 @@ export default function AdminAssignments() {
                         <span className="text-[9px] text-slate-500">{a.year}</span>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-white font-semibold text-sm truncate">{MONTHS[a.month - 1]} {a.year}</p>
+                        <p className="text-white font-semibold text-sm truncate">{periodLabel(a)}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold flex-shrink-0"
                             style={{ background: 'rgba(245,158,11,0.15)', color: '#fbbf24' }}>
@@ -271,7 +279,7 @@ export default function AdminAssignments() {
                             style={{ background: 'rgba(20,184,166,0.12)', border: '1px solid rgba(20,184,166,0.22)' }}>
                             <span className="text-[10px] font-bold" style={{ color: '#2dd4bf' }}>{MONTHS[a.month - 1].slice(0,3)}</span>
                           </div>
-                          <p className="text-white font-semibold">{MONTHS[a.month - 1]} {a.year}</p>
+                          <p className="text-white font-semibold">{periodLabel(a)}</p>
                         </div>
                       </td>
                       <td className="py-3 px-4">
@@ -336,35 +344,30 @@ export default function AdminAssignments() {
 
             <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
 
-              {/* Month + Year (only for new) */}
+              {/* Period selector (only for new) */}
               {!editing && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="label text-xs flex items-center gap-1.5 mb-1.5">
-                      <Calendar size={11} className="text-teal-400" /> Month
-                    </label>
+                <div>
+                  <label className="label text-xs flex items-center gap-1.5 mb-1.5">
+                    <Calendar size={11} className="text-teal-400" /> Mess Period
+                  </label>
+                  {periodOpts.length === 0 ? (
+                    <div className="rounded-xl px-3 py-3 text-center text-xs text-slate-500"
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      No open periods — create one in Month Control first
+                    </div>
+                  ) : (
                     <CustomSelect
-                      value={form.month}
-                      onChange={v => setForm({ ...form, month: v })}
-                      options={monthOpts}
+                      value={form.periodKey}
+                      onChange={v => setForm({ ...form, periodKey: v })}
+                      options={periodOpts}
+                      placeholder="— Select period —"
                       accent="#2dd4bf"
                     />
-                  </div>
-                  <div>
-                    <label className="label text-xs flex items-center gap-1.5 mb-1.5">
-                      <Calendar size={11} className="text-teal-400" /> Year
-                    </label>
-                    <CustomSelect
-                      value={form.year}
-                      onChange={v => setForm({ ...form, year: v })}
-                      options={yearOpts}
-                      accent="#2dd4bf"
-                    />
-                  </div>
+                  )}
                 </div>
               )}
 
-              {/* Editing: show locked month/year */}
+              {/* Editing: show locked period */}
               {editing && (
                 <div className="rounded-xl px-4 py-3 flex items-center gap-3"
                   style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.18)' }}>
@@ -374,7 +377,7 @@ export default function AdminAssignments() {
                   </div>
                   <div>
                     <p className="text-[10px] text-slate-500 mb-0.5">Reassigning for</p>
-                    <p className="text-white font-bold text-sm">{MONTHS[form.month - 1]} {form.year}</p>
+                    <p className="text-white font-bold text-sm">{periodLabel(editing)}</p>
                   </div>
                 </div>
               )}
@@ -411,7 +414,7 @@ export default function AdminAssignments() {
         </div>
       )}
 
-      {/* ── Delete Confirm ── */}
+      {/* Delete Confirm */}
       {delConfirm && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
           style={{ background: 'rgba(0,0,0,0.80)', backdropFilter: 'blur(8px)' }}>
@@ -422,17 +425,17 @@ export default function AdminAssignments() {
                 <Trash2 size={16} className="text-red-400" />
               </div>
               <div>
-                <h2 className="font-bold text-white">Revoke Assignment?</h2>
+                <h2 className="font-bold text-white">Unassign Manager?</h2>
                 <p className="text-slate-500 text-xs mt-0.5">This action cannot be undone</p>
               </div>
             </div>
             <p className="text-slate-400 text-sm">
               Remove <span className="text-white font-semibold">{rn(delConfirm.managerId?.name)}</span> as manager for{' '}
-              <span className="text-white font-semibold">{MONTHS[delConfirm.month - 1]} {delConfirm.year}</span>?
+              <span className="text-white font-semibold">{periodLabel(delConfirm)}</span>?
             </p>
             <div className="flex gap-3">
               <button onClick={() => setDelConfirm(null)} className="btn-secondary flex-1">Cancel</button>
-              <button onClick={() => handleDelete(delConfirm._id)} className="btn-danger flex-1">Revoke</button>
+              <button onClick={() => handleDelete(delConfirm)} className="btn-danger flex-1">Unassign</button>
             </div>
           </div>
         </div>
