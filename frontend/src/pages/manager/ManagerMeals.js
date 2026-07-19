@@ -211,7 +211,7 @@ export default function ManagerMeals() {
       {/* ── Calendar Strip ── */}
       <div className="rounded-2xl px-2 py-2" style={glass}>
         <div ref={calendarRef} className="flex gap-0.5 overflow-x-auto"
-          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+          style={{ scrollbarWidth: 'none' }}>
           {days.map(({ num, dateStr, dayIdx, inRange }) => {
             const isSel   = dateStr === selectedDate;
             const isToday = dateStr === todayStr;
@@ -313,7 +313,6 @@ function CalDay({ num, dayIdx, isSel, isToday, hasMeal, inRange, onSelect }) {
           ? '1px solid rgba(16,185,129,0.22)'
           : '1px solid transparent',
         WebkitTapHighlightColor: 'transparent',
-        transition: 'background 0.15s',
       }}>
       <span className="text-[9px] font-semibold uppercase mb-0.5"
         style={{ color: isSel ? 'rgba(255,255,255,0.65)' : dayIdx===0 ? '#f87171' : '#4b5563' }}>
@@ -354,7 +353,6 @@ function MemberCard({ member, data, isLive, onToggleMeal, onToggleOff, onChangeG
         : '1px solid rgba(255,255,255,0.08)',
       boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
       opacity: isOff ? 0.65 : 1,
-      transition: 'opacity 0.2s, border 0.2s',
     }}>
 
       {/* Row 1 — avatar + full name + status badge */}
@@ -391,7 +389,6 @@ function MemberCard({ member, data, isLive, onToggleMeal, onToggleOff, onChangeG
             border: hasLunch ? '1px solid rgba(16,185,129,0.38)' : '1px solid rgba(255,255,255,0.08)',
             color: hasLunch ? '#34d399' : '#475569',
             WebkitTapHighlightColor: 'transparent',
-            transition: 'background 0.15s, border 0.15s, color 0.15s',
           }}>
           ☀️ Lunch
         </button>
@@ -404,7 +401,6 @@ function MemberCard({ member, data, isLive, onToggleMeal, onToggleOff, onChangeG
             border: hasDinner ? '1px solid rgba(59,130,246,0.38)' : '1px solid rgba(255,255,255,0.08)',
             color: hasDinner ? '#60a5fa' : '#475569',
             WebkitTapHighlightColor: 'transparent',
-            transition: 'background 0.15s, border 0.15s, color 0.15s',
           }}>
           🌙 Dinner
         </button>
@@ -434,7 +430,6 @@ function MemberCard({ member, data, isLive, onToggleMeal, onToggleOff, onChangeG
             border: isOff ? '1px solid rgba(248,113,113,0.38)' : '1px solid rgba(255,255,255,0.08)',
             color: isOff ? '#f87171' : '#475569',
             WebkitTapHighlightColor: 'transparent',
-            transition: 'background 0.15s, border 0.15s, color 0.15s',
           }}>
           {isOff ? '✕ Off' : 'Off'}
         </button>
