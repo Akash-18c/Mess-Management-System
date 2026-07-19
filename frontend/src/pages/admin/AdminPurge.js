@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Trash2, AlertTriangle, ShieldAlert, CheckCircle2, Database, ChevronDown, Flame } from 'lucide-react';
+import { Trash2, AlertTriangle, ShieldAlert, CheckCircle2, Database, ChevronDown, Flame, UserX } from 'lucide-react';
 import api from '../../api';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -151,6 +151,34 @@ export default function AdminPurge() {
   const [allLoading, setAllLoading] = useState(false);
   const [allResult,  setAllResult]  = useState(null);
 
+  const [members,       setMembers]       = useState([]);
+  const [selMember,     setSelMember]     = useState('');
+  const [memberModal,   setMemberModal]   = useState(false);
+  const [memberLoading, setMemberLoading] = useState(false);
+  const [memberResult,  setMemberResult]  = useState(null);
+  const [memberDrop,    setMemberDrop]    = useState(false);
+
+  useEffect(() => {
+    api.get('/admin/members').then(r => setMembers(r.data.filter(m => m.role !== 'admin'))).catch(() => {});
+  }, [memberResult]);
+
+  const rn = n => { const m = n?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (n || ''); };
+  const selectedMember = members.find(m => m._id === selMember);
+  const memberPhrase = selectedMember ? `DELETE ${rn(selectedMember.name).toUpperCase()}` : '';
+
+  const handlePurgeMember = async () => {
+    setMemberLoading(true);
+    try {
+      const { data } = await api.delete(`/admin/purge-member/${selMember}`);
+      setMemberResult(data.deleted);
+      toast.success(data.message);
+      setMemberModal(false);
+      setSelMember('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Purge failed');
+    } finally { setMemberLoading(false); }
+  };
+
   const selectedLabel = `${MONTHS[month - 1]} ${year}`;
   const confirmPhrase = `DELETE ${selectedLabel.toUpperCase()}`;
   const ALL_PHRASE    = 'DELETE ALL MEMBERS';
@@ -284,6 +312,69 @@ export default function AdminPurge() {
         )}
       </div>
 
+      {/* ── Delete Single Member ── */}
+      <div className="rounded-2xl p-4 sm:p-5 space-y-4"
+        style={{ background: 'rgba(99,29,99,0.12)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', border: '1px solid rgba(232,121,249,0.22)', boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(232,121,249,0.18)', border: '1px solid rgba(232,121,249,0.30)' }}>
+            <UserX size={16} className="text-fuchsia-400" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white">Delete Single Member</p>
+            <p className="text-[10px] text-fuchsia-400 mt-0.5">Removes login credentials + all their records</p>
+          </div>
+        </div>
+        <p className="text-xs text-slate-400 leading-relaxed">
+          Deletes the member's <span className="text-white font-semibold">login credentials</span> and all their meals, payments, bills, and charges.
+        </p>
+        <div style={{ position: 'relative' }}>
+          <button type="button" onClick={() => setMemberDrop(o => !o)}
+            className="w-full flex items-center justify-between text-sm font-semibold"
+            style={{ ...glass, borderRadius: '14px', padding: '11px 14px', outline: 'none', color: selectedMember ? '#fff' : '#475569' }}>
+            <span>{selectedMember ? `${rn(selectedMember.name)}${selectedMember.room ? ` · Room ${selectedMember.room}` : ''}` : '— Select Member —'}</span>
+            <ChevronDown size={14} className="text-slate-400" style={{ transform: memberDrop ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+          </button>
+          {memberDrop && (
+            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 50, background: 'rgba(6,10,22,0.98)', border: '1px solid rgba(232,121,249,0.20)', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.8)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)' }}>
+              <div style={{ maxHeight: '200px', overflowY: 'auto', scrollbarWidth: 'thin' }}>
+                {members.length === 0 && <p className="text-slate-600 text-xs text-center py-4">No members</p>}
+                {members.map(m => (
+                  <button key={m._id} type="button"
+                    onClick={() => { setSelMember(m._id); setMemberDrop(false); setMemberResult(null); }}
+                    className="w-full text-left px-4 py-2.5 text-sm"
+                    style={{ color: selMember === m._id ? '#e879f9' : '#94a3b8', background: selMember === m._id ? 'rgba(232,121,249,0.10)' : 'transparent', borderLeft: selMember === m._id ? '2px solid #e879f9' : '2px solid transparent', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    {rn(m.name)}{m.room ? ` · Room ${m.room}` : ''}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <button onClick={() => { if (!selMember) { toast.error('Select a member first'); return; } setMemberResult(null); setMemberModal(true); }}
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm text-white"
+          style={{ background: selMember ? 'linear-gradient(135deg,#7e22ce,#a855f7,#e879f9)' : 'rgba(232,121,249,0.15)', border: '1px solid rgba(232,121,249,0.35)', boxShadow: selMember ? '0 4px 24px rgba(232,121,249,0.20)' : 'none', WebkitTapHighlightColor: 'transparent', opacity: selMember ? 1 : 0.5 }}>
+          <UserX size={15} /> Delete Member &amp; Credentials
+        </button>
+        {memberResult && (
+          <div className="rounded-2xl p-4" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.20)' }}>
+            <div className="flex items-center gap-2 mb-3">
+              <CheckCircle2 size={16} className="text-emerald-400" />
+              <p className="text-sm font-bold text-emerald-400">Member Deleted</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {Object.entries(memberResult).map(([k, v]) => (
+                <div key={k} className="rounded-xl px-3 py-2.5 flex items-center justify-between gap-2"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <span className="text-xs text-slate-400 truncate capitalize">{k}</span>
+                  <span className="text-sm font-bold text-emerald-400">{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* ── Purge All Members ── */}
       <div className="rounded-2xl p-4 sm:p-5 space-y-4"
         style={{ background: 'rgba(127,29,29,0.12)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', border: '1px solid rgba(239,68,68,0.22)', boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
@@ -327,6 +418,15 @@ export default function AdminPurge() {
       </div>
 
       {/* ── Modals ── */}
+      <ConfirmModal
+        open={memberModal}
+        onClose={() => setMemberModal(false)}
+        title="Delete Member & Credentials"
+        subtitle={selectedMember ? `${rn(selectedMember.name)} · Cannot be undone` : ''}
+        phrase={memberPhrase}
+        onConfirm={handlePurgeMember}
+        loading={memberLoading}
+      />
       <ConfirmModal
         open={modal}
         onClose={() => setModal(false)}

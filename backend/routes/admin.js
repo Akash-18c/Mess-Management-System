@@ -281,6 +281,8 @@ router.delete('/purge-all-members', async (req, res) => {
     // Re-seed default categories after purge
     const defaults = ['Rice Bag','Gas Cylinder','Fuel','Utensils','Maintenance','Miscellaneous','Internet','Water','Electricity'];
     await Promise.all(defaults.map(name => ExpenseCategory.create({ name, type: 'other', isActive: true })));
+    // Clear plainPassword from admin account too
+    await User.updateMany({ role: 'admin' }, { plainPassword: '' });
     res.json({
       message: 'All data deleted. Admin account and default categories preserved.',
       deleted: { members: members.deletedCount, meals: meals.deletedCount, groceries: grocery.deletedCount, otherExpenses: other.deletedCount, payments: payments.deletedCount, bills: bills.deletedCount, summaries: summaries.deletedCount, assignments: assignments.deletedCount, gasCylinders: gas.deletedCount, riceBags: rice.deletedCount, otherCharges: otherCharges.deletedCount, masiSalary: masi.deletedCount, categories: categories.deletedCount },
@@ -354,11 +356,14 @@ router.post('/close-month/:month/:year', async (req, res) => {
 router.post('/open-month/:month/:year', async (req, res) => {
   try {
     const { month, year } = req.params;
-    const { managerId } = req.body;
+    const { managerId, startDate, endDate } = req.body;
+    const updateFields = { isOpen: true, isClosed: false, openedAt: new Date() };
+    if (startDate) updateFields.startDate = startDate;
+    if (endDate)   updateFields.endDate   = endDate;
     // upsert summary with isOpen=true
     const summary = await MonthlySummary.findOneAndUpdate(
       { month, year },
-      { isOpen: true, isClosed: false, openedAt: new Date() },
+      updateFields,
       { new: true, upsert: true }
     );
     // assign manager if provided
@@ -402,7 +407,7 @@ router.get('/months', async (req, res) => {
     const assignments = await MonthAssignment.find().populate('managerId', 'name');
     const months = summaries.map(s => {
       const a = assignments.find(a => a.month === s.month && a.year === s.year);
-      return { month: s.month, year: s.year, isOpen: s.isOpen, isClosed: s.isClosed, openedAt: s.openedAt, closedAt: s.closedAt, manager: a?.managerId || null };
+      return { month: s.month, year: s.year, isOpen: s.isOpen, isClosed: s.isClosed, openedAt: s.openedAt, closedAt: s.closedAt, startDate: s.startDate || null, endDate: s.endDate || null, manager: a?.managerId || null };
     });
     res.json(months);
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -412,7 +417,31 @@ router.get('/months', async (req, res) => {
 router.get('/active-months', async (req, res) => {
   try {
     const summaries = await MonthlySummary.find({ isOpen: true, isClosed: false }).sort({ year: -1, month: -1 });
-    res.json(summaries.map(s => ({ month: s.month, year: s.year })));
+    res.json(summaries.map(s => ({ month: s.month, year: s.year, startDate: s.startDate || null, endDate: s.endDate || null })));
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// --- Purge Single Member (credentials + all their data) ---
+router.delete('/purge-member/:id', async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const Meal     = require('../models/Meal');
+    const Payment  = require('../models/Payment');
+    const OtherCharge = require('../models/OtherCharge');
+    const filter = { memberId };
+    const [meals, payments, bills, otherCharges, user] = await Promise.all([
+      Meal.deleteMany(filter),
+      Payment.deleteMany(filter),
+      Bill.deleteMany(filter),
+      OtherCharge.deleteMany(filter),
+      User.findByIdAndDelete(memberId),
+    ]);
+    // Also remove any month assignment for this member
+    await MonthAssignment.deleteMany({ managerId: memberId });
+    res.json({
+      message: 'Member and all their data deleted',
+      deleted: { meals: meals.deletedCount, payments: payments.deletedCount, bills: bills.deletedCount, otherCharges: otherCharges.deletedCount, user: user ? 1 : 0 },
+    });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 

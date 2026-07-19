@@ -534,6 +534,13 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>The Messy Kitchen</p>
               <p className="text-slate-500 text-[10px]">{MONTHS_FULL[month - 1]} {year}</p>
+              {(liveSummary?.startDate || liveSummary?.endDate) && (
+                <p className="text-teal-500 text-[9px] font-semibold mt-0.5">
+                  {liveSummary.startDate ? new Date(liveSummary.startDate + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '?'}
+                  {' → '}
+                  {liveSummary.endDate ? new Date(liveSummary.endDate + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '?'}
+                </p>
+              )}
             </div>
           </div>
         </div>
