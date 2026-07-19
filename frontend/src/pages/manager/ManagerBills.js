@@ -295,23 +295,23 @@ export default function ManagerBills() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-2.5 px-2 text-right text-white font-semibold">{b.mealCount}</td>
-                      <td className="py-2.5 px-2 text-right" style={{ color: (b.guestMeals||0) > 0 ? '#c084fc' : '#475569' }}>{b.guestMeals||0}</td>
-                      <td className="py-2.5 px-2 text-right text-amber-400">₹{mealRate.toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right text-slate-200">₹{(b.mealCost ?? (b.mealCount * mealRate)).toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right" style={{ color: (b.gasCharge||0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.gasCharge||0).toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right" style={{ color: (b.otherSharedCharge||0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.otherSharedCharge||0).toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right" style={{ color: (b.otherCharges||0) > 0 ? '#f472b6' : '#475569' }}>₹{(b.otherCharges||0).toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right text-slate-400">₹{(b.masiSalary||0).toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right font-bold text-white">₹{(b.totalBill??0).toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right text-green-400">₹{(b.advance||0).toFixed(2)}</td>
-                      <td className="py-2.5 px-2 pr-4 text-right">
-                        <span className="font-bold px-2 py-0.5 rounded-lg text-[11px]" style={{
+                      <td className="py-2.5 px-2 text-right text-white font-semibold whitespace-nowrap">{b.mealCount}</td>
+                      <td className="py-2.5 px-2 text-right whitespace-nowrap" style={{ color: (b.guestMeals||0) > 0 ? '#c084fc' : '#475569' }}>{b.guestMeals||0}</td>
+                      <td className="py-2.5 px-2 text-right text-amber-400 whitespace-nowrap">₹{mealRate.toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right text-slate-200 whitespace-nowrap">₹{(b.mealCost ?? (b.mealCount * mealRate)).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right whitespace-nowrap" style={{ color: (b.gasCharge||0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.gasCharge||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right whitespace-nowrap" style={{ color: (b.otherSharedCharge||0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.otherSharedCharge||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right whitespace-nowrap" style={{ color: (b.otherCharges||0) > 0 ? '#f472b6' : '#475569' }}>₹{(b.otherCharges||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right text-slate-400 whitespace-nowrap">₹{(b.masiSalary||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right font-bold text-white whitespace-nowrap">₹{(b.totalBill??0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 text-right text-green-400 whitespace-nowrap">₹{(b.advance||0).toFixed(2)}</td>
+                      <td className="py-2.5 px-2 pr-4 text-right whitespace-nowrap">
+                        <span className="font-bold px-2 py-0.5 rounded-lg text-[11px] inline-block whitespace-nowrap" style={{
                           background: isDue ? 'rgba(248,113,113,0.12)' : 'rgba(52,211,153,0.12)',
                           color: isDue ? '#f87171' : '#34d399',
                           border: isDue ? '1px solid rgba(248,113,113,0.20)' : '1px solid rgba(52,211,153,0.20)',
                         }}>
-                          {isDue ? `₹${due.toFixed(2)}` : `-₹${Math.abs(due).toFixed(2)}`}
+                          {isDue ? `Due ₹${due.toFixed(2)}` : `Ref ₹${Math.abs(due).toFixed(2)}`}
                         </span>
                       </td>
                     </tr>
