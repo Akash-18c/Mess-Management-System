@@ -83,6 +83,11 @@ export default function ManagerMeals() {
   // canEdit: active period covers this month OR manager is assigned for this month
   const canEdit = !!activeMonthCfg || (myAssignment?.month === month && myAssignment?.year === year);
 
+  // The month/year to store meals under = the active period's stored month/year
+  // (a cross-month period like Jul19–Aug31 is stored under month:7)
+  const mealMonth = activeMonthCfg?.month || month;
+  const mealYear  = activeMonthCfg?.year  || year;
+
   // A date is in range only if within admin-set start/end (if set)
   const isDateInRange = (dateStr) => {
     if (!rangeStart && !rangeEnd) return true;
@@ -102,16 +107,34 @@ export default function ManagerMeals() {
 
   const loadData = useCallback(async () => {
     try {
-      const [memsRes, mealsRes, activeRes, assignRes] = await Promise.all([
+      const [memsRes, activeRes, assignRes] = await Promise.all([
         api.get('/member/members-list'),
-        api.get(`/meals/${month}/${year}`),
         api.get('/member/active-months'),
         api.get('/member/my-assignment'),
       ]);
+      const activeList = Array.isArray(activeRes.data) ? activeRes.data : [];
       setMembers(Array.isArray(memsRes.data) ? memsRes.data : []);
-      setActiveMonths(Array.isArray(activeRes.data) ? activeRes.data : []);
+      setActiveMonths(activeList);
       setMyAssignment(assignRes.data || null);
       setDataReady(true);
+
+      // Determine the stored month/year for this view
+      // A cross-month period (e.g. Jul19–Aug31 stored as month:7) must be fetched by its stored month
+      const cfg = activeList.find(m => {
+        if (m.month === month && m.year === year) return true;
+        if (m.startDate || m.endDate) {
+          const viewStart = `${year}-${String(month).padStart(2,'0')}-01`;
+          const viewEnd   = `${year}-${String(month).padStart(2,'0')}-${String(new Date(year, month, 0).getDate()).padStart(2,'0')}`;
+          const s = m.startDate || viewStart;
+          const e = m.endDate   || viewEnd;
+          return s <= viewEnd && e >= viewStart;
+        }
+        return false;
+      });
+      const fetchMonth = cfg?.month || month;
+      const fetchYear  = cfg?.year  || year;
+
+      const mealsRes = await api.get(`/meals/${fetchMonth}/${fetchYear}`);
       const map = {};
       const meals = Array.isArray(mealsRes.data) ? mealsRes.data : [];
       meals.forEach(m => {
@@ -137,7 +160,7 @@ export default function ManagerMeals() {
     if (pendingRef.current[k]) clearTimeout(pendingRef.current[k]);
     pendingRef.current[k] = setTimeout(async () => {
       try {
-        await api.post('/meals/mark', { date: selectedDate, memberId, breakfast: false, month, year, ...patch });
+        await api.post('/meals/mark', { date: selectedDate, memberId, breakfast: false, month: mealMonth, year: mealYear, ...patch });
       } catch {
         toast.error('Failed to save');
         setMealData(prev => ({ ...prev, [`${memberId}_${selectedDate}`]: rollback }));
@@ -150,7 +173,7 @@ export default function ManagerMeals() {
     if (pendingRef.current[k]) clearTimeout(pendingRef.current[k]);
     pendingRef.current[k] = setTimeout(async () => {
       try {
-        await api.post('/meals/guest', { date: selectedDate, memberId, guestMeals, month, year });
+        await api.post('/meals/guest', { date: selectedDate, memberId, guestMeals, month: mealMonth, year: mealYear });
       } catch {
         toast.error('Failed to save');
         setMealData(prev => ({ ...prev, [`${memberId}_${selectedDate}`]: rollback }));
