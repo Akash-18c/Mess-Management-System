@@ -88,20 +88,25 @@ export default function ManagerMeals() {
   }, [rangeStart, rangeEnd]);
 
   const loadData = useCallback(async () => {
-    const [memsRes, mealsRes, activeRes, assignRes] = await Promise.all([
-      api.get('/members'),
-      api.get(`/meals/${month}/${year}`),
-      api.get('/active-months'),
-      api.get('/member/my-assignment'),
-    ]);
-    setMembers(memsRes.data);
-    setActiveMonths(activeRes.data || []);
-    setMyAssignment(assignRes.data || null);
-    const map = {};
-    mealsRes.data.forEach(m => {
-      map[`${m.memberId?._id}_${m.date?.slice(0,10)}`] = m;
-    });
-    setMealData(map);
+    try {
+      const [memsRes, mealsRes, activeRes, assignRes] = await Promise.all([
+        api.get('/member/members-list'),
+        api.get(`/meals/${month}/${year}`),
+        api.get('/active-months'),
+        api.get('/member/my-assignment'),
+      ]);
+      setMembers(Array.isArray(memsRes.data) ? memsRes.data : []);
+      setActiveMonths(Array.isArray(activeRes.data) ? activeRes.data : []);
+      setMyAssignment(assignRes.data || null);
+      const map = {};
+      const meals = Array.isArray(mealsRes.data) ? mealsRes.data : [];
+      meals.forEach(m => {
+        map[`${m.memberId?._id}_${m.date?.slice(0,10)}`] = m;
+      });
+      setMealData(map);
+    } catch (err) {
+      console.error('loadData failed', err);
+    }
   }, [month, year]);
 
   useEffect(() => { loadData(); }, [loadData]);
