@@ -268,6 +268,7 @@ export default function MemberDashboard() {
         role="member"
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}
+        advancePaid={advance}
       />
 
       {/* ── My Other Charges ── */}

@@ -390,7 +390,7 @@ function IndividualCostTable({ individualCosts, mealRate, summary, totalCollecte
 }
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
-export default function DashboardShared({ summary, totalCollected, mealRate, totalAllMeals, individualCosts, canEditGas, role, selectedMonth, selectedYear, onRefresh }) {
+export default function DashboardShared({ summary, totalCollected, mealRate, totalAllMeals, individualCosts, canEditGas, role, selectedMonth, selectedYear, onRefresh, advancePaid }) {
   const { user } = useAuthStore();
   const now   = new Date();
   const month = selectedMonth || now.getMonth() + 1;
@@ -437,84 +437,54 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
       {messBalance < 2000 && (() => {
         const isDeficit = messBalance < 0;
         const c = isDeficit
-          ? { from: '#ef4444', to: '#dc2626', glow: 'rgba(239,68,68,0.22)', border: 'rgba(239,68,68,0.40)', textHead: '#fca5a5', textSub: 'rgba(252,165,165,0.72)', badge: 'rgba(239,68,68,0.18)', strip: 'rgba(239,68,68,0.9)' }
-          : { from: '#f59e0b', to: '#d97706', glow: 'rgba(251,191,36,0.18)', border: 'rgba(251,191,36,0.42)', textHead: '#fde68a', textSub: 'rgba(253,230,138,0.68)', badge: 'rgba(251,191,36,0.16)', strip: 'rgba(251,191,36,0.9)' };
+          ? { from: '#ef4444', glow: 'rgba(239,68,68,0.20)', border: 'rgba(239,68,68,0.38)', textHead: '#fca5a5', textSub: 'rgba(252,165,165,0.65)', badge: 'rgba(239,68,68,0.15)', strip: 'rgba(239,68,68,0.85)' }
+          : { from: '#f59e0b', glow: 'rgba(251,191,36,0.16)', border: 'rgba(251,191,36,0.38)', textHead: '#fde68a', textSub: 'rgba(253,230,138,0.60)', badge: 'rgba(251,191,36,0.14)', strip: 'rgba(251,191,36,0.85)' };
         return (
-          <div className="rounded-2xl overflow-hidden relative"
+          <div className="rounded-xl overflow-hidden relative"
             style={{
-              background: `linear-gradient(135deg, rgba(${isDeficit?'239,68,68':'251,191,36'},0.10) 0%, rgba(${isDeficit?'15,10,10':'15,12,5'},0.60) 100%)`,
+              background: `linear-gradient(135deg, rgba(${isDeficit?'239,68,68':'251,191,36'},0.08) 0%, rgba(8,12,20,0.70) 100%)`,
               border: `1px solid ${c.border}`,
-              boxShadow: `0 4px 32px ${c.glow}, 0 1px 0 rgba(255,255,255,0.06) inset`,
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
+              boxShadow: `0 2px 16px ${c.glow}`,
+              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
             }}>
-
-            {/* top shimmer line */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl"
-              style={{ background: `linear-gradient(90deg, transparent 0%, ${c.strip} 40%, ${c.from} 60%, transparent 100%)`, opacity: 0.7 }} />
-
-            {/* noise texture overlay */}
-            <div className="absolute inset-0 rounded-2xl pointer-events-none"
-              style={{ background: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.03\'/%3E%3C/svg%3E")', opacity: 0.4 }} />
-
-            <div className="relative flex items-center gap-3 sm:gap-4 px-4 py-4">
-
-              {/* pulsing icon */}
+            {/* shimmer top line */}
+            <div className="absolute top-0 left-0 right-0 h-px"
+              style={{ background: `linear-gradient(90deg,transparent,${c.strip},transparent)` }} />
+            <div className="relative flex items-center gap-2.5 px-3 py-2.5">
+              {/* pulsing icon — smaller on mobile */}
               <div className="relative flex-shrink-0">
-                <div className="absolute inset-0 rounded-2xl animate-ping"
-                  style={{ background: c.from, opacity: 0.15, animationDuration: '2s' }} />
-                <div className="absolute inset-[-4px] rounded-[18px] animate-pulse"
-                  style={{ background: `radial-gradient(circle, ${c.glow} 0%, transparent 70%)`, animationDuration: '3s' }} />
-                <div className="relative w-12 h-12 rounded-2xl flex items-center justify-center"
-                  style={{
-                    background: `linear-gradient(135deg, ${c.badge}, rgba(0,0,0,0.2))`,
-                    border: `1.5px solid ${c.border}`,
-                    boxShadow: `0 0 16px ${c.glow}`,
-                  }}>
-                  <AlertTriangle size={20} style={{ color: c.from, filter: `drop-shadow(0 0 6px ${c.glow})` }} />
+                <div className="absolute inset-0 rounded-xl animate-ping"
+                  style={{ background: c.from, opacity: 0.12, animationDuration: '2.5s' }} />
+                <div className="relative w-8 h-8 rounded-xl flex items-center justify-center"
+                  style={{ background: c.badge, border: `1px solid ${c.border}`, boxShadow: `0 0 10px ${c.glow}` }}>
+                  <AlertTriangle size={15} style={{ color: c.from }} />
                 </div>
               </div>
-
-              {/* text block */}
+              {/* text */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-black text-sm tracking-tight leading-none"
-                    style={{ color: c.textHead, textShadow: `0 0 20px ${c.glow}` }}>
+                <div className="flex items-center gap-1.5">
+                  <p className="font-bold text-xs leading-none" style={{ color: c.textHead }}>
                     {isDeficit ? 'Mess Fund in Deficit' : 'Mess Fund Running Low'}
                   </p>
-                  <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                  <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex-shrink-0"
                     style={{ background: c.badge, color: c.from, border: `1px solid ${c.border}` }}>
-                    {isDeficit ? 'URGENT' : 'WARNING'}
+                    {isDeficit ? 'URGENT' : 'ALERT'}
                   </span>
                 </div>
-                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: c.textSub }}>
-                  {isDeficit
-                    ? `Expenses exceed collections by ₹${Math.abs(messBalance).toFixed(2)} — members need to top up`
-                    : `Only ₹${messBalance.toFixed(2)} remaining — please contribute to the mess fund`
-                  }
+                <p className="text-[10px] mt-0.5 truncate" style={{ color: c.textSub }}>
+                  {isDeficit ? `Deficit ₹${Math.abs(messBalance).toFixed(2)} — top up needed` : `₹${messBalance.toFixed(2)} left — please contribute`}
                 </p>
               </div>
-
-              {/* amount pill */}
-              <div className="flex-shrink-0">
-                <div className="rounded-2xl px-3.5 py-2.5 text-center"
-                  style={{
-                    background: `linear-gradient(135deg, ${c.badge}, rgba(0,0,0,0.25))`,
-                    border: `1.5px solid ${c.border}`,
-                    boxShadow: `0 0 20px ${c.glow}, inset 0 1px 0 rgba(255,255,255,0.08)`,
-                    minWidth: '72px',
-                  }}>
-                  <p className="font-black text-lg tabular-nums leading-none"
-                    style={{ color: c.from, textShadow: `0 0 12px ${c.glow}`, letterSpacing: '-0.02em' }}>
-                    {isDeficit ? '-' : '+'}₹{Math.abs(messBalance).toFixed(0)}
-                  </p>
-                  <p className="text-[9px] font-bold uppercase tracking-widest mt-1"
-                    style={{ color: c.textSub }}>
-                    {isDeficit ? 'deficit' : 'balance'}
-                  </p>
-                </div>
+              {/* compact amount badge */}
+              <div className="flex-shrink-0 rounded-lg px-2.5 py-1.5 text-center"
+                style={{ background: c.badge, border: `1px solid ${c.border}`, minWidth: '56px' }}>
+                <p className="font-black text-sm tabular-nums leading-none" style={{ color: c.from }}>
+                  {isDeficit ? '-' : '+'}₹{Math.abs(messBalance).toFixed(0)}
+                </p>
+                <p className="text-[8px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: c.textSub }}>
+                  {isDeficit ? 'deficit' : 'balance'}
+                </p>
               </div>
-
             </div>
           </div>
         );
@@ -542,7 +512,15 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
                 background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 50%,#6ee7b7 100%)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>{realName}</h2>
-              <span className="text-xs font-semibold" style={{ color: roleAccent }}>{roleBadgeLabel}</span>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                <span className="text-xs font-semibold" style={{ color: roleAccent }}>{roleBadgeLabel}</span>
+                {role === 'member' && advancePaid != null && (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                    style={{ background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.22)', color: '#93c5fd' }}>
+                    Advance paid: ₹{Number(advancePaid).toFixed(2)}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2 rounded-xl px-3 py-2"
