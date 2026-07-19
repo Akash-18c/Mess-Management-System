@@ -92,7 +92,7 @@ export default function ManagerMeals() {
       const [memsRes, mealsRes, activeRes, assignRes] = await Promise.all([
         api.get('/member/members-list'),
         api.get(`/meals/${month}/${year}`),
-        api.get('/active-months'),
+        api.get('/member/active-months'),
         api.get('/member/my-assignment'),
       ]);
       setMembers(Array.isArray(memsRes.data) ? memsRes.data : []);
