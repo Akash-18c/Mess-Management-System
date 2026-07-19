@@ -9,7 +9,7 @@ const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 const glass = {
   background: 'rgba(255,255,255,0.04)',
-  backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
+  backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
   border: '1px solid rgba(255,255,255,0.10)',
   boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)',
 };
@@ -338,8 +338,7 @@ function MemberCard({ member, data, isLive, onToggleMeal, onToggleOff, onChangeG
 
   return (
     <div className="rounded-2xl px-3 pt-2.5 pb-2" style={{
-      background: 'rgba(255,255,255,0.04)',
-      backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)',
+      background: 'rgba(255,255,255,0.06)',
       border: isOff
         ? '1px solid rgba(248,113,113,0.22)'
         : (hasLunch || hasDinner)
