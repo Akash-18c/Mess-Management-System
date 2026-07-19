@@ -90,17 +90,13 @@ export default function ManagerLayout() {
         </div>
       )}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 transition-all duration-300"
+        <header className="lg:hidden flex items-center justify-between px-4 py-3"
           style={scrolled ? {
-            background: 'rgba(8,14,28,0.85)',
-            backdropFilter: 'blur(24px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            background: 'rgba(8,14,28,0.97)',
             borderBottom: '1px solid rgba(255,255,255,0.10)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 -1px 0 rgba(255,255,255,0.04)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
           } : {
-            background: 'rgba(8,14,28,0.45)',
-            backdropFilter: 'blur(16px) saturate(150%)',
-            WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+            background: 'rgba(8,14,28,0.92)',
             borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}>
           <button onClick={() => setOpen(true)} className="text-slate-400 hover:text-white"><Menu size={22} /></button>

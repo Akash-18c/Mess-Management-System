@@ -80,25 +80,20 @@ export default function MemberLayout() {
       </aside>
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
+          <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-64 bg-slate-800 border-r border-slate-700 flex flex-col">
             <SidebarContent />
           </aside>
         </div>
       )}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile header — glass effect deepens on scroll */}
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 transition-all duration-300"
+        <header className="lg:hidden flex items-center justify-between px-4 py-3"
           style={scrolled ? {
-            background: 'rgba(8,14,28,0.85)',
-            backdropFilter: 'blur(24px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            background: 'rgba(8,14,28,0.97)',
             borderBottom: '1px solid rgba(255,255,255,0.10)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 -1px 0 rgba(255,255,255,0.04)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
           } : {
-            background: 'rgba(8,14,28,0.45)',
-            backdropFilter: 'blur(16px) saturate(150%)',
-            WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+            background: 'rgba(8,14,28,0.92)',
             borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}>
           <button onClick={() => setOpen(true)}

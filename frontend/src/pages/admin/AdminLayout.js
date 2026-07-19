@@ -86,9 +86,7 @@ export default function AdminLayout() {
   );
 
   const sidebarStyle = {
-    background: 'rgba(8,13,28,0.92)',
-    backdropFilter: 'blur(40px)',
-    WebkitBackdropFilter: 'blur(40px)',
+    background: 'rgba(8,13,28,0.98)',
     borderRight: '1px solid rgba(255,255,255,0.08)',
     boxShadow: '4px 0 40px rgba(0,0,0,0.5)',
   };
@@ -107,7 +105,7 @@ export default function AdminLayout() {
 
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/75 backdrop-blur-md" onClick={() => setOpen(false)} />
+          <div className="absolute inset-0 bg-black/75" onClick={() => setOpen(false)} />
           <aside className="absolute left-0 top-0 h-full w-64 flex flex-col z-10" style={sidebarStyle}>
             <SidebarContent />
           </aside>
@@ -115,7 +113,7 @@ export default function AdminLayout() {
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden relative z-10">
-        <header className="lg:hidden flex items-center justify-between px-4 py-3" style={{ background: 'rgba(6,10,22,0.90)', borderBottom: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', boxShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>
+        <header className="lg:hidden flex items-center justify-between px-4 py-3" style={{ background: 'rgba(6,10,22,0.97)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 2px 20px rgba(0,0,0,0.4)' }}>
           <button onClick={() => setOpen(true)} className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors" style={{ color: '#94a3b8', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)' }}><Menu size={20} /></button>
           <div className="flex items-center gap-2">
             <img src="/messy-logo.png" alt="logo" className="w-7 h-7 object-contain" style={{ filter: 'drop-shadow(0 0 6px rgba(16,185,129,0.5))' }} />
