@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Trash2, AlertTriangle, ShieldAlert, CheckCircle2, Database, ChevronDown, Flame, UserX } from 'lucide-react';
+import { Trash2, AlertTriangle, ShieldAlert, CheckCircle2, Database, ChevronDown, Flame, UserX, UtensilsCrossed } from 'lucide-react';
 import api from '../../api';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -151,6 +151,10 @@ export default function AdminPurge() {
   const [allLoading, setAllLoading] = useState(false);
   const [allResult,  setAllResult]  = useState(null);
 
+  const [mealsModal,   setMealsModal]   = useState(false);
+  const [mealsLoading, setMealsLoading] = useState(false);
+  const [mealsResult,  setMealsResult]  = useState(null);
+
   const [members,       setMembers]       = useState([]);
   const [selMember,     setSelMember]     = useState('');
   const [memberModal,   setMemberModal]   = useState(false);
@@ -165,6 +169,18 @@ export default function AdminPurge() {
   const rn = n => { const m = n?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (n || ''); };
   const selectedMember = members.find(m => m._id === selMember);
   const memberPhrase = selectedMember ? `DELETE ${rn(selectedMember.name).toUpperCase()}` : '';
+
+  const handlePurgeAllMeals = async () => {
+    setMealsLoading(true);
+    try {
+      const { data } = await api.delete('/admin/purge-all-meals');
+      setMealsResult(data.deleted);
+      toast.success(data.message);
+      setMealsModal(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Delete failed');
+    } finally { setMealsLoading(false); }
+  };
 
   const handlePurgeMember = async () => {
     setMemberLoading(true);
@@ -312,6 +328,39 @@ export default function AdminPurge() {
         )}
       </div>
 
+      {/* ── Delete All Meals ── */}
+      <div className="rounded-2xl p-4 sm:p-5 space-y-4"
+        style={{ background: 'rgba(20,40,20,0.14)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', border: '1px solid rgba(52,211,153,0.22)', boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(52,211,153,0.18)', border: '1px solid rgba(52,211,153,0.30)' }}>
+            <UtensilsCrossed size={16} className="text-emerald-400" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white">Delete All Meals</p>
+            <p className="text-[10px] text-emerald-400 mt-0.5">Wipes every meal record across all months</p>
+          </div>
+        </div>
+        <p className="text-xs text-slate-400 leading-relaxed">
+          Deletes <span className="text-white font-semibold">all meal records</span> from every month.
+          Member accounts, expenses, payments and bills are <span className="text-emerald-400 font-semibold">not affected</span>.
+        </p>
+        <button onClick={() => { setMealsResult(null); setMealsModal(true); }}
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm text-white"
+          style={{ background: 'linear-gradient(135deg,#065f46,#059669,#34d399)', border: '1px solid rgba(52,211,153,0.35)', boxShadow: '0 4px 24px rgba(52,211,153,0.15)', WebkitTapHighlightColor: 'transparent' }}>
+          <UtensilsCrossed size={15} /> Delete All Meal Records
+        </button>
+        {mealsResult && (
+          <div className="rounded-2xl p-4" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.20)' }}>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-400" />
+              <p className="text-sm font-bold text-emerald-400">Meals Deleted</p>
+              <span className="text-xs text-slate-500">— {mealsResult.meals} records removed</span>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* ── Delete Single Member ── */}
       <div className="rounded-2xl p-4 sm:p-5 space-y-4"
         style={{ background: 'rgba(99,29,99,0.12)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', border: '1px solid rgba(232,121,249,0.22)', boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
@@ -418,6 +467,15 @@ export default function AdminPurge() {
       </div>
 
       {/* ── Modals ── */}
+      <ConfirmModal
+        open={mealsModal}
+        onClose={() => setMealsModal(false)}
+        title="Delete All Meal Records"
+        subtitle="Every meal across all months — cannot be undone"
+        phrase="DELETE ALL MEALS"
+        onConfirm={handlePurgeAllMeals}
+        loading={mealsLoading}
+      />
       <ConfirmModal
         open={memberModal}
         onClose={() => setMemberModal(false)}

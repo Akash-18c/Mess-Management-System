@@ -450,6 +450,15 @@ router.get('/active-months', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// --- Purge All Meals ---
+router.delete('/purge-all-meals', async (req, res) => {
+  try {
+    const Meal = require('../models/Meal');
+    const result = await Meal.deleteMany({});
+    res.json({ message: 'All meal records deleted', deleted: { meals: result.deletedCount } });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 // --- Purge Single Member (credentials + all their data) ---
 router.delete('/purge-member/:id', async (req, res) => {
   try {
