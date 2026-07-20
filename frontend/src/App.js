@@ -17,6 +17,7 @@ const AdminMarketDuty    = lazy(() => import('./pages/admin/AdminMarketDuty'));
 const AdminPurge         = lazy(() => import('./pages/admin/AdminPurge'));
 const AdminExpensesHistory = lazy(() => import('./pages/admin/AdminExpensesHistory'));
 const AdminCategories    = lazy(() => import('./pages/admin/AdminCategories'));
+const AdminGuestMembers  = lazy(() => import('./pages/admin/AdminGuestMembers'));
 const ManagerLayout      = lazy(() => import('./pages/manager/ManagerLayout'));
 const ManagerDashboard   = lazy(() => import('./pages/manager/ManagerDashboard'));
 const ManagerMeals       = lazy(() => import('./pages/manager/ManagerMeals'));
@@ -27,6 +28,7 @@ const ManagerOtherCharges = lazy(() => import('./pages/manager/ManagerOtherCharg
 const ManagerMarketDuty  = lazy(() => import('./pages/manager/ManagerMarketDuty'));
 const ManagerBorrows     = lazy(() => import('./pages/manager/ManagerBorrows'));
 const ManagerRiceBag     = lazy(() => import('./pages/manager/ManagerRiceBag'));
+const ManagerGuestMembers = lazy(() => import('./pages/manager/ManagerGuestMembers'));
 const MemberLayout       = lazy(() => import('./pages/member/MemberLayout'));
 const MemberDashboard    = lazy(() => import('./pages/member/MemberDashboard'));
 const MemberHistory      = lazy(() => import('./pages/member/MemberHistory'));
@@ -99,6 +101,7 @@ export default function App() {
             <Route path="market-duty" element={<AdminMarketDuty />} />
             <Route path="categories" element={<AdminCategories />} />
             <Route path="purge" element={<AdminPurge />} />
+            <Route path="guest-members" element={<AdminGuestMembers />} />
           </Route>
 
           <Route path="/manager" element={<ProtectedRoute roles={['manager', 'admin']}><ManagerLayout /></ProtectedRoute>}>
@@ -111,6 +114,7 @@ export default function App() {
             <Route path="market-duty" element={<ManagerMarketDuty />} />
             <Route path="borrows" element={<ManagerBorrows />} />
             <Route path="rice-bag" element={<ManagerRiceBag />} />
+            <Route path="guests" element={<ManagerGuestMembers />} />
           </Route>
 
           <Route path="/member" element={<ProtectedRoute roles={['member', 'manager', 'admin']}><MemberLayout /></ProtectedRoute>}>

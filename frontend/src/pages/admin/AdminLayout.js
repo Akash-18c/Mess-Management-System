@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, FileText, Trash2, LogOut, Menu, HandCoins, CalendarDays, Receipt, Cake, ShoppingCart } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, FileText, Trash2, LogOut, Menu, HandCoins, CalendarDays, Receipt, Cake, ShoppingCart, UserCheck } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useMarketDutyNotifier from '../../hooks/useMarketDutyNotifier';
 
@@ -18,6 +18,7 @@ const links = [
   { to: '/admin/masi-salary',      icon: HandCoins,       label: 'Masi Salary' },
   { to: '/admin/birthdays',        icon: Cake,            label: 'Birthdays' },
   { to: '/admin/market-duty',      icon: ShoppingCart,    label: 'Market Duty' },
+  { to: '/admin/guest-members',    icon: UserCheck,       label: 'Guest Members' },
   { to: '/admin/purge',            icon: Trash2,          label: 'Purge Data', danger: true },
 ];
 
