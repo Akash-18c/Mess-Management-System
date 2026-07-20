@@ -6,6 +6,7 @@ const mealEntrySchema = new mongoose.Schema({
   dinner:     { type: Boolean, default: false },
   customRate: { type: Number, default: 0 },
   charge:     { type: Number, default: 0 },
+  note:       { type: String, default: '' },
 }, { _id: true });
 
 const guestMemberSchema = new mongoose.Schema({

@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, X, UserPlus, UtensilsCrossed, Pencil, ChevronDown, ChevronUp, Users } from 'lucide-react';
+import { Plus, X, UserPlus, UtensilsCrossed, Pencil, ChevronDown, ChevronUp, Users, Download } from 'lucide-react';
 import api from '../../api';
 import useActivePeriod from '../../hooks/useActivePeriod';
+import { downloadGuestReport } from '../../utils/downloadGuestReport';
 
 const now = new Date();
 
@@ -48,7 +49,7 @@ export default function ManagerGuestMembers() {
   const [expanded,    setExpanded]    = useState({});
 
   const [gForm, setGForm] = useState({ name: '', phone: '', note: '', mealRate: '' });
-  const [mForm, setMForm] = useState({ date: now.toISOString().slice(0, 10), lunch: false, dinner: false, customRate: '' });
+  const [mForm, setMForm] = useState({ date: now.toISOString().slice(0, 10), lunch: false, dinner: false, customRate: '', note: '' });
 
   const load = useCallback(() => {
     api.get(`/guests/${MONTH}/${YEAR}`).then(r => setGuests(r.data)).catch(() => {});
@@ -90,12 +91,12 @@ export default function ManagerGuestMembers() {
   // ── Meal modal helpers ──
   const openAddMeal = (guest) => {
     setEditMeal({ guestId: guest._id, meal: null, guest });
-    setMForm({ date: now.toISOString().slice(0, 10), lunch: false, dinner: false, customRate: guest.mealRate || '' });
+    setMForm({ date: now.toISOString().slice(0, 10), lunch: false, dinner: false, customRate: guest.mealRate || '', note: '' });
     setMealModal(true);
   };
   const openEditMeal = (guest, meal) => {
     setEditMeal({ guestId: guest._id, meal, guest });
-    setMForm({ date: meal.date?.slice(0, 10) || now.toISOString().slice(0, 10), lunch: meal.lunch, dinner: meal.dinner, customRate: meal.customRate || guest.mealRate || '' });
+    setMForm({ date: meal.date?.slice(0, 10) || now.toISOString().slice(0, 10), lunch: meal.lunch, dinner: meal.dinner, customRate: meal.customRate || guest.mealRate || '', note: meal.note || '' });
     setMealModal(true);
   };
   const saveMeal = async (e) => {
@@ -111,11 +112,11 @@ export default function ManagerGuestMembers() {
     if (editMeal.meal) {
       updatedMeals = guest.meals.map(m =>
         m._id === editMeal.meal._id
-          ? { ...m, date: mForm.date, lunch: mForm.lunch, dinner: mForm.dinner, customRate: rate, charge }
+          ? { ...m, date: mForm.date, lunch: mForm.lunch, dinner: mForm.dinner, customRate: rate, charge, note: mForm.note }
           : m
       );
     } else {
-      updatedMeals = [...guest.meals, { date: mForm.date, lunch: mForm.lunch, dinner: mForm.dinner, customRate: rate, charge }];
+      updatedMeals = [...guest.meals, { date: mForm.date, lunch: mForm.lunch, dinner: mForm.dinner, customRate: rate, charge, note: mForm.note }];
     }
     setLoading(true);
     try {
@@ -191,6 +192,12 @@ export default function ManagerGuestMembers() {
                   style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.30)', color: '#60a5fa' }}>
                   <Pencil size={13} />
                 </button>
+                <button onClick={e => { e.stopPropagation(); downloadGuestReport(g); }}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-95"
+                  style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.28)', color: '#34d399' }}
+                  title="Download Report">
+                  <Download size={13} />
+                </button>
                 {isOpen ? <ChevronUp size={16} className="text-slate-500" /> : <ChevronDown size={16} className="text-slate-500" />}
               </div>
             </div>
@@ -215,24 +222,41 @@ export default function ManagerGuestMembers() {
                     <p className="text-slate-500 text-xs">No meals added yet</p>
                   </div>
                 ) : (
-                  <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                  <div className="p-3 grid gap-2">
                     {[...g.meals].sort((a, b) => a.date > b.date ? 1 : -1).map((m) => (
-                      <div key={m._id} className="flex items-center gap-3 px-4 py-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm font-semibold">
-                            {new Date(m.date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      <div key={m._id} className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                        {/* Date badge */}
+                        <div className="flex-shrink-0 text-center rounded-lg px-2 py-1.5 min-w-[44px]"
+                          style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.18)' }}>
+                          <p className="text-[9px] font-bold text-amber-500 uppercase leading-none">
+                            {new Date(m.date + 'T00:00:00').toLocaleDateString('en-IN', { month: 'short' })}
                           </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            {m.lunch  && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.25)' }}>☀️ Lunch</span>}
-                            {m.dinner && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(99,102,241,0.15)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.25)' }}>🌙 Dinner</span>}
-                            {m.customRate > 0 && <span className="text-[10px] text-slate-500">₹{m.customRate}/meal</span>}
-                          </div>
+                          <p className="text-base font-extrabold text-amber-400 leading-tight">
+                            {new Date(m.date + 'T00:00:00').getDate()}
+                          </p>
+                          <p className="text-[9px] text-amber-600 leading-none">
+                            {new Date(m.date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short' })}
+                          </p>
                         </div>
+                        {/* Meal info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {m.lunch  && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.25)' }}>☀️ Lunch</span>}
+                            {m.dinner && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(99,102,241,0.15)', color: '#a78bfa', border: '1px solid rgba(99,102,241,0.25)' }}>🌙 Dinner</span>}
+                          </div>
+                          {(m.note || m.customRate > 0) && (
+                            <p className="text-[10px] text-slate-500 mt-1 truncate">
+                              {m.customRate > 0 && `₹${m.customRate}/meal`}{m.customRate > 0 && m.note && ' · '}{m.note && `📝 ${m.note}`}
+                            </p>
+                          )}
+                        </div>
+                        {/* Charge + edit */}
                         <span className="text-sm font-bold text-amber-400 flex-shrink-0">₹{(m.charge || 0).toFixed(2)}</span>
                         <button onClick={() => openEditMeal(g, m)}
-                          className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-95 flex-shrink-0"
-                          style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.30)', color: '#60a5fa' }}>
-                          <Pencil size={13} />
+                          className="w-7 h-7 rounded-lg flex items-center justify-center active:scale-95 flex-shrink-0"
+                          style={{ background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.22)', color: '#60a5fa' }}>
+                          <Pencil size={12} />
                         </button>
                       </div>
                     ))}
@@ -359,6 +383,12 @@ export default function ManagerGuestMembers() {
                 </label>
                 <input style={inputStyle} type="number" min="0" step="0.01" placeholder={`Default: ${editMeal.guest.mealRate || 0}`}
                   value={mForm.customRate} onChange={e => setMForm(p => ({ ...p, customRate: e.target.value }))} />
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1.5 block">Note</label>
+                <input style={inputStyle} placeholder="e.g. special request, occasion…" value={mForm.note}
+                  onChange={e => setMForm(p => ({ ...p, note: e.target.value }))} />
               </div>
 
               {/* Live charge preview */}
