@@ -188,17 +188,17 @@ export default function AdminDashboard() {
   ].filter(p => p.value > 0);
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-4 max-w-3xl pb-6">
       {/* ── Birthday Banner ── */}
       <BirthdayBanner />
+
       {/* ── Background Orbs ── */}
       <div aria-hidden="true" style={{ pointerEvents: 'none', position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '45vw', height: '45vw', maxWidth: 520, maxHeight: 520, background: 'radial-gradient(circle, rgba(20,184,166,0.09) 0%, transparent 70%)', borderRadius: '50%' }} />
         <div style={{ position: 'absolute', bottom: '5%', right: '-8%', width: '40vw', height: '40vw', maxWidth: 480, maxHeight: 480, background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', borderRadius: '50%' }} />
-        <div style={{ position: 'absolute', top: '40%', left: '35%', width: '30vw', height: '30vw', maxWidth: 360, maxHeight: 360, background: 'radial-gradient(circle, rgba(45,212,191,0.05) 0%, transparent 70%)', borderRadius: '50%' }} />
       </div>
 
-      {/* ── Header ── */}
+      {/* ── Header ── */}}
       <div className="relative" ref={dropRef}>
         <div className="flex items-start justify-between gap-3 rounded-2xl p-3 px-4" style={glass}>
           <div className="min-w-0">
@@ -290,16 +290,15 @@ export default function AdminDashboard() {
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Total Members', value: totalMembers,                                         emoji: '👥', accent: 'rgba(20,184,166,0.10)',  border: 'rgba(20,184,166,0.20)'  },
-          { label: 'Meal Rate',     value: `₹${activeSummary?.mealRate?.toFixed(2) || '0.00'}`, emoji: '📊', accent: 'rgba(99,102,241,0.10)',  border: 'rgba(99,102,241,0.20)'  },
-          { label: 'Manager',       value: currentManager?.managerId?.name || 'None',            emoji: '👑', accent: 'rgba(249,115,22,0.10)',  border: 'rgba(249,115,22,0.20)'  },
+          { label: 'Total Members', value: totalMembers,                                         emoji: '👥', accent: 'rgba(20,184,166,0.10)', border: 'rgba(20,184,166,0.20)' },
+          { label: 'Meal Rate',     value: `₹${activeSummary?.mealRate?.toFixed(2) || '0.00'}`, emoji: '📊', accent: 'rgba(99,102,241,0.10)', border: 'rgba(99,102,241,0.20)' },
+          { label: 'Manager',       value: rn(currentManager?.managerId?.name || 'None'),        emoji: '👑', accent: 'rgba(249,115,22,0.10)', border: 'rgba(249,115,22,0.20)' },
         ].map(({ label, value, emoji, accent, border }) => (
-          <div key={label} className="rounded-2xl overflow-hidden"
-            style={{ background: accent, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: `1px solid ${border}`, boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+          <div key={label} className="rounded-2xl" style={{ background: accent, border: `1px solid ${border}` }}>
             <div className="px-3 pt-3 pb-2.5">
-              <div className="text-2xl mb-2 leading-none">{emoji}</div>
-              <p className="text-base font-bold text-white leading-none tabular-nums truncate">{value}</p>
-              <p className="text-[10px] text-slate-400 mt-1.5 leading-tight font-medium">{label}</p>
+              <div className="text-xl mb-1.5 leading-none">{emoji}</div>
+              <p className="text-sm font-bold text-white leading-tight tabular-nums truncate">{value}</p>
+              <p className="text-[10px] text-slate-400 mt-1 leading-tight">{label}</p>
             </div>
           </div>
         ))}
@@ -321,29 +320,26 @@ export default function AdminDashboard() {
       {/* ── Member Meal Bar Chart ── */}
       {memberMealCounts.some(m => m.meals > 0) && (
         <div className="rounded-2xl overflow-hidden" style={glass}>
-          <div className="flex items-center justify-between px-4 pt-4 pb-2">
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                  style={{ background: 'rgba(45,212,191,0.15)', border: '1px solid rgba(45,212,191,0.25)' }}>
-                  <UtensilsCrossed size={13} style={{ color: '#2dd4bf' }} />
-                </div>
-                <p className="text-sm font-bold text-white">Member Meal Count</p>
+          <div className="flex items-center justify-between px-4 pt-3 pb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(45,212,191,0.15)', border: '1px solid rgba(45,212,191,0.25)' }}>
+                <UtensilsCrossed size={13} style={{ color: '#2dd4bf' }} />
               </div>
-              <p className="text-slate-500 text-xs mt-0.5 pl-9">{selectedLabel}</p>
+              <div>
+                <p className="text-sm font-bold text-white leading-tight">Member Meal Count</p>
+                <p className="text-slate-500 text-[10px]">{selectedLabel}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#2dd4bf' }}>
-                <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#2dd4bf' }} /> Lunch
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {[['#2dd4bf','Lunch'],['#34d399','Dinner']].map(([c,l]) => (
+                <span key={l} className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: c }}>
+                  <span className="w-2 h-2 rounded-sm inline-block" style={{ background: c }} />{l}
+                </span>
+              ))}
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.18)', color: '#2dd4bf' }}>
+                {memberMealCounts.reduce((s,m)=>s+m.meals,0)} meals
               </span>
-              <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#34d399' }}>
-                <span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#34d399' }} /> Dinner
-              </span>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
-                style={{ background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.18)' }}>
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#2dd4bf' }} />
-                <span className="text-[10px] font-semibold" style={{ color: '#2dd4bf' }}>{memberMealCounts.reduce((s,m)=>s+m.meals,0)} meals</span>
-              </div>
             </div>
           </div>
           <div className="px-2 pb-3" style={{ overflowX: 'auto', overflowY: 'hidden' }}>
@@ -385,14 +381,14 @@ export default function AdminDashboard() {
       )}
 
       {/* ── Charts ── */}
-      <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 rounded-2xl p-5" style={glass}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 rounded-2xl p-4" style={glass}>
+          <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <h3 className="font-semibold text-white flex items-center gap-2">
-                <Activity size={15} style={{ color: '#2dd4bf' }} /> Expense Trend
+              <h3 className="font-semibold text-white text-sm flex items-center gap-2">
+                <Activity size={14} style={{ color: '#2dd4bf' }} /> Expense Trend
               </h3>
-              <p className="text-slate-500 text-xs mt-0.5">All months overview</p>
+              <p className="text-slate-500 text-[10px] mt-0.5">All months overview</p>
             </div>
             <div className="flex items-center gap-3 text-xs text-slate-500">
               <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: '#14b8a6', boxShadow: '0 0 6px #14b8a6' }} />Expense</span>
@@ -442,8 +438,8 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        <div className="rounded-2xl p-5" style={glass}>
-          <h3 className="font-semibold text-white mb-0.5">{MONTHS[selectedMonth - 1]} Breakdown</h3>
+        <div className="rounded-2xl p-4" style={glass}>
+          <h3 className="font-semibold text-white text-sm mb-0.5">{MONTHS[selectedMonth - 1]} Breakdown</h3>
           <p className="text-slate-500 text-xs mb-3">Grocery · Other Paid · Other Due</p>
           {pieData.length > 0 ? (
             <>
@@ -483,7 +479,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── All Months Cards ── */}
-      <div className="relative rounded-2xl overflow-hidden" style={glass}>
+      <div className="rounded-2xl overflow-hidden" style={glass}>
         <div className="px-4 pt-4 pb-3 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div>
             <h3 className="font-semibold text-white text-sm">All Months</h3>

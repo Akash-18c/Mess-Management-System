@@ -442,7 +442,7 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
 
       {/* ── Low Fund Alert ── */}
       {summaryReady && messBalance < 2000 && (() => {
@@ -502,13 +502,7 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
       })()}
 
       {/* ── Welcome Banner ── */}
-      <div className="rounded-2xl p-4" style={{
-        background: 'rgba(255,255,255,0.08)',
-        backdropFilter: 'blur(40px)',
-        WebkitBackdropFilter: 'blur(40px)',
-        border: '1px solid rgba(255,255,255,0.18)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25)',
-      }}>
+      <div className="rounded-2xl p-4" style={glass}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-base font-bold text-white flex-shrink-0"
