@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Trash2, AlertTriangle, ShieldAlert, CheckCircle2, Flame, UserX, UtensilsCrossed, ChevronDown, X, Search } from 'lucide-react';
+import { Trash2, AlertTriangle, ShieldAlert, CheckCircle2, Flame, UserX, UtensilsCrossed, ChevronDown, X, Search, Zap } from 'lucide-react';
 import api from '../../api';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -223,6 +223,10 @@ export default function AdminPurge() {
   const [mealsLoading, setMealsLoading] = useState(false);
   const [mealsResult,  setMealsResult]  = useState(null);
 
+  const [siteModal,   setSiteModal]   = useState(false);
+  const [siteLoading, setSiteLoading] = useState(false);
+  const [siteResult,  setSiteResult]  = useState(null);
+
   const [members,       setMembers]       = useState([]);
   const [selMember,     setSelMember]     = useState('');
   const [pickerOpen,    setPickerOpen]    = useState(false);
@@ -246,6 +250,15 @@ export default function AdminPurge() {
       setResult(data.deleted); toast.success(data.message); setModal(false);
     } catch (err) { toast.error(err.response?.data?.message || 'Purge failed'); }
     finally { setLoading(false); }
+  };
+
+  const handlePurgeSiteData = async () => {
+    setSiteLoading(true);
+    try {
+      const { data } = await api.delete('/admin/purge-site-data');
+      setSiteResult(data.deleted); toast.success(data.message); setSiteModal(false);
+    } catch (err) { toast.error(err.response?.data?.message || 'Purge failed'); }
+    finally { setSiteLoading(false); }
   };
 
   const handlePurgeAll = async () => {
@@ -409,7 +422,22 @@ export default function AdminPurge() {
         {memberResult && <ResultGrid data={memberResult} />}
       </ActionCard>
 
-      {/* ── 4. Purge All Members ── */}
+      {/* ── 4. Purge Site Data ── */}
+      <ActionCard
+        icon={Zap} iconBg="rgba(251,191,36,0.15)" iconColor="#fbbf24"
+        accentBorder="rgba(251,191,36,0.22)"
+        title="Reset All Data"
+        subtitle="Wipes everything except members & market duty"
+        description="Deletes all meals, expenses, payments, bills, summaries, assignments, borrows, and resets manager roles. Member accounts, birthdays, and market duty are preserved.">
+        <button onClick={() => { setSiteResult(null); setSiteModal(true); }}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-transform"
+          style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.35)', WebkitTapHighlightColor: 'transparent' }}>
+          <Zap size={14} /> Reset Site Data
+        </button>
+        {siteResult && <ResultGrid data={siteResult} />}
+      </ActionCard>
+
+      {/* ── 5. Purge All Members ── */}
       <ActionCard
         icon={Flame} iconBg="rgba(239,68,68,0.15)" iconColor="#f87171"
         accentBorder="rgba(239,68,68,0.22)"
@@ -438,6 +466,7 @@ export default function AdminPurge() {
       <ConfirmModal open={mealsModal}  onClose={() => setMealsModal(false)}  title="Delete All Meal Records"  subtitle="Every meal across all months"                                    phrase="DELETE ALL MEALS" onConfirm={handlePurgeAllMeals}  loading={mealsLoading}   />
       <ConfirmModal open={memberModal} onClose={() => setMemberModal(false)} title="Delete Member"            subtitle={selectedMember ? `${rn(selectedMember.name)} · Cannot be undone` : ''} phrase={memberPhrase}   onConfirm={handlePurgeMember}    loading={memberLoading}  />
       <ConfirmModal open={allModal}    onClose={() => setAllModal(false)}    title="Purge All Members & Data" subtitle="Admin account will be preserved"                                  phrase="DELETE ALL MEMBERS" onConfirm={handlePurgeAll}    loading={allLoading}     />
+      <ConfirmModal open={siteModal}   onClose={() => setSiteModal(false)}   title="Reset All Site Data"     subtitle="Members & market duty will be kept"                             phrase="RESET SITE DATA"   onConfirm={handlePurgeSiteData} loading={siteLoading}  />
     </div>
   );
 }

@@ -446,6 +446,38 @@ router.get('/active-months', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// --- Purge Site Data (keep members, market duty, birthdays) ---
+router.delete('/purge-site-data', async (req, res) => {
+  try {
+    const Meal        = require('../models/Meal');
+    const Payment     = require('../models/Payment');
+    const RiceBag     = require('../models/RiceBag');
+    const GasCylinder = require('../models/GasCylinder');
+    const OtherCharge = require('../models/OtherCharge');
+    const Borrow      = require('../models/Borrow');
+    const [meals, grocery, other, payments, bills, summaries, assignments, gas, rice, otherCharges, masi, borrows] = await Promise.all([
+      Meal.deleteMany({}),
+      GroceryExpense.deleteMany({}),
+      OtherExpense.deleteMany({}),
+      Payment.deleteMany({}),
+      Bill.deleteMany({}),
+      MonthlySummary.deleteMany({}),
+      MonthAssignment.deleteMany({}),
+      GasCylinder.deleteMany({}),
+      RiceBag.deleteMany({}),
+      OtherCharge.deleteMany({}),
+      MasiSalary.deleteMany({}),
+      Borrow.deleteMany({}),
+    ]);
+    // Reset all managers back to member role
+    await User.updateMany({ role: 'manager' }, { role: 'member' });
+    res.json({
+      message: 'All operational data deleted. Members, market duty, and birthdays preserved.',
+      deleted: { meals: meals.deletedCount, groceries: grocery.deletedCount, otherExpenses: other.deletedCount, payments: payments.deletedCount, bills: bills.deletedCount, summaries: summaries.deletedCount, assignments: assignments.deletedCount, gasCylinders: gas.deletedCount, riceBags: rice.deletedCount, otherCharges: otherCharges.deletedCount, masiSalary: masi.deletedCount, borrows: borrows.deletedCount },
+    });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 // --- Purge All Meals ---
 router.delete('/purge-all-meals', async (req, res) => {
   try {
