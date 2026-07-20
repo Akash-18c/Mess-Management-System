@@ -4,6 +4,7 @@ import { Plus, X, UserPlus, UtensilsCrossed, Pencil, ChevronDown, ChevronUp, Use
 import api from '../../api';
 import useActivePeriod from '../../hooks/useActivePeriod';
 import { downloadGuestReport } from '../../utils/downloadGuestReport';
+import useAuthStore from '../../store/authStore';
 
 const now = new Date();
 
@@ -37,6 +38,7 @@ function totalCharge(g) { return g.meals.reduce((s, m) => s + (m.charge || 0), 0
 
 export default function ManagerGuestMembers() {
   const { period } = useActivePeriod();
+  const user = useAuthStore(s => s.user);
   const MONTH = period?.month || now.getMonth() + 1;
   const YEAR  = period?.year  || now.getFullYear();
 
@@ -192,7 +194,7 @@ export default function ManagerGuestMembers() {
                   style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.30)', color: '#60a5fa' }}>
                   <Pencil size={13} />
                 </button>
-                <button onClick={e => { e.stopPropagation(); downloadGuestReport(g); }}
+                <button onClick={e => { e.stopPropagation(); downloadGuestReport(g, user?.name || ''); }}
                   className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-95"
                   style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.28)', color: '#34d399' }}
                   title="Download Report">

@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { Plus, X, UserPlus, UtensilsCrossed, Pencil, Trash2, ChevronDown, ChevronUp, Users, Download } from 'lucide-react';
 import api from '../../api';
 import { downloadGuestReport } from '../../utils/downloadGuestReport';
+import useAuthStore from '../../store/authStore';
 
 const now = new Date();
 
@@ -37,6 +38,7 @@ function totalCharge(g) { return g.meals.reduce((s, m) => s + (m.charge || 0), 0
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export default function AdminGuestMembers() {
+  const user = useAuthStore(s => s.user);
   const [selMonth, setSelMonth] = useState(now.getMonth() + 1);
   const [selYear,  setSelYear]  = useState(now.getFullYear());
 
@@ -224,7 +226,7 @@ export default function AdminGuestMembers() {
                   style={{ background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.30)', color: '#60a5fa' }}>
                   <Pencil size={13} />
                 </button>
-                <button onClick={e => { e.stopPropagation(); downloadGuestReport(g); }}
+                <button onClick={e => { e.stopPropagation(); downloadGuestReport(g, user?.name || ''); }}
                   className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-95"
                   style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.28)', color: '#34d399' }}
                   title="Download Report">
