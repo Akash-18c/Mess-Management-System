@@ -3,15 +3,16 @@ import toast from 'react-hot-toast';
 import { Banknote, IndianRupee, Scale, UtensilsCrossed, TrendingUp, Download, ChefHat, RefreshCw, AlertTriangle } from 'lucide-react';
 import api from '../api';
 import useAuthStore from '../store/authStore';
+import { getCache, setCache, clearCachePrefix } from '../utils/cache';
 
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 const glass = {
-  background: 'rgba(255,255,255,0.08)',
-  backdropFilter: 'blur(40px)',
-  WebkitBackdropFilter: 'blur(40px)',
-  border: '1px solid rgba(255,255,255,0.18)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25)',
+  background: 'rgba(255,255,255,0.05)',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.30)',
 };
 
 // Helper: extract display name — strips role prefix like "Admin (...)" → shows full name
@@ -229,23 +230,14 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
 }
 
 // ─── Expense Type Card ────────────────────────────────────────────────────────
-function ExpenseTypeCard({ month, year, canEdit, categoryName, emoji, onStatusChange }) {
-  const [entries, setEntries] = useState([]);
-
-  const load = useCallback(() => {
-    api.get(`/expenses/other/${month}/${year}`)
-      .then(r => setEntries(r.data.filter(e => e.categoryName === categoryName)))
-      .catch(() => {});
-  }, [month, year, categoryName]);
-
-  useEffect(() => { load(); }, [load]);
-
+// allOtherExpenses is passed in from parent (one shared fetch)
+function ExpenseTypeCard({ month, year, canEdit, categoryName, emoji, entries, onStatusChange }) {
   const toggleStatus = async (entry) => {
     try {
       await api.put(`/expenses/other/${entry._id}`, { status: entry.status === 'Paid' ? 'Due' : 'Paid' });
       toast.success(`Marked as ${entry.status === 'Paid' ? 'Due' : 'Paid'}`);
-      load();
-      if (onStatusChange) onStatusChange(); // refresh parent summary
+      clearCachePrefix(`otherexp-`);
+      if (onStatusChange) onStatusChange();
     } catch { toast.error('Failed to update'); }
   };
 
@@ -398,19 +390,34 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
 
   const [liveSummary, setLiveSummary] = useState(summary);
   const [summaryReady, setSummaryReady] = useState(!!summary);
+  const [otherExpenses, setOtherExpenses] = useState([]);
 
   useEffect(() => {
     setLiveSummary(summary);
     if (summary !== undefined) setSummaryReady(true);
   }, [summary]);
 
+  // Single fetch for all 3 expense cards
+  const loadOtherExpenses = useCallback(() => {
+    const ck = `otherexp-${month}-${year}`;
+    const cached = getCache(ck);
+    if (cached) { setOtherExpenses(cached); return; }
+    api.get(`/expenses/other/${month}/${year}`)
+      .then(r => { setOtherExpenses(r.data); setCache(ck, r.data, 30000); })
+      .catch(() => {});
+  }, [month, year]);
+
+  useEffect(() => { loadOtherExpenses(); }, [loadOtherExpenses]);
+
   const refreshSummary = useCallback(async () => {
     try {
       const r = await api.get(`/summary/${month}/${year}`);
       setLiveSummary(r.data);
     } catch {}
+    clearCachePrefix(`otherexp-`);
+    loadOtherExpenses();
     if (onRefresh) onRefresh();
-  }, [month, year, onRefresh]);
+  }, [month, year, onRefresh, loadOtherExpenses]);
 
   const grandTotal  = liveSummary?.grandTotal || 0;
   const messBalance = liveSummary?.messBalance ?? (totalCollected - grandTotal);
@@ -567,9 +574,9 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
 
       {/* ── Gas + Rice Bag + Other Expenses ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Gas Cylinder" emoji="🔥" onStatusChange={refreshSummary} />
-        <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Rice Bag"     emoji="🌾" onStatusChange={refreshSummary} />
-        <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Other"        emoji="📦" onStatusChange={refreshSummary} />
+        <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Gas Cylinder" emoji="🔥" entries={otherExpenses.filter(e => e.categoryName === 'Gas Cylinder')} onStatusChange={refreshSummary} />
+        <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Rice Bag"     emoji="🌾" entries={otherExpenses.filter(e => e.categoryName === 'Rice Bag')}     onStatusChange={refreshSummary} />
+        <ExpenseTypeCard month={month} year={year} canEdit={canEditGas} categoryName="Other"        emoji="📦" entries={otherExpenses.filter(e => e.categoryName !== 'Gas Cylinder' && e.categoryName !== 'Rice Bag')} onStatusChange={refreshSummary} />
       </div>
 
       {/* ── PDF + Stats card ── */}

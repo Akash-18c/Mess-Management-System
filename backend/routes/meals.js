@@ -10,8 +10,9 @@ router.use(auth);
 router.get('/:month/:year', async (req, res) => {
   try {
     const meals = await Meal.find({ month: req.params.month, year: req.params.year })
-      .populate('memberId', 'name room')
-      .sort({ date: 1 });
+      .select('date memberId lunch dinner isOff guestMeals month year')
+      .sort({ date: 1 })
+      .lean();
     res.json(meals);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });

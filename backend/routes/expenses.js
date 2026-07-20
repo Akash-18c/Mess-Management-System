@@ -20,7 +20,7 @@ router.get('/categories', (req, res) => {
 // --- Grocery ---
 router.get('/grocery/:month/:year', async (req, res) => {
   try {
-    const items = await GroceryExpense.find({ month: req.params.month, year: req.params.year }).sort({ date: -1 });
+    const items = await GroceryExpense.find({ month: req.params.month, year: req.params.year }).sort({ date: -1 }).lean();
     res.json(items);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -58,7 +58,7 @@ router.delete('/grocery/:id', requireRole('manager', 'admin'), async (req, res) 
 // --- Other Expenses ---
 router.get('/other/:month/:year', async (req, res) => {
   try {
-    const items = await OtherExpense.find({ month: req.params.month, year: req.params.year }).sort({ date: -1 });
+    const items = await OtherExpense.find({ month: req.params.month, year: req.params.year }).sort({ date: -1 }).lean();
     res.json(items);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -92,7 +92,7 @@ router.delete('/other/:id', requireRole('manager', 'admin'), async (req, res) =>
 // IMPORTANT: 'my' route MUST be before '/:month/:year' to avoid Express matching 'my' as :month
 router.get('/charges/my/:month/:year', async (req, res) => {
   try {
-    const items = await OtherCharge.find({ memberId: req.user._id, month: req.params.month, year: req.params.year }).sort({ date: 1 });
+    const items = await OtherCharge.find({ memberId: req.user._id, month: req.params.month, year: req.params.year }).sort({ date: 1 }).lean();
     res.json(items);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });

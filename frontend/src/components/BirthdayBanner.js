@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../api';
+import { getCache, setCache } from '../utils/cache';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const BALLOON_IMG = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5wfRdOxSyRLBqDDkRvkjQh-FGS9CBsCMPZCUyWhFOqw&s=10';
@@ -20,8 +21,10 @@ export default function BirthdayBanner() {
   const [people, setPeople] = useState([]);
 
   const fetchBirthdays = useCallback(() => {
+    const cached = getCache('birthdays');
+    if (cached) { setPeople(cached); return; }
     api.get('/member/birthdays/upcoming')
-      .then(r => setPeople(r.data || []))
+      .then(r => { setPeople(r.data || []); setCache('birthdays', r.data || [], 5 * 60 * 1000); })
       .catch(() => {});
   }, []);
 
