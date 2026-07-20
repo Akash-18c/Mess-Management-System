@@ -205,6 +205,112 @@ function ActionCard({ icon: Icon, iconBg, iconColor, accentBorder, title, subtit
   );
 }
 
+// ── Merged Member Delete / Purge All Card ───────────────────────────────────
+function MemberDeleteCard({ members, selMember, setSelMember, pickerOpen, setPickerOpen, memberResult, setMemberResult, allResult, setAllResult, onDeleteMember, onPurgeAll }) {
+  const [mode, setMode] = useState('single'); // 'single' | 'all'
+  const isSingle = mode === 'single';
+  const selectedMember = members.find(m => m._id === selMember);
+
+  return (
+    <div className="rounded-2xl overflow-hidden"
+      style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${isSingle ? 'rgba(232,121,249,0.18)' : 'rgba(239,68,68,0.22)'}`, boxShadow: '0 4px 24px rgba(0,0,0,0.3)', transition: 'border-color 0.25s' }}>
+
+      {/* header */}
+      <div className="flex items-center gap-3 px-4 py-4"
+        style={{ borderBottom: `1px solid ${isSingle ? 'rgba(232,121,249,0.18)' : 'rgba(239,68,68,0.22)'}`, transition: 'border-color 0.25s' }}>
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+          style={{ background: isSingle ? 'rgba(232,121,249,0.15)' : 'rgba(239,68,68,0.15)', border: `1px solid ${isSingle ? 'rgba(232,121,249,0.40)' : 'rgba(239,68,68,0.40)'}`, transition: 'all 0.25s' }}>
+          {isSingle ? <UserX size={18} style={{ color: '#e879f9' }} /> : <Flame size={18} style={{ color: '#f87171' }} />}
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-white leading-tight">{isSingle ? 'Delete Member' : 'Purge Everything'}</p>
+          <p className="text-xs mt-0.5" style={{ color: isSingle ? '#e879f9' : '#f87171' }}>
+            {isSingle ? 'Removes login + all their records' : 'Nuclear option — wipes all members & data'}
+          </p>
+        </div>
+      </div>
+
+      {/* body */}
+      <div className="px-4 py-4 space-y-4">
+
+        {/* mode toggle pills */}
+        <div className="flex gap-2 p-1 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          {[['single', UserX, '#e879f9', 'Single Member'], ['all', Flame, '#f87171', 'All Members']].map(([val, Icon, color, label]) => {
+            const active = mode === val;
+            return (
+              <button key={val} onClick={() => { setMode(val); setMemberResult(null); setAllResult(null); }}
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
+                style={{
+                  background: active ? (val === 'single' ? 'rgba(232,121,249,0.18)' : 'rgba(239,68,68,0.18)') : 'transparent',
+                  color: active ? color : '#64748b',
+                  border: active ? `1px solid ${val === 'single' ? 'rgba(232,121,249,0.35)' : 'rgba(239,68,68,0.35)'}` : '1px solid transparent',
+                  WebkitTapHighlightColor: 'transparent',
+                }}>
+                <Icon size={12} /> {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* single mode */}
+        {isSingle && (
+          <>
+            <p className="text-xs text-slate-500">Select a member to permanently delete their account and all associated records.</p>
+            <button onClick={() => setPickerOpen(true)}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left active:bg-white/5 transition-colors"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', WebkitTapHighlightColor: 'transparent' }}>
+              {selectedMember ? (
+                <>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                    style={{ background: 'rgba(232,121,249,0.20)', color: '#e879f9' }}>
+                    {rn(selectedMember.name)[0]?.toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{rn(selectedMember.name)}</p>
+                    {selectedMember.room && <p className="text-xs text-slate-500">Room {selectedMember.room}</p>}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                    <UserX size={14} className="text-slate-500" />
+                  </div>
+                  <p className="text-sm text-slate-500 flex-1">Tap to select member…</p>
+                </>
+              )}
+              <ChevronDown size={14} className="text-slate-500 flex-shrink-0" />
+            </button>
+            <button
+              onClick={() => { if (!selMember) { toast.error('Select a member first'); return; } setMemberResult(null); onDeleteMember(); }}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-transform"
+              style={{ background: selMember ? 'rgba(232,121,249,0.18)' : 'rgba(255,255,255,0.05)', border: `1px solid ${selMember ? 'rgba(232,121,249,0.35)' : 'rgba(255,255,255,0.08)'}`, opacity: selMember ? 1 : 0.5, WebkitTapHighlightColor: 'transparent' }}>
+              <UserX size={14} /> Delete Member
+            </button>
+            {memberResult && <ResultGrid data={memberResult} />}
+          </>
+        )}
+
+        {/* all mode */}
+        {!isSingle && (
+          <>
+            <p className="text-xs text-slate-500">Deletes every member account and all records across all months. Only the admin account is preserved.</p>
+            <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)' }}>
+              <AlertTriangle size={14} className="text-red-400 flex-shrink-0" />
+              <p className="text-xs text-red-300">This cannot be undone. All member data will be permanently lost.</p>
+            </div>
+            <button onClick={() => { setAllResult(null); onPurgeAll(); }}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-transform"
+              style={{ background: 'rgba(239,68,68,0.18)', border: '1px solid rgba(239,68,68,0.35)', WebkitTapHighlightColor: 'transparent' }}>
+              <Flame size={14} /> Delete All Members & Data
+            </button>
+            {allResult && <ResultGrid data={allResult} />}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function AdminPurge() {
   const now = new Date();
@@ -378,49 +484,16 @@ export default function AdminPurge() {
         {mealsResult && <ResultGrid data={mealsResult} />}
       </ActionCard>
 
-      {/* ── 3. Delete Single Member ── */}
-      <ActionCard
-        icon={UserX} iconBg="rgba(232,121,249,0.15)" iconColor="#e879f9"
-        accentBorder="rgba(232,121,249,0.18)"
-        title="Delete Single Member"
-        subtitle="Removes login + all their records">
-
-        {/* Member selector button */}
-        <button onClick={() => setPickerOpen(true)}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left active:bg-white/5 transition-colors"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', WebkitTapHighlightColor: 'transparent' }}>
-          {selectedMember ? (
-            <>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                style={{ background: 'rgba(232,121,249,0.20)', color: '#e879f9' }}>
-                {rn(selectedMember.name)[0]?.toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{rn(selectedMember.name)}</p>
-                {selectedMember.room && <p className="text-xs text-slate-500">Room {selectedMember.room}</p>}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: 'rgba(255,255,255,0.07)' }}>
-                <UserX size={14} className="text-slate-500" />
-              </div>
-              <p className="text-sm text-slate-500 flex-1">Tap to select member…</p>
-            </>
-          )}
-          <ChevronDown size={14} className="text-slate-500 flex-shrink-0" />
-        </button>
-
-        <button
-          onClick={() => { if (!selMember) { toast.error('Select a member first'); return; } setMemberResult(null); setMemberModal(true); }}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-transform"
-          style={{ background: selMember ? 'rgba(232,121,249,0.18)' : 'rgba(255,255,255,0.05)', border: `1px solid ${selMember ? 'rgba(232,121,249,0.35)' : 'rgba(255,255,255,0.08)'}`, opacity: selMember ? 1 : 0.5, WebkitTapHighlightColor: 'transparent' }}>
-          <UserX size={14} /> Delete Member
-        </button>
-
-        {memberResult && <ResultGrid data={memberResult} />}
-      </ActionCard>
+      {/* ── 3. Delete Member / Purge All (merged) ── */}
+      <MemberDeleteCard
+        members={members}
+        selMember={selMember} setSelMember={setSelMember}
+        pickerOpen={pickerOpen} setPickerOpen={setPickerOpen}
+        memberResult={memberResult} setMemberResult={setMemberResult}
+        allResult={allResult} setAllResult={setAllResult}
+        onDeleteMember={() => setMemberModal(true)}
+        onPurgeAll={() => setAllModal(true)}
+      />
 
       {/* ── 4. Purge Site Data ── */}
       <ActionCard
@@ -435,21 +508,6 @@ export default function AdminPurge() {
           <Zap size={14} /> Reset Site Data
         </button>
         {siteResult && <ResultGrid data={siteResult} />}
-      </ActionCard>
-
-      {/* ── 5. Purge All Members ── */}
-      <ActionCard
-        icon={Flame} iconBg="rgba(239,68,68,0.15)" iconColor="#f87171"
-        accentBorder="rgba(239,68,68,0.22)"
-        title="Purge Everything"
-        subtitle="Nuclear option — wipes all members & data"
-        description="Deletes all members and every record across all months. Only the admin account is preserved.">
-        <button onClick={() => { setAllResult(null); setAllModal(true); }}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-transform"
-          style={{ background: 'rgba(239,68,68,0.18)', border: '1px solid rgba(239,68,68,0.35)', WebkitTapHighlightColor: 'transparent' }}>
-          <Flame size={14} /> Delete All Members &amp; Data
-        </button>
-        {allResult && <ResultGrid data={allResult} />}
       </ActionCard>
 
       {/* ── Member Picker Sheet ── */}
