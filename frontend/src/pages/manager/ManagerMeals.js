@@ -138,7 +138,8 @@ export default function ManagerMeals() {
       const map = {};
       const meals = Array.isArray(mealsRes.data) ? mealsRes.data : [];
       meals.forEach(m => {
-        map[`${m.memberId?._id}_${m.date?.slice(0,10)}`] = m;
+        const mid = m.memberId?._id || m.memberId;
+        if (mid) map[`${mid}_${m.date?.slice(0,10)}`] = m;
       });
       setMealData(map);
     } catch (err) {

@@ -64,8 +64,8 @@ export default function MemberMeals() {
     setMembers(memsRes.data);
     const map = {};
     mealsRes.data.forEach(m => {
-      const key = `${m.memberId?._id}_${m.date?.slice(0, 10)}`;
-      map[key] = m;
+      const mid = m.memberId?._id || m.memberId;
+      if (mid) map[`${mid}_${m.date?.slice(0, 10)}`] = m;
     });
     setMealData(map);
   }, [month, year]);
