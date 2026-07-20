@@ -57,6 +57,7 @@ export default function ManagerDashboard() {
   const [members, setMembers] = useState([]);
   const [totalCollected, setTotalCollected] = useState(0);
   const [individualCosts, setIndividualCosts] = useState([]);
+  const [advancePaid, setAdvancePaid] = useState(null);
   const dropRef = useRef(null);
   const navigate = useNavigate();
 
@@ -132,12 +133,13 @@ export default function ManagerDashboard() {
       api.get(`/meals/${selectedMonth}/${selectedYear}`).then(r => { setMeals(r.data); setCache(mk, r.data); }).catch(() => setMeals([]));
 
     const cd = getCache(dk);
-    if (cd) { setTotalCollected(cd.tc); setIndividualCosts(cd.ic); } else {
+    if (cd) { setTotalCollected(cd.tc); setIndividualCosts(cd.ic); if (cd.adv != null) setAdvancePaid(cd.adv); } else {
       if (isCurrentMonth) {
         api.get('/member/dashboard').then(r => {
           setTotalCollected(r.data.totalCollected || 0);
           setIndividualCosts(r.data.individualCosts || []);
-          setCache(dk, { tc: r.data.totalCollected || 0, ic: r.data.individualCosts || [] });
+          setAdvancePaid(r.data.advance ?? null);
+          setCache(dk, { tc: r.data.totalCollected || 0, ic: r.data.individualCosts || [], adv: r.data.advance ?? null });
         }).catch(() => {});
       } else {
         api.get(`/member/month-data/${selectedMonth}/${selectedYear}`).then(r => {
@@ -274,6 +276,7 @@ export default function ManagerDashboard() {
         role="manager"
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}
+        advancePaid={isCurrentMonth ? advancePaid : null}
       />
 
       {/* ── Stat Cards ── */}

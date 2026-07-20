@@ -389,13 +389,13 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
   const year  = selectedYear  || now.getFullYear();
 
   const [liveSummary, setLiveSummary] = useState(summary);
-  const [summaryReady, setSummaryReady] = useState(!!summary);
   const [otherExpenses, setOtherExpenses] = useState([]);
 
   useEffect(() => {
     setLiveSummary(summary);
-    if (summary !== undefined) setSummaryReady(true);
   }, [summary]);
+
+  const summaryReady = summary !== undefined;
 
   // Single fetch for all 3 expense cards
   const loadOtherExpenses = useCallback(() => {
@@ -519,7 +519,7 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
               }}>{realName}</h2>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 <span className="text-xs font-semibold" style={{ color: roleAccent }}>{roleBadgeLabel}</span>
-                {role === 'member' && advancePaid != null && (
+                {advancePaid != null && (
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                     style={{ background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.22)', color: '#93c5fd' }}>
                     Advance paid: ₹{Number(advancePaid).toFixed(2)}

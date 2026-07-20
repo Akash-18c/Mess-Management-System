@@ -62,6 +62,7 @@ export default function AdminDashboard() {
   const [dropdownOpen,  setDropdownOpen]  = useState(false);
   const [members,       setMembers]       = useState([]);
   const [meals,         setMeals]         = useState([]);
+  const [advancePaid,   setAdvancePaid]   = useState(null);
   const dropRef  = useRef(null);
   const navigate = useNavigate();
   const [deletingAssignment, setDeletingAssignment] = useState(null);
@@ -114,6 +115,7 @@ export default function AdminDashboard() {
     if (cd) { setData(cd); } else {
       api.get('/admin/dashboard').then(r => { setData(r.data); setCache('adm-dashboard', r.data); });
     }
+    api.get('/member/dashboard').then(r => setAdvancePaid(r.data.advance ?? null)).catch(() => {});
     const cs = getCache('summaries');
     if (cs) { setAllSummaries(cs); } else {
       api.get('/summary/list').then(r => { setAllSummaries(r.data); setCache('summaries', r.data); }).catch(() => {});
@@ -198,7 +200,7 @@ export default function AdminDashboard() {
         <div style={{ position: 'absolute', bottom: '5%', right: '-8%', width: '40vw', height: '40vw', maxWidth: 480, maxHeight: 480, background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', borderRadius: '50%' }} />
       </div>
 
-      {/* ── Header ── */}}
+      {/* ── Header ── */}
       <div className="relative" ref={dropRef}>
         <div className="flex items-start justify-between gap-3 rounded-2xl p-3 px-4" style={glass}>
           <div className="min-w-0">
@@ -315,6 +317,7 @@ export default function AdminDashboard() {
         role="admin"
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}
+        advancePaid={isCurrentMonth ? advancePaid : null}
       />
 
       {/* ── Member Meal Bar Chart ── */}
