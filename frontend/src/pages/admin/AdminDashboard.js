@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Unlock, ChevronDown, Calendar, Sparkles, Activity, UtensilsCrossed } from 'lucide-react';
+import { Lock, Unlock, ChevronDown, Calendar, Sparkles, Activity, UtensilsCrossed, Trash2 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar } from 'recharts';
 import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
 import PageLoader from '../../components/PageLoader';
 import BirthdayBanner from '../../components/BirthdayBanner';
 import { getCache, setCache, clearCache } from '../../utils/cache';
+import toast from 'react-hot-toast';
 
 const MONTHS      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -63,6 +64,23 @@ export default function AdminDashboard() {
   const [meals,         setMeals]         = useState([]);
   const dropRef  = useRef(null);
   const navigate = useNavigate();
+  const [deletingAssignment, setDeletingAssignment] = useState(null);
+
+  const handleDeleteAssignment = async (e, mgr) => {
+    e.stopPropagation();
+    if (!mgr) return;
+    if (!window.confirm(`Remove ${rn(mgr.managerId?.name || '')} as manager?`)) return;
+    setDeletingAssignment(mgr._id);
+    try {
+      await api.delete(`/admin/assignments/${mgr._id}`);
+      toast.success('Manager assignment removed');
+      clearCache();
+      const r = await api.get('/admin/dashboard');
+      setData(r.data);
+      setCache('adm-dashboard', r.data);
+    } catch { toast.error('Failed to remove assignment'); }
+    finally { setDeletingAssignment(null); }
+  };
 
   useEffect(() => {
     const h = (e) => { if (dropRef.current && !dropRef.current.contains(e.target)) setDropdownOpen(false); };
@@ -481,10 +499,10 @@ export default function AdminDashboard() {
               const mgr   = allAssignments.find(a => a.month === s.month && a.year === s.year);
               const isSel = s.month === selectedMonth && s.year === selectedYear;
               return (
-                <button
+                <div
                   key={s._id}
                   onClick={() => { setSelectedMonth(s.month); setSelectedYear(s.year); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className="text-left rounded-xl p-3 transition-all w-full"
+                  className="rounded-xl p-3 cursor-pointer"
                   style={{
                     background: isSel ? 'rgba(20,184,166,0.12)' : 'rgba(255,255,255,0.03)',
                     border: isSel ? '1px solid rgba(20,184,166,0.35)' : '1px solid rgba(255,255,255,0.07)',
@@ -492,7 +510,7 @@ export default function AdminDashboard() {
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  {/* Top row: month + status badge */}
+                  {/* Top row: month + status badge + delete */}
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5">
                       {isSel && <span className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0" style={{ background: '#2dd4bf' }} />}
@@ -500,10 +518,24 @@ export default function AdminDashboard() {
                         {MONTHS_FULL[s.month - 1].slice(0,3)} {s.year}
                       </span>
                     </div>
-                    {s.isClosed
-                      ? <span className="badge-closed inline-flex items-center gap-1 text-[10px]"><Lock size={8} />Closed</span>
-                      : <span className="badge-open  inline-flex items-center gap-1 text-[10px]"><Unlock size={8} />Open</span>
-                    }
+                    <div className="flex items-center gap-1.5">
+                      {s.isClosed
+                        ? <span className="badge-closed inline-flex items-center gap-1 text-[10px]"><Lock size={8} />Closed</span>
+                        : <span className="badge-open  inline-flex items-center gap-1 text-[10px]"><Unlock size={8} />Open</span>
+                      }
+                      {mgr && (
+                        <button
+                          onClick={e => handleDeleteAssignment(e, mgr)}
+                          disabled={deletingAssignment === mgr._id}
+                          className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 active:scale-90"
+                          style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', WebkitTapHighlightColor: 'transparent' }}
+                        >
+                          {deletingAssignment === mgr._id
+                            ? <span className="w-2.5 h-2.5 rounded-full border border-red-400/40 border-t-red-400 animate-spin" />
+                            : <Trash2 size={10} className="text-red-400" />}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {/* Stats row */}
                   <div className="flex items-center justify-between">
@@ -517,10 +549,10 @@ export default function AdminDashboard() {
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] text-slate-500 mb-0.5">Manager</p>
-                      <p className="text-[11px] font-semibold text-slate-300 truncate max-w-[80px]">{mgr?.managerId?.name || '—'}</p>
+                      <p className="text-[11px] font-semibold text-slate-300 truncate max-w-[80px]">{mgr ? rn(mgr.managerId?.name || '') : '—'}</p>
                     </div>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
