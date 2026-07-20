@@ -5,15 +5,11 @@ import { Calendar, ChevronDown, Sparkles, UtensilsCrossed } from 'lucide-react';
 import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
 import BirthdayBanner from '../../components/BirthdayBanner';
+import { getCache, setCache, clearCache } from '../../utils/cache';
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-// simple in-memory cache
-const cache = {};
-function getCache(key) { const e = cache[key]; return e && Date.now() - e.ts < 30000 ? e.data : null; }
-function setCache(key, data) { cache[key] = { data, ts: Date.now() }; }
 
 function buildMonthRange() {
   const now = new Date();
@@ -79,7 +75,7 @@ export default function ManagerDashboard() {
         setSelectedMonth(prev => prev === curMonth ? next.m : prev);
         setSelectedYear(prev => prev === curYear ? next.y : prev);
         setCur(next);
-        Object.keys(cache).forEach(k => delete cache[k]);
+        clearCache();
         schedule();
       }, msUntilMidnight() + 500);
       return t;
@@ -92,7 +88,7 @@ export default function ManagerDashboard() {
   // ── auto-refresh every 60s for current month
   useEffect(() => {
     if (!isCurrentMonth) return;
-    const t = setInterval(() => { Object.keys(cache).forEach(k => delete cache[k]); load(); }, 60000);
+    const t = setInterval(() => { clearCache(); load(); }, 60000);
     return () => clearInterval(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCurrentMonth]);

@@ -6,14 +6,10 @@ import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
 import PageLoader from '../../components/PageLoader';
 import BirthdayBanner from '../../components/BirthdayBanner';
+import { getCache, setCache, clearCache } from '../../utils/cache';
 
 const MONTHS      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-// simple in-memory cache (30s TTL)
-const cache = {};
-function getCache(key) { const e = cache[key]; return e && Date.now() - e.ts < 30000 ? e.data : null; }
-function setCache(key, data) { cache[key] = { data, ts: Date.now() }; }
 
 function buildMonthRange() {
   const now = new Date();
@@ -86,8 +82,7 @@ export default function AdminDashboard() {
         setSelectedMonth(prev => (prev === curMonth && selectedYear === curYear) ? next.m : prev);
         setSelectedYear(prev => (prev === curYear) ? next.y : prev);
         setCur(next);
-        Object.keys(cache).forEach(k => delete cache[k]);
-        schedule();
+        clearCache();
       }, msUntilMidnight() + 500);
       return t;
     };

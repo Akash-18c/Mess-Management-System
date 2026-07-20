@@ -6,13 +6,9 @@ import DashboardShared from '../../components/DashboardShared';
 import PageLoader from '../../components/PageLoader';
 import useAuthStore from '../../store/authStore';
 import BirthdayBanner from '../../components/BirthdayBanner';
+import { getCache, setCache } from '../../utils/cache';
 
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-// simple in-memory cache (30s TTL)
-const cache = {};
-function getCache(key) { const e = cache[key]; return e && Date.now() - e.ts < 30000 ? e.data : null; }
-function setCache(key, data) { cache[key] = { data, ts: Date.now() }; }
 
 function buildMonthRange() {
   const now = new Date();
