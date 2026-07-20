@@ -145,7 +145,10 @@ export default function AdminDashboard() {
 
   const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
   const memberMealCounts = members.map(m => {
-    const mm = meals.filter(ml => ml.memberId?._id === m._id && !ml.isOff);
+    const mm = meals.filter(ml => {
+      const mid = ml.memberId?._id || ml.memberId;
+      return mid?.toString() === m._id?.toString() && !ml.isOff;
+    });
     const lunch  = mm.filter(ml => ml.lunch).length;
     const dinner = mm.filter(ml => ml.dinner).length;
     return { name: rn(m.name).split(' ')[0], lunch, dinner, meals: lunch + dinner };
