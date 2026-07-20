@@ -1,136 +1,76 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Trash2, AlertTriangle, ShieldAlert, CheckCircle2, Database, ChevronDown, Flame, UserX, UtensilsCrossed } from 'lucide-react';
+import { Trash2, AlertTriangle, ShieldAlert, CheckCircle2, Flame, UserX, UtensilsCrossed, ChevronDown, X, Search } from 'lucide-react';
 import api from '../../api';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const rn = n => { const m = n?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (n || ''); };
 
-const DATA_ITEMS = [
-  { key: 'meals',         label: 'Meal Records',       color: '#34d399', bg: 'rgba(52,211,153,0.10)'  },
-  { key: 'groceries',     label: 'Grocery Expenses',   color: '#f97316', bg: 'rgba(249,115,22,0.10)'  },
-  { key: 'otherExpenses', label: 'Other Expenses',     color: '#f59e0b', bg: 'rgba(245,158,11,0.10)'  },
-  { key: 'otherCharges',  label: 'Other Charges',      color: '#f472b6', bg: 'rgba(244,114,182,0.10)' },
-  { key: 'payments',      label: 'Payments',           color: '#60a5fa', bg: 'rgba(96,165,250,0.10)'  },
-  { key: 'bills',         label: 'Bills',              color: '#a78bfa', bg: 'rgba(167,139,250,0.10)' },
-  { key: 'masiSalary',    label: 'Masi Salary',        color: '#e879f9', bg: 'rgba(232,121,249,0.10)' },
-  { key: 'summary',       label: 'Monthly Summary',    color: '#2dd4bf', bg: 'rgba(45,212,191,0.10)'  },
-  { key: 'assignment',    label: 'Manager Assignment', color: '#fb923c', bg: 'rgba(251,146,60,0.10)'  },
-  { key: 'gasCylinders',  label: 'Gas Cylinders',      color: '#94a3b8', bg: 'rgba(148,163,184,0.10)' },
-  { key: 'riceBags',      label: 'Rice Bags',          color: '#fbbf24', bg: 'rgba(251,191,36,0.10)'  },
-];
-
-const glass = {
-  background: 'rgba(255,255,255,0.04)',
-  backdropFilter: 'blur(40px)',
-  WebkitBackdropFilter: 'blur(40px)',
-  border: '1px solid rgba(255,255,255,0.09)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07)',
-};
-
-const redGlass = {
-  background: 'rgba(239,68,68,0.06)',
-  backdropFilter: 'blur(40px)',
-  WebkitBackdropFilter: 'blur(40px)',
-  border: '1px solid rgba(239,68,68,0.18)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
-};
-
-function Dropdown({ value, onChange, options, label }) {
-  const [open, setOpen] = useState(false);
-  const selected = options.find(o => o.value === value);
-  return (
-    <div>
-      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 block">{label}</label>
-      <div style={{ position: 'relative' }}>
-        <button
-          type="button"
-          onClick={() => setOpen(o => !o)}
-          className="w-full flex items-center justify-between text-sm font-semibold text-white"
-          style={{ ...glass, borderRadius: '14px', padding: '11px 14px', outline: 'none' }}
-        >
-          <span>{selected?.label}</span>
-          <ChevronDown size={14} className="text-slate-400" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-        </button>
-        {open && (
-          <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 50, background: 'rgba(6,10,22,0.98)', border: '1px solid rgba(239,68,68,0.20)', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.8)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)' }}>
-            <div style={{ maxHeight: '220px', overflowY: 'auto', scrollbarWidth: 'thin' }}>
-              {options.map(o => (
-                <button key={o.value} type="button"
-                  onClick={() => { onChange(o.value); setOpen(false); }}
-                  className="w-full text-left px-4 py-2.5 text-sm"
-                  style={{ color: value === o.value ? '#f87171' : '#94a3b8', background: value === o.value ? 'rgba(239,68,68,0.10)' : 'transparent', borderLeft: value === o.value ? '2px solid #ef4444' : '2px solid transparent', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-                >
-                  {o.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
+// ── Confirm Modal (bottom-sheet on mobile) ────────────────────────────────────
 function ConfirmModal({ open, onClose, title, subtitle, phrase, onConfirm, loading }) {
   const [val, setVal] = useState('');
+  const inputRef = useRef(null);
   const match = val.trim() === phrase;
+
+  useEffect(() => {
+    if (open) { setVal(''); setTimeout(() => inputRef.current?.focus(), 120); }
+  }, [open]);
+
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
+      style={{ background: 'rgba(0,0,0,0.80)', backdropFilter: 'blur(12px)' }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full sm:max-w-md rounded-t-[28px] sm:rounded-[24px] overflow-hidden"
-        style={{ background: 'linear-gradient(160deg,rgba(20,8,8,0.98) 0%,rgba(8,12,28,0.98) 100%)', border: '1px solid rgba(239,68,68,0.22)', boxShadow: '0 -8px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(239,68,68,0.08)' }}>
-
+      <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden"
+        style={{ background: 'rgba(10,6,6,0.98)', border: '1px solid rgba(239,68,68,0.20)', boxShadow: '0 -8px 48px rgba(0,0,0,0.7)' }}>
         {/* drag handle */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
           <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
         </div>
-
-        {/* top shimmer */}
-        <div className="h-px w-full" style={{ background: 'linear-gradient(90deg,transparent,rgba(239,68,68,0.5),transparent)' }} />
-
-        <div className="px-5 pt-5 pb-4 flex items-center gap-3" style={{ borderBottom: '1px solid rgba(239,68,68,0.10)' }}>
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.30)', boxShadow: '0 0 20px rgba(239,68,68,0.15)' }}>
-            <Flame size={18} className="text-red-400" />
+        <div className="h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(239,68,68,0.5),transparent)' }} />
+        {/* header */}
+        <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid rgba(239,68,68,0.10)' }}>
+          <div className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.30)' }}>
+            <Flame size={16} className="text-red-400" />
           </div>
-          <div>
-            <p className="font-bold text-white text-base">{title}</p>
-            <p className="text-xs text-red-400 mt-0.5">{subtitle}</p>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-white text-sm leading-tight">{title}</p>
+            {subtitle && <p className="text-xs text-red-400 mt-0.5 truncate">{subtitle}</p>}
           </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#64748b' }}>
+            <X size={14} />
+          </button>
         </div>
-
         <div className="p-5 space-y-4">
-          <p className="text-sm text-slate-400 leading-relaxed">Type this phrase exactly to confirm:</p>
+          <p className="text-xs text-slate-400">Type this phrase exactly to confirm:</p>
           <div className="rounded-2xl px-4 py-3 text-center"
             style={{ background: 'rgba(239,68,68,0.08)', border: '1px dashed rgba(239,68,68,0.35)' }}>
             <span className="font-mono font-bold text-sm text-red-300 tracking-wide select-all">{phrase}</span>
           </div>
-          <input
+          <input ref={inputRef}
             className="input font-mono text-sm w-full"
             placeholder={phrase}
             value={val}
             onChange={e => setVal(e.target.value)}
-            autoFocus
             style={{ borderColor: val.length > 0 ? (match ? 'rgba(52,211,153,0.5)' : 'rgba(239,68,68,0.4)') : undefined, borderRadius: '14px' }}
           />
           {val.length > 0 && (
             <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: match ? '#34d399' : '#f87171' }}>
-              {match ? <><CheckCircle2 size={12} /> Phrase matches — ready</> : <><AlertTriangle size={12} /> Does not match</>}
+              {match ? <><CheckCircle2 size={12} /> Ready to delete</> : <><AlertTriangle size={12} /> Phrase doesn't match</>}
             </p>
           )}
-          <div className="flex gap-3 pt-1">
+          <div className="flex gap-3">
             <button onClick={onClose}
-              className="flex-1 py-3 rounded-2xl text-sm font-semibold text-slate-300 transition-all hover:text-white"
+              className="flex-1 py-3 rounded-2xl text-sm font-semibold text-slate-300"
               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
               Cancel
             </button>
             <button onClick={() => { onConfirm(); setVal(''); }} disabled={loading || !match}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm text-white disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ background: match ? 'linear-gradient(135deg,#dc2626,#ef4444)' : 'rgba(239,68,68,0.3)', border: '1px solid rgba(239,68,68,0.35)', boxShadow: match ? '0 4px 20px rgba(239,68,68,0.30)' : 'none', transition: 'all 0.2s' }}>
-              <Trash2 size={14} />
-              {loading ? 'Deleting…' : 'Delete Forever'}
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm text-white disabled:opacity-40"
+              style={{ background: match ? 'linear-gradient(135deg,#dc2626,#ef4444)' : 'rgba(239,68,68,0.25)', border: '1px solid rgba(239,68,68,0.35)', boxShadow: match ? '0 4px 20px rgba(239,68,68,0.30)' : 'none', transition: 'all 0.2s' }}>
+              <Trash2 size={13} /> {loading ? 'Deleting…' : 'Delete'}
             </button>
           </div>
         </div>
@@ -139,10 +79,138 @@ function ConfirmModal({ open, onClose, title, subtitle, phrase, onConfirm, loadi
   );
 }
 
+// ── Member Picker (bottom-sheet on mobile) ────────────────────────────────────
+function MemberPicker({ members, value, onChange, open, onClose }) {
+  const [q, setQ] = useState('');
+  const filtered = members.filter(m => rn(m.name).toLowerCase().includes(q.toLowerCase()));
+
+  useEffect(() => { if (!open) setQ(''); }, [open]);
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[9998] flex items-end sm:items-center justify-center"
+      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl overflow-hidden flex flex-col"
+        style={{ background: 'rgba(8,10,20,0.99)', border: '1px solid rgba(232,121,249,0.18)', boxShadow: '0 -8px 48px rgba(0,0,0,0.7)', maxHeight: '80vh' }}>
+        {/* drag handle */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden flex-shrink-0">
+          <div className="w-10 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
+        </div>
+        {/* header */}
+        <div className="flex items-center justify-between px-5 py-3.5 flex-shrink-0"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <p className="font-bold text-white text-sm">Select Member</p>
+          <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: '#64748b' }}>
+            <X size={14} />
+          </button>
+        </div>
+        {/* search */}
+        <div className="px-4 py-3 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
+            <Search size={14} className="text-slate-500 flex-shrink-0" />
+            <input
+              autoFocus
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholder="Search member…"
+              className="flex-1 bg-transparent text-sm text-white placeholder-slate-600 outline-none"
+            />
+            {q && <button onClick={() => setQ('')}><X size={12} className="text-slate-500" /></button>}
+          </div>
+        </div>
+        {/* list */}
+        <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin' }}>
+          {filtered.length === 0
+            ? <p className="text-center text-slate-600 text-sm py-8">No members found</p>
+            : filtered.map((m, i) => {
+              const name = rn(m.name);
+              const isSel = m._id === value;
+              const initial = name[0]?.toUpperCase();
+              return (
+                <button key={m._id}
+                  onClick={() => { onChange(m._id); onClose(); }}
+                  className="w-full flex items-center gap-3 px-5 py-3.5 text-left active:bg-white/5"
+                  style={{
+                    borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                    background: isSel ? 'rgba(232,121,249,0.08)' : 'transparent',
+                    borderLeft: isSel ? '3px solid #e879f9' : '3px solid transparent',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                    style={{ background: isSel ? 'rgba(232,121,249,0.20)' : 'rgba(255,255,255,0.07)', color: isSel ? '#e879f9' : '#94a3b8' }}>
+                    {initial}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate" style={{ color: isSel ? '#e879f9' : '#e2e8f0' }}>{name}</p>
+                    {m.room && <p className="text-xs text-slate-500 mt-0.5">Room {m.room}</p>}
+                  </div>
+                  {isSel && <CheckCircle2 size={16} style={{ color: '#e879f9', flexShrink: 0 }} />}
+                </button>
+              );
+            })
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Result grid ───────────────────────────────────────────────────────────────
+function ResultGrid({ data }) {
+  const entries = Object.entries(data).filter(([, v]) => typeof v === 'number');
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.18)' }}>
+      <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid rgba(16,185,129,0.12)' }}>
+        <CheckCircle2 size={14} className="text-emerald-400" />
+        <p className="text-xs font-bold text-emerald-400">Done — records deleted</p>
+      </div>
+      <div className="grid grid-cols-2 gap-px" style={{ background: 'rgba(255,255,255,0.04)' }}>
+        {entries.map(([k, v]) => (
+          <div key={k} className="flex items-center justify-between px-3 py-2.5"
+            style={{ background: 'rgba(8,12,24,0.80)' }}>
+            <span className="text-xs text-slate-500 capitalize truncate">{k}</span>
+            <span className="text-sm font-bold text-emerald-400 ml-2 flex-shrink-0">{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Action Card ───────────────────────────────────────────────────────────────
+function ActionCard({ icon: Icon, iconBg, iconColor, accentBorder, title, subtitle, description, children, danger }) {
+  return (
+    <div className="rounded-2xl overflow-hidden"
+      style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${accentBorder}`, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
+      {/* card header */}
+      <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: `1px solid ${accentBorder}` }}>
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+          style={{ background: iconBg, border: `1px solid ${iconColor}40` }}>
+          <Icon size={18} style={{ color: iconColor }} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-white leading-tight">{title}</p>
+          <p className="text-xs mt-0.5" style={{ color: iconColor }}>{subtitle}</p>
+        </div>
+      </div>
+      {/* body */}
+      <div className="px-4 py-4 space-y-4">
+        {description && <p className="text-xs text-slate-500 leading-relaxed">{description}</p>}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
 export default function AdminPurge() {
   const now = new Date();
   const [month,   setMonth]   = useState(now.getMonth() + 1);
   const [year,    setYear]    = useState(now.getFullYear());
+
   const [modal,   setModal]   = useState(false);
   const [loading, setLoading] = useState(false);
   const [result,  setResult]  = useState(null);
@@ -157,352 +225,219 @@ export default function AdminPurge() {
 
   const [members,       setMembers]       = useState([]);
   const [selMember,     setSelMember]     = useState('');
+  const [pickerOpen,    setPickerOpen]    = useState(false);
   const [memberModal,   setMemberModal]   = useState(false);
   const [memberLoading, setMemberLoading] = useState(false);
   const [memberResult,  setMemberResult]  = useState(null);
-  const [memberDrop,    setMemberDrop]    = useState(false);
 
   useEffect(() => {
     api.get('/admin/members').then(r => setMembers(r.data.filter(m => m.role !== 'admin'))).catch(() => {});
   }, [memberResult]);
 
-  const rn = n => { const m = n?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (n || ''); };
   const selectedMember = members.find(m => m._id === selMember);
-  const memberPhrase = selectedMember ? `DELETE ${rn(selectedMember.name).toUpperCase()}` : '';
-
-  const handlePurgeAllMeals = async () => {
-    setMealsLoading(true);
-    try {
-      const { data } = await api.delete('/admin/purge-all-meals');
-      setMealsResult(data.deleted);
-      toast.success(data.message);
-      setMealsModal(false);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Delete failed');
-    } finally { setMealsLoading(false); }
-  };
-
-  const handlePurgeMember = async () => {
-    setMemberLoading(true);
-    try {
-      const { data } = await api.delete(`/admin/purge-member/${selMember}`);
-      setMemberResult(data.deleted);
-      toast.success(data.message);
-      setMemberModal(false);
-      setSelMember('');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Purge failed');
-    } finally { setMemberLoading(false); }
-  };
-
-  const selectedLabel = `${MONTHS[month - 1]} ${year}`;
-  const confirmPhrase = `DELETE ${selectedLabel.toUpperCase()}`;
-  const ALL_PHRASE    = 'DELETE ALL MEMBERS';
+  const memberPhrase   = selectedMember ? `DELETE ${rn(selectedMember.name).toUpperCase()}` : '';
+  const selectedLabel  = `${MONTHS[month - 1]} ${year}`;
+  const confirmPhrase  = `DELETE ${selectedLabel.toUpperCase()}`;
 
   const handlePurge = async () => {
     setLoading(true);
     try {
       const { data } = await api.delete(`/admin/purge-month/${month}/${year}`);
-      setResult(data.deleted);
-      toast.success(data.message);
-      setModal(false);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Purge failed');
-    } finally { setLoading(false); }
+      setResult(data.deleted); toast.success(data.message); setModal(false);
+    } catch (err) { toast.error(err.response?.data?.message || 'Purge failed'); }
+    finally { setLoading(false); }
   };
 
   const handlePurgeAll = async () => {
     setAllLoading(true);
     try {
       const { data } = await api.delete('/admin/purge-all-members');
-      setAllResult(data.deleted);
-      toast.success(data.message);
-      setAllModal(false);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Purge failed');
-    } finally { setAllLoading(false); }
+      setAllResult(data.deleted); toast.success(data.message); setAllModal(false);
+    } catch (err) { toast.error(err.response?.data?.message || 'Purge failed'); }
+    finally { setAllLoading(false); }
   };
 
-  const monthOptions = MONTHS.map((m, i) => ({ value: i + 1, label: m }));
-  const yearOptions  = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map(y => ({ value: y, label: String(y) }));
+  const handlePurgeAllMeals = async () => {
+    setMealsLoading(true);
+    try {
+      const { data } = await api.delete('/admin/purge-all-meals');
+      setMealsResult(data.deleted); toast.success(data.message); setMealsModal(false);
+    } catch (err) { toast.error(err.response?.data?.message || 'Delete failed'); }
+    finally { setMealsLoading(false); }
+  };
+
+  const handlePurgeMember = async () => {
+    setMemberLoading(true);
+    try {
+      const { data } = await api.delete(`/admin/purge-member/${selMember}`);
+      setMemberResult(data.deleted); toast.success(data.message); setMemberModal(false); setSelMember('');
+    } catch (err) { toast.error(err.response?.data?.message || 'Purge failed'); }
+    finally { setMemberLoading(false); }
+  };
+
+  const yearOptions = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
 
   return (
-    <div className="space-y-4 max-w-2xl relative">
-
-      {/* ambient glow */}
-      <div aria-hidden="true" style={{ pointerEvents: 'none', position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '10%', right: '5%', width: '40vw', height: '40vw', maxWidth: 400, maxHeight: 400, background: 'radial-gradient(circle,rgba(239,68,68,0.07) 0%,transparent 70%)', borderRadius: '50%', filter: 'blur(60px)' }} />
-      </div>
+    <div className="space-y-4 max-w-lg pb-8">
 
       {/* ── Header ── */}
-      <div className="relative rounded-2xl p-4 px-5 flex items-center gap-4" style={redGlass}>
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.30)', boxShadow: '0 0 24px rgba(239,68,68,0.15)' }}>
-          <ShieldAlert size={22} className="text-red-400" />
+      <div className="rounded-2xl p-4 flex items-center gap-3"
+        style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)' }}>
+        <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+          style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.30)' }}>
+          <ShieldAlert size={20} className="text-red-400" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-white">Purge Data</h1>
-          <p className="text-slate-500 text-xs mt-0.5">Permanently wipe records — irreversible action</p>
-        </div>
-        {/* top shimmer */}
-        <div className="absolute top-0 left-8 right-8 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(239,68,68,0.4),transparent)' }} />
-      </div>
-
-      {/* ── Warning ── */}
-      <div className="rounded-2xl p-4 flex gap-3 items-start"
-        style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-          style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.25)' }}>
-          <AlertTriangle size={15} className="text-red-400" />
-        </div>
-        <div>
-          <p className="text-sm font-bold text-red-300">This action cannot be undone</p>
-          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-            All records for the chosen month will be permanently wiped.{' '}
-            <span className="text-emerald-400 font-semibold">Member accounts are never deleted.</span>
-          </p>
+          <h1 className="text-base font-bold text-white">Purge Data</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Permanently wipe records — irreversible</p>
         </div>
       </div>
 
-      {/* ── What gets deleted ── */}
-      <div className="rounded-2xl p-4 sm:p-5" style={glass}>
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: 'rgba(148,163,184,0.10)', border: '1px solid rgba(148,163,184,0.15)' }}>
-            <Database size={13} className="text-slate-400" />
-          </div>
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Records that will be erased</p>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {DATA_ITEMS.map(({ label, color, bg }) => (
-            <div key={label} className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
-              style={{ background: bg, border: `1px solid ${color}22` }}>
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color, boxShadow: `0 0 6px ${color}` }} />
-              <span className="text-xs font-medium text-slate-300 truncate">{label}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 flex items-center gap-2 px-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" style={{ boxShadow: '0 0 6px #34d399' }} />
-          <p className="text-xs text-slate-600">Member accounts &amp; profiles are always kept safe</p>
-        </div>
-      </div>
+      {/* ── 1. Purge by Month ── */}
+      <ActionCard
+        icon={Trash2} iconBg="rgba(239,68,68,0.15)" iconColor="#f87171"
+        accentBorder="rgba(239,68,68,0.18)"
+        title="Purge Month Data"
+        subtitle="Wipes all records for a specific month"
+        description="Deletes meals, expenses, payments, bills, and summary for the selected month. Member accounts are never deleted.">
 
-      {/* ── Month Purge ── */}
-      <div className="rounded-2xl p-4 sm:p-5 space-y-4" style={glass}>
-        <p className="text-sm font-bold text-white">Purge by Month</p>
-        <div className="grid grid-cols-2 gap-3" style={{ position: 'relative', zIndex: 20 }}>
-          <Dropdown label="Month" value={month} onChange={v => { setMonth(v); setResult(null); }} options={monthOptions} />
-          <Dropdown label="Year"  value={year}  onChange={v => { setYear(v);  setResult(null); }} options={yearOptions}  />
-        </div>
-        <div className="rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-          style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)' }}>
+        {/* Month + Year selectors */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Month */}
           <div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Selected for purge</p>
-            <p className="text-lg font-bold text-red-300 mt-0.5">{selectedLabel}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Month</p>
+            <div className="relative">
+              <select
+                value={month}
+                onChange={e => { setMonth(Number(e.target.value)); setResult(null); }}
+                className="w-full appearance-none text-sm font-semibold text-white pr-8 pl-3 py-2.5 rounded-xl outline-none"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', WebkitAppearance: 'none' }}>
+                {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+              </select>
+              <ChevronDown size={13} className="text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+          {/* Year */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Year</p>
+            <div className="relative">
+              <select
+                value={year}
+                onChange={e => { setYear(Number(e.target.value)); setResult(null); }}
+                className="w-full appearance-none text-sm font-semibold text-white pr-8 pl-3 py-2.5 rounded-xl outline-none"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', WebkitAppearance: 'none' }}>
+                {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+              <ChevronDown size={13} className="text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+        </div>
+
+        {/* Selected label + button */}
+        <div className="flex items-center justify-between gap-3 rounded-xl px-4 py-3"
+          style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}>
+          <div>
+            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Selected</p>
+            <p className="text-sm font-bold text-red-300 mt-0.5">{selectedLabel}</p>
           </div>
           <button onClick={() => setModal(true)}
-            className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-bold text-sm text-white w-full sm:w-auto"
-            style={{ background: 'linear-gradient(135deg,#dc2626,#ef4444)', border: '1px solid rgba(239,68,68,0.35)', boxShadow: '0 4px 20px rgba(239,68,68,0.25)', WebkitTapHighlightColor: 'transparent' }}>
-            <Trash2 size={15} /> Purge {selectedLabel}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white flex-shrink-0 active:scale-95 transition-transform"
+            style={{ background: 'rgba(239,68,68,0.25)', border: '1px solid rgba(239,68,68,0.40)', WebkitTapHighlightColor: 'transparent' }}>
+            <Trash2 size={13} /> Purge
           </button>
         </div>
 
-        {/* Month purge result */}
-        {result && (
-          <div className="rounded-2xl p-4" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.20)' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <CheckCircle2 size={16} className="text-emerald-400" />
-              <p className="text-sm font-bold text-emerald-400">Purge Complete</p>
-              <span className="text-xs text-slate-500">— {selectedLabel}</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {DATA_ITEMS.map(({ key, label, color, bg }) => (
-                <div key={key} className="rounded-xl px-3 py-2.5 flex items-center justify-between gap-2"
-                  style={{ background: bg, border: `1px solid ${color}22` }}>
-                  <span className="text-xs text-slate-400 truncate">{label}</span>
-                  <span className="text-sm font-bold flex-shrink-0" style={{ color }}>{result[key] ?? 0}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+        {result && <ResultGrid data={result} />}
+      </ActionCard>
 
-      {/* ── Delete All Meals ── */}
-      <div className="rounded-2xl p-4 sm:p-5 space-y-4"
-        style={{ background: 'rgba(20,40,20,0.14)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', border: '1px solid rgba(52,211,153,0.22)', boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(52,211,153,0.18)', border: '1px solid rgba(52,211,153,0.30)' }}>
-            <UtensilsCrossed size={16} className="text-emerald-400" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-white">Delete All Meals</p>
-            <p className="text-[10px] text-emerald-400 mt-0.5">Wipes every meal record across all months</p>
-          </div>
-        </div>
-        <p className="text-xs text-slate-400 leading-relaxed">
-          Deletes <span className="text-white font-semibold">all meal records</span> from every month.
-          Member accounts, expenses, payments and bills are <span className="text-emerald-400 font-semibold">not affected</span>.
-        </p>
+      {/* ── 2. Delete All Meals ── */}
+      <ActionCard
+        icon={UtensilsCrossed} iconBg="rgba(52,211,153,0.15)" iconColor="#34d399"
+        accentBorder="rgba(52,211,153,0.18)"
+        title="Delete All Meals"
+        subtitle="Wipes every meal record across all months"
+        description="Only meal records are deleted. Expenses, payments, bills and member accounts are not affected.">
         <button onClick={() => { setMealsResult(null); setMealsModal(true); }}
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm text-white"
-          style={{ background: 'linear-gradient(135deg,#065f46,#059669,#34d399)', border: '1px solid rgba(52,211,153,0.35)', boxShadow: '0 4px 24px rgba(52,211,153,0.15)', WebkitTapHighlightColor: 'transparent' }}>
-          <UtensilsCrossed size={15} /> Delete All Meal Records
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-transform"
+          style={{ background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.30)', WebkitTapHighlightColor: 'transparent' }}>
+          <UtensilsCrossed size={14} /> Delete All Meal Records
         </button>
-        {mealsResult && (
-          <div className="rounded-2xl p-4" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.20)' }}>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 size={16} className="text-emerald-400" />
-              <p className="text-sm font-bold text-emerald-400">Meals Deleted</p>
-              <span className="text-xs text-slate-500">— {mealsResult.meals} records removed</span>
-            </div>
-          </div>
-        )}
-      </div>
+        {mealsResult && <ResultGrid data={mealsResult} />}
+      </ActionCard>
 
-      {/* ── Delete Single Member ── */}
-      <div className="rounded-2xl p-4 sm:p-5 space-y-4"
-        style={{ background: 'rgba(99,29,99,0.12)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', border: '1px solid rgba(232,121,249,0.22)', boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(232,121,249,0.18)', border: '1px solid rgba(232,121,249,0.30)' }}>
-            <UserX size={16} className="text-fuchsia-400" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-white">Delete Single Member</p>
-            <p className="text-[10px] text-fuchsia-400 mt-0.5">Removes login credentials + all their records</p>
-          </div>
-        </div>
-        <p className="text-xs text-slate-400 leading-relaxed">
-          Deletes the member's <span className="text-white font-semibold">login credentials</span> and all their meals, payments, bills, and charges.
-        </p>
-        <div style={{ position: 'relative' }}>
-          <button type="button" onClick={() => setMemberDrop(o => !o)}
-            className="w-full flex items-center justify-between text-sm font-semibold"
-            style={{ ...glass, borderRadius: '14px', padding: '11px 14px', outline: 'none', color: selectedMember ? '#fff' : '#475569' }}>
-            <span>{selectedMember ? `${rn(selectedMember.name)}${selectedMember.room ? ` · Room ${selectedMember.room}` : ''}` : '— Select Member —'}</span>
-            <ChevronDown size={14} className="text-slate-400" style={{ transform: memberDrop ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-          </button>
-          {memberDrop && (
-            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 50, background: 'rgba(6,10,22,0.98)', border: '1px solid rgba(232,121,249,0.20)', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.8)', backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)' }}>
-              <div style={{ maxHeight: '200px', overflowY: 'auto', scrollbarWidth: 'thin' }}>
-                {members.length === 0 && <p className="text-slate-600 text-xs text-center py-4">No members</p>}
-                {members.map(m => (
-                  <button key={m._id} type="button"
-                    onClick={() => { setSelMember(m._id); setMemberDrop(false); setMemberResult(null); }}
-                    className="w-full text-left px-4 py-2.5 text-sm"
-                    style={{ color: selMember === m._id ? '#e879f9' : '#94a3b8', background: selMember === m._id ? 'rgba(232,121,249,0.10)' : 'transparent', borderLeft: selMember === m._id ? '2px solid #e879f9' : '2px solid transparent', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    {rn(m.name)}{m.room ? ` · Room ${m.room}` : ''}
-                  </button>
-                ))}
+      {/* ── 3. Delete Single Member ── */}
+      <ActionCard
+        icon={UserX} iconBg="rgba(232,121,249,0.15)" iconColor="#e879f9"
+        accentBorder="rgba(232,121,249,0.18)"
+        title="Delete Single Member"
+        subtitle="Removes login + all their records">
+
+        {/* Member selector button */}
+        <button onClick={() => setPickerOpen(true)}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left active:bg-white/5 transition-colors"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', WebkitTapHighlightColor: 'transparent' }}>
+          {selectedMember ? (
+            <>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                style={{ background: 'rgba(232,121,249,0.20)', color: '#e879f9' }}>
+                {rn(selectedMember.name)[0]?.toUpperCase()}
               </div>
-            </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{rn(selectedMember.name)}</p>
+                {selectedMember.room && <p className="text-xs text-slate-500">Room {selectedMember.room}</p>}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(255,255,255,0.07)' }}>
+                <UserX size={14} className="text-slate-500" />
+              </div>
+              <p className="text-sm text-slate-500 flex-1">Tap to select member…</p>
+            </>
           )}
-        </div>
-        <button onClick={() => { if (!selMember) { toast.error('Select a member first'); return; } setMemberResult(null); setMemberModal(true); }}
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm text-white"
-          style={{ background: selMember ? 'linear-gradient(135deg,#7e22ce,#a855f7,#e879f9)' : 'rgba(232,121,249,0.15)', border: '1px solid rgba(232,121,249,0.35)', boxShadow: selMember ? '0 4px 24px rgba(232,121,249,0.20)' : 'none', WebkitTapHighlightColor: 'transparent', opacity: selMember ? 1 : 0.5 }}>
-          <UserX size={15} /> Delete Member &amp; Credentials
+          <ChevronDown size={14} className="text-slate-500 flex-shrink-0" />
         </button>
-        {memberResult && (
-          <div className="rounded-2xl p-4" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.20)' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <CheckCircle2 size={16} className="text-emerald-400" />
-              <p className="text-sm font-bold text-emerald-400">Member Deleted</p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {Object.entries(memberResult).map(([k, v]) => (
-                <div key={k} className="rounded-xl px-3 py-2.5 flex items-center justify-between gap-2"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span className="text-xs text-slate-400 truncate capitalize">{k}</span>
-                  <span className="text-sm font-bold text-emerald-400">{v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
 
-      {/* ── Purge All Members ── */}
-      <div className="rounded-2xl p-4 sm:p-5 space-y-4"
-        style={{ background: 'rgba(127,29,29,0.12)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', border: '1px solid rgba(239,68,68,0.22)', boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(239,68,68,0.18)', border: '1px solid rgba(239,68,68,0.30)', boxShadow: '0 0 20px rgba(239,68,68,0.12)' }}>
-            <Flame size={16} className="text-red-400" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-white">Purge All Members</p>
-            <p className="text-[10px] text-red-400 mt-0.5">Nuclear option — wipes everything</p>
-          </div>
-        </div>
-        <p className="text-xs text-slate-400 leading-relaxed">
-          Deletes <span className="text-white font-semibold">all members</span> and every record across all months.
-          Only the <span className="text-emerald-400 font-semibold">admin account</span> is preserved.
-        </p>
+        <button
+          onClick={() => { if (!selMember) { toast.error('Select a member first'); return; } setMemberResult(null); setMemberModal(true); }}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-transform"
+          style={{ background: selMember ? 'rgba(232,121,249,0.18)' : 'rgba(255,255,255,0.05)', border: `1px solid ${selMember ? 'rgba(232,121,249,0.35)' : 'rgba(255,255,255,0.08)'}`, opacity: selMember ? 1 : 0.5, WebkitTapHighlightColor: 'transparent' }}>
+          <UserX size={14} /> Delete Member
+        </button>
+
+        {memberResult && <ResultGrid data={memberResult} />}
+      </ActionCard>
+
+      {/* ── 4. Purge All Members ── */}
+      <ActionCard
+        icon={Flame} iconBg="rgba(239,68,68,0.15)" iconColor="#f87171"
+        accentBorder="rgba(239,68,68,0.22)"
+        title="Purge Everything"
+        subtitle="Nuclear option — wipes all members & data"
+        description="Deletes all members and every record across all months. Only the admin account is preserved.">
         <button onClick={() => { setAllResult(null); setAllModal(true); }}
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm text-white"
-          style={{ background: 'linear-gradient(135deg,#7f1d1d,#dc2626,#ef4444)', border: '1px solid rgba(239,68,68,0.35)', boxShadow: '0 4px 24px rgba(239,68,68,0.20)', WebkitTapHighlightColor: 'transparent' }}>
-          <Trash2 size={15} /> Delete All Members &amp; Data
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-transform"
+          style={{ background: 'rgba(239,68,68,0.18)', border: '1px solid rgba(239,68,68,0.35)', WebkitTapHighlightColor: 'transparent' }}>
+          <Flame size={14} /> Delete All Members &amp; Data
         </button>
+        {allResult && <ResultGrid data={allResult} />}
+      </ActionCard>
 
-        {allResult && (
-          <div className="rounded-2xl p-4" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.20)' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <CheckCircle2 size={16} className="text-emerald-400" />
-              <p className="text-sm font-bold text-emerald-400">All Data Purged</p>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {Object.entries(allResult).map(([k, v]) => (
-                <div key={k} className="rounded-xl px-3 py-2.5 flex items-center justify-between gap-2"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span className="text-xs text-slate-400 truncate capitalize">{k}</span>
-                  <span className="text-sm font-bold text-emerald-400">{v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      {/* ── Member Picker Sheet ── */}
+      <MemberPicker
+        members={members}
+        value={selMember}
+        onChange={id => { setSelMember(id); setMemberResult(null); }}
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+      />
 
-      {/* ── Modals ── */}
-      <ConfirmModal
-        open={mealsModal}
-        onClose={() => setMealsModal(false)}
-        title="Delete All Meal Records"
-        subtitle="Every meal across all months — cannot be undone"
-        phrase="DELETE ALL MEALS"
-        onConfirm={handlePurgeAllMeals}
-        loading={mealsLoading}
-      />
-      <ConfirmModal
-        open={memberModal}
-        onClose={() => setMemberModal(false)}
-        title="Delete Member & Credentials"
-        subtitle={selectedMember ? `${rn(selectedMember.name)} · Cannot be undone` : ''}
-        phrase={memberPhrase}
-        onConfirm={handlePurgeMember}
-        loading={memberLoading}
-      />
-      <ConfirmModal
-        open={modal}
-        onClose={() => setModal(false)}
-        title="Confirm Month Purge"
-        subtitle={`${selectedLabel} · Cannot be undone`}
-        phrase={confirmPhrase}
-        onConfirm={handlePurge}
-        loading={loading}
-      />
-      <ConfirmModal
-        open={allModal}
-        onClose={() => setAllModal(false)}
-        title="Delete All Members & Data"
-        subtitle="Admin account will be preserved"
-        phrase={ALL_PHRASE}
-        onConfirm={handlePurgeAll}
-        loading={allLoading}
-      />
+      {/* ── Confirm Modals ── */}
+      <ConfirmModal open={modal}       onClose={() => setModal(false)}       title="Purge Month Data"          subtitle={`${selectedLabel} · Cannot be undone`}                          phrase={confirmPhrase}  onConfirm={handlePurge}          loading={loading}        />
+      <ConfirmModal open={mealsModal}  onClose={() => setMealsModal(false)}  title="Delete All Meal Records"  subtitle="Every meal across all months"                                    phrase="DELETE ALL MEALS" onConfirm={handlePurgeAllMeals}  loading={mealsLoading}   />
+      <ConfirmModal open={memberModal} onClose={() => setMemberModal(false)} title="Delete Member"            subtitle={selectedMember ? `${rn(selectedMember.name)} · Cannot be undone` : ''} phrase={memberPhrase}   onConfirm={handlePurgeMember}    loading={memberLoading}  />
+      <ConfirmModal open={allModal}    onClose={() => setAllModal(false)}    title="Purge All Members & Data" subtitle="Admin account will be preserved"                                  phrase="DELETE ALL MEMBERS" onConfirm={handlePurgeAll}    loading={allLoading}     />
     </div>
   );
 }
