@@ -7,7 +7,7 @@ router.use(auth);
 
 router.get('/list', async (req, res) => {
   try {
-    const summaries = await MonthlySummary.find().sort({ year: -1, month: -1 });
+    const summaries = await MonthlySummary.find().sort({ year: -1, month: -1 }).lean();
     const now = new Date();
     const curMonth = now.getMonth() + 1;
     const curYear  = now.getFullYear();
@@ -21,7 +21,7 @@ router.get('/list', async (req, res) => {
 
 router.get('/:month/:year', async (req, res) => {
   try {
-    const summary = await MonthlySummary.findOne({ month: req.params.month, year: req.params.year });
+    const summary = await MonthlySummary.findOne({ month: req.params.month, year: req.params.year }).lean();
     res.json(summary || { groceryTotal: 0, otherTotal: 0, grandTotal: 0, totalMeals: 0, mealRate: 0, isClosed: false });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });

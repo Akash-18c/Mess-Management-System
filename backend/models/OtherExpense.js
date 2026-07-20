@@ -14,4 +14,6 @@ const otherExpenseSchema = new mongoose.Schema({
   addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 
+otherExpenseSchema.index({ month: 1, year: 1 });
+
 module.exports = mongoose.model('OtherExpense', otherExpenseSchema);

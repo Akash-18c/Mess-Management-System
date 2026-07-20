@@ -13,5 +13,8 @@ const mealSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 mealSchema.index({ date: 1, memberId: 1 }, { unique: true });
+mealSchema.index({ month: 1, year: 1 });
+mealSchema.index({ month: 1, year: 1, memberId: 1 });
+mealSchema.index({ month: 1, year: 1, isOff: 1 });
 
 module.exports = mongoose.model('Meal', mealSchema);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Unlock, ChevronDown, Calendar, Sparkles, Activity, UtensilsCrossed } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar } from 'recharts';
@@ -9,6 +9,11 @@ import BirthdayBanner from '../../components/BirthdayBanner';
 
 const MONTHS      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// simple in-memory cache (30s TTL)
+const cache = {};
+function getCache(key) { const e = cache[key]; return e && Date.now() - e.ts < 30000 ? e.data : null; }
+function setCache(key, data) { cache[key] = { data, ts: Date.now() }; }
 
 function buildMonthRange() {
   const now = new Date();
@@ -27,6 +32,8 @@ function buildMonthRange() {
   }
   return list.reverse();
 }
+// Compute once — only changes at midnight (handled by state reset)
+const MONTH_RANGE = buildMonthRange();
 
 const glass = {
   background: 'rgba(255,255,255,0.08)',
@@ -79,6 +86,7 @@ export default function AdminDashboard() {
         setSelectedMonth(prev => (prev === curMonth && selectedYear === curYear) ? next.m : prev);
         setSelectedYear(prev => (prev === curYear) ? next.y : prev);
         setCur(next);
+        Object.keys(cache).forEach(k => delete cache[k]);
         schedule();
       }, msUntilMidnight() + 500);
       return t;
@@ -89,21 +97,38 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    api.get('/admin/dashboard').then(r => setData(r.data));
-    api.get('/summary/list').then(r => setAllSummaries(r.data)).catch(() => {});
-    api.get('/admin/members').then(r => setMembers(r.data.filter(m => m.isActive))).catch(() => {});
+    const cd = getCache('adm-dashboard');
+    if (cd) { setData(cd); } else {
+      api.get('/admin/dashboard').then(r => { setData(r.data); setCache('adm-dashboard', r.data); });
+    }
+    const cs = getCache('summaries');
+    if (cs) { setAllSummaries(cs); } else {
+      api.get('/summary/list').then(r => { setAllSummaries(r.data); setCache('summaries', r.data); }).catch(() => {});
+    }
+    const cm = getCache('adm-members');
+    if (cm) { setMembers(cm); } else {
+      api.get('/admin/members').then(r => { const d = r.data.filter(m => m.isActive); setMembers(d); setCache('adm-members', d); }).catch(() => {});
+    }
   }, []);
 
-  useEffect(() => {
-    api.get(`/meals/${selectedMonth}/${selectedYear}`).then(r => setMeals(r.data)).catch(() => setMeals([]));
+  const loadMeals = useCallback(() => {
+    const mk = `meals-${selectedMonth}-${selectedYear}`;
+    const cm = getCache(mk);
+    if (cm) { setMeals(cm); return; }
+    api.get(`/meals/${selectedMonth}/${selectedYear}`).then(r => { setMeals(r.data); setCache(mk, r.data); }).catch(() => setMeals([]));
   }, [selectedMonth, selectedYear]);
+
+  useEffect(() => { loadMeals(); }, [loadMeals]);
 
   const isCurrentMonth = selectedMonth === curMonth && selectedYear === curYear;
 
   useEffect(() => {
     if (isCurrentMonth) { setMonthData(null); return; }
+    const dk = `adm-monthdata-${selectedMonth}-${selectedYear}`;
+    const cd = getCache(dk);
+    if (cd) { setMonthData(cd); return; }
     api.get(`/admin/month-data/${selectedMonth}/${selectedYear}`)
-      .then(r => setMonthData(r.data)).catch(() => setMonthData(null));
+      .then(r => { setMonthData(r.data); setCache(dk, r.data); }).catch(() => setMonthData(null));
   }, [selectedMonth, selectedYear, isCurrentMonth]);
 
   if (!data) return <PageLoader />;
@@ -116,7 +141,7 @@ export default function AdminDashboard() {
 
   const summaryMap = {};
   allSummaries.forEach(s => { summaryMap[`${s.year}-${s.month}`] = s; });
-  const monthOptions = buildMonthRange().map(({ month, year }) => {
+  const monthOptions = MONTH_RANGE.map(({ month, year }) => {
     const s = summaryMap[`${year}-${month}`];
     return { month, year, isClosed: s?.isClosed ?? false, isCurrent: month === curMonth && year === curYear, hasData: !!s };
   });

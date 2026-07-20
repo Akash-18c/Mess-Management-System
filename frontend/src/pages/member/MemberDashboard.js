@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { UtensilsCrossed, IndianRupee, TrendingUp, Wallet, Calendar, ChevronDown, Sparkles, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import api from '../../api';
@@ -8,6 +8,11 @@ import useAuthStore from '../../store/authStore';
 import BirthdayBanner from '../../components/BirthdayBanner';
 
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// simple in-memory cache (30s TTL)
+const cache = {};
+function getCache(key) { const e = cache[key]; return e && Date.now() - e.ts < 30000 ? e.data : null; }
+function setCache(key, data) { cache[key] = { data, ts: Date.now() }; }
 
 function buildMonthRange() {
   const now = new Date();
@@ -26,6 +31,7 @@ function buildMonthRange() {
   }
   return list.reverse();
 }
+const MONTH_RANGE = buildMonthRange();
 
 const BAR_COLORS = ['#22c55e','#34d399','#4ade80','#86efac','#6ee7b7','#10b981','#059669','#16a34a'];
 
@@ -75,21 +81,33 @@ export default function MemberDashboard() {
   }, []);
 
   useEffect(() => {
-    api.get('/member/dashboard').then(r => setData(r.data));
-    api.get('/summary/list').then(r => setAllSummaries(r.data)).catch(() => {});
+    const cd = getCache('mem-dashboard');
+    if (cd) { setData(cd); } else {
+      api.get('/member/dashboard').then(r => { setData(r.data); setCache('mem-dashboard', r.data); });
+    }
+    const cs = getCache('summaries');
+    if (cs) { setAllSummaries(cs); } else {
+      api.get('/summary/list').then(r => { setAllSummaries(r.data); setCache('summaries', r.data); }).catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
+    const ck = `mem-charges-${selectedMonth}-${selectedYear}`;
+    const cc = getCache(ck);
+    if (cc) { setMyCharges(cc); return; }
     api.get(`/expenses/charges/my/${selectedMonth}/${selectedYear}`)
-      .then(r => setMyCharges(r.data)).catch(() => setMyCharges([]));
+      .then(r => { setMyCharges(r.data); setCache(ck, r.data); }).catch(() => setMyCharges([]));
   }, [selectedMonth, selectedYear]);
 
   const isCurrentMonth = selectedMonth === curMonth && selectedYear === curYear;
 
   useEffect(() => {
     if (isCurrentMonth) { setMonthData(null); return; }
+    const dk = `mem-monthdata-${selectedMonth}-${selectedYear}`;
+    const cd = getCache(dk);
+    if (cd) { setMonthData(cd); return; }
     api.get(`/member/month-data/${selectedMonth}/${selectedYear}`)
-      .then(r => setMonthData(r.data))
+      .then(r => { setMonthData(r.data); setCache(dk, r.data); })
       .catch(() => setMonthData(null));
   }, [selectedMonth, selectedYear, isCurrentMonth]);
 
@@ -114,7 +132,7 @@ export default function MemberDashboard() {
 
   const summaryMap = {};
   allSummaries.forEach(s => { summaryMap[`${s.year}-${s.month}`] = s; });
-  const monthOptions = buildMonthRange().map(({ month, year }) => {
+  const monthOptions = MONTH_RANGE.map(({ month, year }) => {
     const s = summaryMap[`${year}-${month}`];
     const isCurrent = month === curMonth && year === curYear;
     return { month, year, isClosed: s?.isClosed ?? false, isCurrent, hasData: !!s || isCurrent };

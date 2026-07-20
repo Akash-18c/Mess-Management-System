@@ -5,10 +5,14 @@ const dotenv = require('dotenv');
 const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 
 dotenv.config();
 
 const app = express();
+
+// ── Gzip compression ──
+app.use(compression());
 
 // ── Security headers ──
 app.use(helmet({
@@ -71,7 +75,16 @@ setInterval(() => {
 
 // ── Serve React build in production ──
 const buildPath = path.join(__dirname, '../frontend/build');
-app.use(express.static(buildPath));
+app.use(express.static(buildPath, {
+  maxAge: '1y',
+  etag: true,
+  setHeaders: (res, filePath) => {
+    // Don't cache index.html so new deploys are picked up immediately
+    if (filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  },
+}));
 app.get('*', (req, res) => {
   res.sendFile(path.join(buildPath, 'index.html'));
 });

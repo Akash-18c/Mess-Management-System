@@ -11,4 +11,7 @@ const paymentSchema = new mongoose.Schema({
   recordedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 
+paymentSchema.index({ month: 1, year: 1 });
+paymentSchema.index({ memberId: 1, month: 1, year: 1 });
+
 module.exports = mongoose.model('Payment', paymentSchema);

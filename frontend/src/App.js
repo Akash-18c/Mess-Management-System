@@ -1,32 +1,34 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore';
-import Login from './pages/Login';
-import AdminLayout from './pages/admin/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminMembers from './pages/admin/AdminMembers';
-import AdminAssignments from './pages/admin/AdminAssignments';
-import AdminReports from './pages/admin/AdminReports';
-import AdminMonths from './pages/admin/AdminMonths';
-import AdminMasiSalary from './pages/admin/AdminMasiSalary';
-import AdminBirthdays from './pages/admin/AdminBirthdays';
-import AdminMarketDuty from './pages/admin/AdminMarketDuty';
-import AdminPurge from './pages/admin/AdminPurge';
-import AdminExpensesHistory from './pages/admin/AdminExpensesHistory';
-import ManagerLayout from './pages/manager/ManagerLayout';
-import ManagerDashboard from './pages/manager/ManagerDashboard';
-import ManagerMeals from './pages/manager/ManagerMeals';
-import ManagerExpenses from './pages/manager/ManagerExpenses';
-import ManagerPayments from './pages/manager/ManagerPayments';
-import ManagerBills from './pages/manager/ManagerBills';
-import ManagerOtherCharges from './pages/manager/ManagerOtherCharges';
-import ManagerMarketDuty from './pages/manager/ManagerMarketDuty';
-import MemberLayout from './pages/member/MemberLayout';
-import MemberDashboard from './pages/member/MemberDashboard';
-import MemberHistory from './pages/member/MemberHistory';
-import MemberExpensesHistory from './pages/member/MemberExpensesHistory';
-import MemberMeals from './pages/member/MemberMeals';
+import PageLoader from './components/PageLoader';
+
+const Login = lazy(() => import('./pages/Login'));
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminMembers = lazy(() => import('./pages/admin/AdminMembers'));
+const AdminAssignments = lazy(() => import('./pages/admin/AdminAssignments'));
+const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
+const AdminMonths = lazy(() => import('./pages/admin/AdminMonths'));
+const AdminMasiSalary = lazy(() => import('./pages/admin/AdminMasiSalary'));
+const AdminBirthdays = lazy(() => import('./pages/admin/AdminBirthdays'));
+const AdminMarketDuty = lazy(() => import('./pages/admin/AdminMarketDuty'));
+const AdminPurge = lazy(() => import('./pages/admin/AdminPurge'));
+const AdminExpensesHistory = lazy(() => import('./pages/admin/AdminExpensesHistory'));
+const ManagerLayout = lazy(() => import('./pages/manager/ManagerLayout'));
+const ManagerDashboard = lazy(() => import('./pages/manager/ManagerDashboard'));
+const ManagerMeals = lazy(() => import('./pages/manager/ManagerMeals'));
+const ManagerExpenses = lazy(() => import('./pages/manager/ManagerExpenses'));
+const ManagerPayments = lazy(() => import('./pages/manager/ManagerPayments'));
+const ManagerBills = lazy(() => import('./pages/manager/ManagerBills'));
+const ManagerOtherCharges = lazy(() => import('./pages/manager/ManagerOtherCharges'));
+const ManagerMarketDuty = lazy(() => import('./pages/manager/ManagerMarketDuty'));
+const MemberLayout = lazy(() => import('./pages/member/MemberLayout'));
+const MemberDashboard = lazy(() => import('./pages/member/MemberDashboard'));
+const MemberHistory = lazy(() => import('./pages/member/MemberHistory'));
+const MemberExpensesHistory = lazy(() => import('./pages/member/MemberExpensesHistory'));
+const MemberMeals = lazy(() => import('./pages/member/MemberMeals'));
 
 function ProtectedRoute({ children, roles }) {
   const { user, token } = useAuthStore();
@@ -58,42 +60,44 @@ export default function App() {
           duration: 3000,
         }}
       />
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<RoleRedirect />} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<RoleRedirect />} />
 
-        <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminLayout /></ProtectedRoute>}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="members" element={<AdminMembers />} />
-          <Route path="assignments" element={<AdminAssignments />} />
-          <Route path="months" element={<AdminMonths />} />
-          <Route path="reports" element={<AdminReports />} />
-          <Route path="masi-salary" element={<AdminMasiSalary />} />
-          <Route path="expenses-history" element={<AdminExpensesHistory />} />
-          <Route path="birthdays" element={<AdminBirthdays />} />
-          <Route path="market-duty" element={<AdminMarketDuty />} />
-          <Route path="purge" element={<AdminPurge />} />
-        </Route>
+          <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminLayout /></ProtectedRoute>}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="members" element={<AdminMembers />} />
+            <Route path="assignments" element={<AdminAssignments />} />
+            <Route path="months" element={<AdminMonths />} />
+            <Route path="reports" element={<AdminReports />} />
+            <Route path="masi-salary" element={<AdminMasiSalary />} />
+            <Route path="expenses-history" element={<AdminExpensesHistory />} />
+            <Route path="birthdays" element={<AdminBirthdays />} />
+            <Route path="market-duty" element={<AdminMarketDuty />} />
+            <Route path="purge" element={<AdminPurge />} />
+          </Route>
 
-        <Route path="/manager" element={<ProtectedRoute roles={['manager', 'admin']}><ManagerLayout /></ProtectedRoute>}>
-          <Route index element={<ManagerDashboard />} />
-          <Route path="meals" element={<ManagerMeals />} />
-          <Route path="expenses" element={<ManagerExpenses />} />
-          <Route path="payments" element={<ManagerPayments />} />
-          <Route path="bills" element={<ManagerBills />} />
-          <Route path="charges" element={<ManagerOtherCharges />} />
-          <Route path="market-duty" element={<ManagerMarketDuty />} />
-        </Route>
+          <Route path="/manager" element={<ProtectedRoute roles={['manager', 'admin']}><ManagerLayout /></ProtectedRoute>}>
+            <Route index element={<ManagerDashboard />} />
+            <Route path="meals" element={<ManagerMeals />} />
+            <Route path="expenses" element={<ManagerExpenses />} />
+            <Route path="payments" element={<ManagerPayments />} />
+            <Route path="bills" element={<ManagerBills />} />
+            <Route path="charges" element={<ManagerOtherCharges />} />
+            <Route path="market-duty" element={<ManagerMarketDuty />} />
+          </Route>
 
-        <Route path="/member" element={<ProtectedRoute roles={['member', 'manager', 'admin']}><MemberLayout /></ProtectedRoute>}>
-          <Route index element={<MemberDashboard />} />
-          <Route path="meals" element={<MemberMeals />} />
-          <Route path="history" element={<MemberHistory />} />
-          <Route path="expenses-history" element={<MemberExpensesHistory />} />
-        </Route>
+          <Route path="/member" element={<ProtectedRoute roles={['member', 'manager', 'admin']}><MemberLayout /></ProtectedRoute>}>
+            <Route index element={<MemberDashboard />} />
+            <Route path="meals" element={<MemberMeals />} />
+            <Route path="history" element={<MemberHistory />} />
+            <Route path="expenses-history" element={<MemberExpensesHistory />} />
+          </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

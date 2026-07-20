@@ -163,33 +163,30 @@ router.get('/dashboard', async (req, res) => {
     const month = now.getMonth() + 1;
     const year = now.getFullYear();
     const Payment = require('../models/Payment');
-    const [summary, assignment, allSummaries, allAssignments, payments] = await Promise.all([
-      MonthlySummary.findOne({ month, year }),
-      MonthAssignment.findOne({ month, year }).populate('managerId', 'name'),
-      MonthlySummary.find().sort({ year: -1, month: -1 }).limit(12),
-      MonthAssignment.find().populate('managerId', 'name').sort({ year: -1, month: -1 }),
-      require('../models/Payment').find({ month, year }),
+    const Meal = require('../models/Meal');
+    const [summary, assignment, allSummaries, allAssignments, payments, allBills, allPayments2, allMembers] = await Promise.all([
+      MonthlySummary.findOne({ month, year }).lean(),
+      MonthAssignment.findOne({ month, year }).populate('managerId', 'name').lean(),
+      MonthlySummary.find().sort({ year: -1, month: -1 }).limit(12).lean(),
+      MonthAssignment.find().populate('managerId', 'name').sort({ year: -1, month: -1 }).lean(),
+      Payment.find({ month, year }).lean(),
+      Bill.find({ month, year }).populate('memberId', 'name room').lean(),
+      Payment.find({ month, year }).lean(),
+      User.find({ isActive: true }, 'name _id role').lean(),
     ]);
     const totalCollected = parseFloat(payments.reduce((s, p) => s + p.amount, 0).toFixed(2));
 
-    // Individual cost table — computed from Meal records so ALL members show even before bills generated
-    const Meal = require('../models/Meal');
-    const Payment2 = require('../models/Payment');
-    // Use date range if period has startDate/endDate (cross-month periods)
     let allMealsThisMonth;
     if (summary?.startDate && summary?.endDate) {
       allMealsThisMonth = await Meal.find({
         date: { $gte: new Date(summary.startDate + 'T00:00:00.000Z'), $lte: new Date(summary.endDate + 'T23:59:59.999Z') },
         isOff: false,
-      });
+      }).lean();
     } else {
-      allMealsThisMonth = await Meal.find({ month, year, isOff: false });
+      allMealsThisMonth = await Meal.find({ month, year, isOff: false }).lean();
     }
-    const allBills = await Bill.find({ month, year }).populate('memberId', 'name room');
-    const allPayments2 = await Payment2.find({ month, year });
-    const allMembers = await User.find({ isActive: true }, 'name _id role');
     const mealRate = summary?.mealRate || 0;
-    const masiRec = await MasiSalary.findOne({ month, year });
+    const masiRec = await MasiSalary.findOne({ month, year }).lean();
     const masiPerMember = masiRec?.perMemberAmount || 0;
     const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
     const individualCosts = allMembers.map(m => {
@@ -235,26 +232,25 @@ router.get('/month-data/:month/:year', async (req, res) => {
     const Payment = require('../models/Payment');
     const Meal    = require('../models/Meal');
     const [summary, payments, allBills, allPayments2, allMembers] = await Promise.all([
-      MonthlySummary.findOne({ month, year }),
-      Payment.find({ month, year }),
-      Bill.find({ month, year }).populate('memberId', 'name room'),
-      Payment.find({ month, year }),
-      User.find({ isActive: true }, 'name _id role'),
+      MonthlySummary.findOne({ month, year }).lean(),
+      Payment.find({ month, year }).lean(),
+      Bill.find({ month, year }).populate('memberId', 'name room').lean(),
+      Payment.find({ month, year }).lean(),
+      User.find({ isActive: true }, 'name _id role').lean(),
     ]);
-    // Use date range if period has startDate/endDate
     let allMeals;
     if (summary?.startDate && summary?.endDate) {
       allMeals = await Meal.find({
         date: { $gte: new Date(summary.startDate + 'T00:00:00.000Z'), $lte: new Date(summary.endDate + 'T23:59:59.999Z') },
         isOff: false,
-      });
+      }).lean();
     } else {
-      allMeals = await Meal.find({ month, year, isOff: false });
+      allMeals = await Meal.find({ month, year, isOff: false }).lean();
     }
     const rnm = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
     const totalCollected = parseFloat((payments.reduce((s, p) => s + p.amount, 0)).toFixed(2));
     const mealRate = summary?.mealRate || 0;
-    const masiRec2 = await MasiSalary.findOne({ month, year });
+    const masiRec2 = await MasiSalary.findOne({ month, year }).lean();
     const masiPerMember2 = masiRec2?.perMemberAmount || 0;
     const individualCosts = allMembers.map(m => {
       const mMeals = allMeals.filter(ml => ml.memberId?.toString() === m._id.toString());

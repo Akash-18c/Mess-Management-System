@@ -51,26 +51,25 @@ router.get('/dashboard', async (req, res) => {
     const today = now.toISOString().slice(0, 10);
 
     const [myMeals, payments, summary, allPayments, groceries, others, members, bills, masiRec, allOtherCharges] = await Promise.all([
-      Meal.find({ memberId: req.user._id, month, year }),
-      Payment.find({ memberId: req.user._id, month, year }),
-      MonthlySummary.findOne({ month, year }),
-      Payment.find({ month, year }),
-      GroceryExpense.find({ month, year }),
-      OtherExpense.find({ month, year }),
-      User.find({ isActive: true }, 'name _id role'),
-      Bill.find({ month, year }).populate('memberId', 'name room'),
-      MasiSalary.findOne({ month, year }),
-      OtherCharge.find({ month, year }),
+      Meal.find({ memberId: req.user._id, month, year }).lean(),
+      Payment.find({ memberId: req.user._id, month, year }).lean(),
+      MonthlySummary.findOne({ month, year }).lean(),
+      Payment.find({ month, year }).lean(),
+      GroceryExpense.find({ month, year }).select('date total status').lean(),
+      OtherExpense.find({ month, year }).select('date amount status').lean(),
+      User.find({ isActive: true }, 'name _id role').lean(),
+      Bill.find({ month, year }).select('memberId totalBill gasCharge riceCharge otherSharedCharge otherCharges lunchCount dinnerCount guestMeals guestCharge').lean(),
+      MasiSalary.findOne({ month, year }).lean(),
+      OtherCharge.find({ month, year }).lean(),
     ]);
 
-    // Build meal query using date range if period has startDate/endDate
     let allMeals;
     if (summary?.startDate && summary?.endDate) {
       allMeals = await Meal.find({
         date: { $gte: new Date(summary.startDate + 'T00:00:00.000Z'), $lte: new Date(summary.endDate + 'T23:59:59.999Z') },
-      }).populate('memberId', 'name');
+      }).select('memberId lunch dinner guestMeals isOff').lean();
     } else {
-      allMeals = await Meal.find({ month, year }).populate('memberId', 'name');
+      allMeals = await Meal.find({ month, year }).select('memberId lunch dinner guestMeals isOff').lean();
     }
 
     let lunch = 0, dinner = 0, guestMeals = 0;
@@ -95,18 +94,18 @@ router.get('/dashboard', async (req, res) => {
     const totalCollected = parseFloat(allPayments.reduce((s, p) => s + p.amount, 0).toFixed(2));
 
     const memberMealCounts = members.map(m => {
-      const mMeals = allMeals.filter(ml => ml.memberId?._id?.toString() === m._id.toString() && !ml.isOff);
+      const mMeals = allMeals.filter(ml => ml.memberId?.toString() === m._id.toString() && !ml.isOff);
       const lunch  = mMeals.filter(ml => ml.lunch).length;
       const dinner = mMeals.filter(ml => ml.dinner).length;
       return { name: rn(m.name).split(' ')[0], lunch, dinner, meals: lunch + dinner };
     });
 
     const individualCosts = members.map(m => {
-      const mMeals = allMeals.filter(ml => ml.memberId?._id?.toString() === m._id.toString() && !ml.isOff);
+      const mMeals = allMeals.filter(ml => ml.memberId?.toString() === m._id.toString() && !ml.isOff);
       const mealCount = mMeals.reduce((s, ml) => s + (ml.lunch ? 1 : 0) + (ml.dinner ? 1 : 0), 0);
       const guestCount = mMeals.reduce((s, ml) => s + (ml.guestMeals || 0), 0);
       const totalMeals = mealCount + guestCount;
-      const mBill = bills.find(b => b.memberId?._id?.toString() === m._id.toString());
+      const mBill = bills.find(b => b.memberId?.toString() === m._id.toString());
       const mealCost = parseFloat(((mealCount + guestCount) * mealRate).toFixed(2));
       const mGasCharge   = mBill?.gasCharge        ?? gasCharge;
       const mRiceCharge  = mBill?.riceCharge       ?? riceCharge;
@@ -133,23 +132,22 @@ router.get('/month-data/:month/:year', async (req, res) => {
   try {
     const { month, year } = req.params;
     const [summary, allBills, allPayments, allMembers, masiRec, allOtherCharges] = await Promise.all([
-      MonthlySummary.findOne({ month, year }),
-      Bill.find({ month, year }).populate('memberId', 'name room'),
-      Payment.find({ month, year }),
-      User.find({}, 'name _id role'),
-      MasiSalary.findOne({ month, year }),
-      OtherCharge.find({ month, year }),
+      MonthlySummary.findOne({ month, year }).lean(),
+      Bill.find({ month, year }).select('memberId totalBill gasCharge riceCharge otherSharedCharge otherCharges').lean(),
+      Payment.find({ month, year }).lean(),
+      User.find({}, 'name _id role').lean(),
+      MasiSalary.findOne({ month, year }).lean(),
+      OtherCharge.find({ month, year }).lean(),
     ]);
 
-    // Use date range if period has startDate/endDate
     let allMeals;
     if (summary?.startDate && summary?.endDate) {
       allMeals = await Meal.find({
         date: { $gte: new Date(summary.startDate + 'T00:00:00.000Z'), $lte: new Date(summary.endDate + 'T23:59:59.999Z') },
         isOff: false,
-      });
+      }).select('memberId lunch dinner guestMeals').lean();
     } else {
-      allMeals = await Meal.find({ month, year, isOff: false });
+      allMeals = await Meal.find({ month, year, isOff: false }).select('memberId lunch dinner guestMeals').lean();
     }
     const totalCollected = parseFloat(allPayments.reduce((s, p) => s + p.amount, 0).toFixed(2));
     const mealRate = summary?.mealRate || 0;
@@ -163,7 +161,7 @@ router.get('/month-data/:month/:year', async (req, res) => {
       const mealCount = mMeals.reduce((s, ml) => s + (ml.lunch ? 1 : 0) + (ml.dinner ? 1 : 0), 0);
       const guestCount = mMeals.reduce((s, ml) => s + (ml.guestMeals || 0), 0);
       const totalMeals = mealCount + guestCount;
-      const mBill = allBills.find(b => b.memberId?._id?.toString() === m._id.toString());
+      const mBill = allBills.find(b => b.memberId?.toString() === m._id.toString());
       const mealCost = parseFloat(((mealCount + guestCount) * mealRate).toFixed(2));
       const mGasCharge   = mBill?.gasCharge        ?? gasCharge;
       const mRiceCharge  = mBill?.riceCharge       ?? riceCharge;

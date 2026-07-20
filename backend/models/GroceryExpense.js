@@ -14,4 +14,6 @@ const groceryExpenseSchema = new mongoose.Schema({
   addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 
+groceryExpenseSchema.index({ month: 1, year: 1 });
+
 module.exports = mongoose.model('GroceryExpense', groceryExpenseSchema);

@@ -32,6 +32,7 @@ function buildMonthRange() {
   }
   return list.reverse();
 }
+const MONTH_RANGE = buildMonthRange();
 
 const BAR_COLORS = ['#f59e0b','#fbbf24','#fcd34d','#fde68a','#f97316','#fb923c','#fdba74','#fed7aa'];
 
@@ -168,7 +169,7 @@ export default function ManagerDashboard() {
 
   const summaryMap = {};
   allSummaries.forEach(s => { summaryMap[`${s.year}-${s.month}`] = s; });
-  const monthOptions = buildMonthRange().map(({ month, year }) => {
+  const monthOptions = MONTH_RANGE.map(({ month, year }) => {
     const s = summaryMap[`${year}-${month}`];
     return { month, year, isClosed: s?.isClosed ?? false, isCurrent: month === curMonth && year === curYear, hasData: !!s };
   });
