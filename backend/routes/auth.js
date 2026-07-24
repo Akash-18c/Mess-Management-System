@@ -155,8 +155,16 @@ router.post('/google', async (req, res) => {
         isApproved: false,
         googleId,
       });
-    } else if (!user.isActive) {
-      return res.status(401).json({ message: 'Your account is inactive. Contact admin.' });
+    } else {
+      if (!user.isActive)
+        return res.status(401).json({ message: 'Your account is inactive. Contact admin.' });
+      if (!user.isApproved)
+        return res.status(401).json({ message: 'Your account is pending admin approval.' });
+      // keep googleId in sync
+      if (!user.googleId) {
+        user.googleId = googleId;
+        await user.save();
+      }
     }
 
     const token = jwt.sign(

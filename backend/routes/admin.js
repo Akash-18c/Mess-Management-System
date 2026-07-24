@@ -81,8 +81,9 @@ router.post('/members', async (req, res) => {
 
 router.put('/members/:id', async (req, res) => {
   try {
-    const { password, ...data } = req.body;
+    const { password, isApproved, ...data } = req.body;
     if (password) { data.password = await bcrypt.hash(password, 10); data.plainPassword = password; }
+    if (isApproved !== undefined) data.isApproved = isApproved;
     const user = await User.findByIdAndUpdate(req.params.id, data, { new: true }).select('-password');
     res.json(user);
   } catch (err) { res.status(400).json({ message: err.message }); }
