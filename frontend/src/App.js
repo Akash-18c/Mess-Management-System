@@ -5,6 +5,8 @@ import useAuthStore from './store/authStore';
 import TopProgress, { startProgress, doneProgress } from './components/TopProgress';
 
 const Login              = lazy(() => import('./pages/Login'));
+const ForgotPassword     = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword      = lazy(() => import('./pages/ResetPassword'));
 const AdminLayout        = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminDashboard     = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminMembers       = lazy(() => import('./pages/admin/AdminMembers'));
@@ -87,6 +89,8 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/" element={<RoleRedirect />} />
 
           <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminLayout /></ProtectedRoute>}>

@@ -11,6 +11,8 @@ const userSchema = new mongoose.Schema({
   joinDate: { type: Date, default: Date.now },
   birthday: { type: String, default: '' }, // stored as 'MM-DD' e.g. '07-15'
   plainPassword: { type: String, default: '' },
+  resetPasswordToken: { type: String, default: null },
+  resetPasswordExpiry: { type: Date, default: null },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
