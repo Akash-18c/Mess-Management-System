@@ -142,7 +142,8 @@ export default function Login() {
     <>
       {navigating && <LoadingOverlay />}
 
-      <div className="fixed inset-0 flex flex-col items-center justify-center px-4 overflow-y-auto overflow-x-hidden">
+      <div className="fixed inset-0 overflow-y-auto overflow-x-hidden">
+        <div className="min-h-full flex flex-col items-center justify-center px-4 py-6">
 
         {/* Background — desktop */}
         <div className="fixed inset-0 hidden sm:block"
@@ -165,24 +166,24 @@ export default function Login() {
           style={{ background: 'radial-gradient(circle,rgba(16,185,129,0.08) 0%,transparent 65%)' }} />
 
         {/* Content */}
-        <div className="relative z-10 w-full max-w-[400px] flex flex-col my-auto py-8">
+        <div className="relative z-10 w-full max-w-[380px] flex flex-col">
 
           {/* Brand */}
-          <div className="flex flex-col items-center text-center mb-6">
-            <div className="pt-4 mb-3">
+          <div className="flex flex-col items-center text-center mb-4">
+            <div className="mb-2">
               <img src="/messy-logo.png" alt="The Messy Kitchen"
-                className="w-24 h-24 sm:w-28 sm:h-28 object-contain mx-auto"
+                className="w-16 h-16 sm:w-20 sm:h-20 object-contain mx-auto"
                 style={{ filter: 'drop-shadow(0 4px 20px rgba(16,185,129,0.60)) drop-shadow(0 0 8px rgba(245,158,11,0.30))' }}
                 onError={e => { e.target.style.display = 'none'; }} />
             </div>
             <h1 style={{
               fontFamily: "'Dancing Script', cursive",
-              fontSize: 'clamp(2rem, 7vw, 2.8rem)', fontWeight: 700, lineHeight: 1.1,
+              fontSize: 'clamp(1.7rem, 6vw, 2.4rem)', fontWeight: 700, lineHeight: 1.1,
               background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 40%,#6ee7b7 70%,#fbbf24 100%)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               filter: 'drop-shadow(0 2px 8px rgba(16,185,129,0.25))',
             }}>The Messy Kitchen</h1>
-            <p className="mt-1.5 text-[10px] sm:text-[11px] font-bold tracking-[0.28em] uppercase"
+            <p className="mt-1 text-[9px] sm:text-[10px] font-bold tracking-[0.25em] uppercase"
               style={{ color: 'rgba(110,231,183,0.70)' }}>
               Mess Meal Management System
             </p>
@@ -200,18 +201,18 @@ export default function Login() {
             <div className="absolute top-0 left-0 right-0 h-1/2 pointer-events-none"
               style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.10) 0%,transparent 100%)' }} />
 
-            <div className="px-6 sm:px-8 py-7 sm:py-8 relative">
+            <div className="px-5 sm:px-7 py-5 sm:py-6 relative">
               <h2 className="mb-0.5" style={{
                 fontFamily: "'Dancing Script', cursive",
-                fontSize: 'clamp(1.6rem, 5vw, 2rem)', fontWeight: 700, lineHeight: 1.2,
+                fontSize: 'clamp(1.4rem, 4.5vw, 1.8rem)', fontWeight: 700, lineHeight: 1.2,
                 background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 50%,#6ee7b7 100%)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>Welcome Back</h2>
-              <p className="text-xs sm:text-sm mb-6" style={{ color: 'rgba(30,40,50,0.65)' }}>
+              <p className="text-xs mb-4" style={{ color: 'rgba(30,40,50,0.65)' }}>
                 Sign in to your mess account
               </p>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3">
 
                 {/* Email */}
                 <div>
@@ -352,10 +353,11 @@ export default function Login() {
               style={{ background: 'linear-gradient(90deg,transparent,rgba(16,185,129,0.35),transparent)' }} />
           </div>
 
-          <p className="text-center mt-5 text-[11px] font-medium tracking-wide"
-            style={{ color: 'rgba(148,163,184,0.60)' }}>
+          <p className="text-center mt-4 mb-2 text-[10px] font-medium tracking-wide"
+            style={{ color: 'rgba(148,163,184,0.55)' }}>
             © {new Date().getFullYear()} The Messy Kitchen · All rights reserved
           </p>
+        </div>
         </div>
       </div>
     </>
