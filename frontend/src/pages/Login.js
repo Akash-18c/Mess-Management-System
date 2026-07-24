@@ -78,14 +78,13 @@ export default function Login() {
     }, 1200);
   };
 
-  // Load Google script
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     document.body.appendChild(script);
-    return () => document.body.removeChild(script);
+    return () => { if (document.body.contains(script)) document.body.removeChild(script); };
   }, []);
 
   const handleGoogleLogin = () => {
@@ -126,111 +125,78 @@ export default function Login() {
     <>
       {navigating && <LoadingOverlay />}
 
-      {/* ── Full-screen wrapper ───────────────────────────────────────── */}
       <div className="fixed inset-0 flex flex-col items-center justify-center px-4 overflow-y-auto overflow-x-hidden">
 
-        {/* Background image — desktop */}
+        {/* Background — desktop */}
         <div className="fixed inset-0 hidden sm:block"
           style={{
             backgroundImage: `url('https://images.unsplash.com/photo-1588644525273-f37b60d78512?w=3840&auto=format&fit=crop&q=100')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
             filter: 'brightness(0.72) saturate(1.10)',
           }} />
 
-        {/* Background image — mobile */}
+        {/* Background — mobile */}
         <div className="fixed inset-0 sm:hidden"
           style={{
             backgroundImage: `url('/ph background.jpeg')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'top center',
-            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'cover', backgroundPosition: 'top center', backgroundRepeat: 'no-repeat',
             filter: 'brightness(0.70) saturate(1.05)',
           }} />
 
-        {/* Gradient overlay — very light so image stays sharp */}
         <div className="fixed inset-0 hidden sm:block"
           style={{ background: 'linear-gradient(160deg,rgba(0,0,0,0.22) 0%,rgba(0,0,0,0.08) 50%,rgba(0,0,0,0.22) 100%)' }} />
-        <div className="fixed inset-0 sm:hidden"
-          style={{ background: 'rgba(0,0,0,0.30)' }} />
+        <div className="fixed inset-0 sm:hidden" style={{ background: 'rgba(0,0,0,0.30)' }} />
 
-        {/* Ambient glows */}
         <div className="fixed -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle,rgba(16,185,129,0.08) 0%,transparent 65%)' }} />
 
-        {/* ── Content ──────────────────────────────────────────────────── */}
+        {/* Content */}
         <div className="relative z-10 w-full max-w-[400px] flex flex-col my-auto py-8">
 
-          {/* ── Brand block ────────────────────────────────────────────── */}
+          {/* Brand */}
           <div className="flex flex-col items-center text-center mb-6">
-
-            {/* Logo — pushed down with padding-top */}
             <div className="pt-4 mb-3">
-              <img
-                src="/messy-logo.png"
-                alt="The Messy Kitchen"
+              <img src="/messy-logo.png" alt="The Messy Kitchen"
                 className="w-24 h-24 sm:w-28 sm:h-28 object-contain mx-auto"
                 style={{ filter: 'drop-shadow(0 4px 20px rgba(16,185,129,0.60)) drop-shadow(0 0 8px rgba(245,158,11,0.30))' }}
-                onError={e => { e.target.style.display = 'none'; }}
-              />
+                onError={e => { e.target.style.display = 'none'; }} />
             </div>
-
-            {/* Title */}
             <h1 style={{
               fontFamily: "'Dancing Script', cursive",
-              fontSize: 'clamp(2rem, 7vw, 2.8rem)',
-              fontWeight: 700,
-              lineHeight: 1.1,
+              fontSize: 'clamp(2rem, 7vw, 2.8rem)', fontWeight: 700, lineHeight: 1.1,
               background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 40%,#6ee7b7 70%,#fbbf24 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               filter: 'drop-shadow(0 2px 8px rgba(16,185,129,0.25))',
-            }}>
-              The Messy Kitchen
-            </h1>
-
-            {/* Tagline */}
+            }}>The Messy Kitchen</h1>
             <p className="mt-1.5 text-[10px] sm:text-[11px] font-bold tracking-[0.28em] uppercase"
               style={{ color: 'rgba(110,231,183,0.70)' }}>
               Mess Meal Management System
             </p>
           </div>
 
-          {/* ── Glass Card ─────────────────────────────────────────────── */}
+          {/* Glass Card */}
           <div className="relative rounded-[28px] sm:rounded-[32px] overflow-hidden"
             style={{
-              background: 'rgba(255,255,255,0.18)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255,255,255,0.28)',
+              background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.28)',
               boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.35)',
             }}>
 
-            {/* Top shimmer */}
             <div className="absolute top-0 left-0 right-0 h-px"
               style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
-            {/* Inner highlight */}
             <div className="absolute top-0 left-0 right-0 h-1/2 pointer-events-none"
               style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.10) 0%,transparent 100%)' }} />
 
             <div className="px-6 sm:px-8 py-7 sm:py-8 relative">
 
-              {/* Card heading */}
               <h2 className="mb-0.5" style={{
                 fontFamily: "'Dancing Script', cursive",
-                fontSize: 'clamp(1.6rem, 5vw, 2rem)',
-                fontWeight: 700,
-                lineHeight: 1.2,
+                fontSize: 'clamp(1.6rem, 5vw, 2rem)', fontWeight: 700, lineHeight: 1.2,
                 background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 50%,#6ee7b7 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>Welcome Back</h2>
 
-              <p className="text-xs sm:text-sm mb-6"
-                style={{ color: 'rgba(30,40,50,0.65)' }}>
+              <p className="text-xs sm:text-sm mb-6" style={{ color: 'rgba(30,40,50,0.65)' }}>
                 Sign in to your mess account
               </p>
 
@@ -239,34 +205,19 @@ export default function Login() {
                 {/* Email */}
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-[0.22em] mb-2"
-                    style={{ color: 'rgba(255,255,255,0.70)' }}>
-                    Email Address
-                  </label>
-                  <GlassInput
-                    icon={Mail}
-                    type="email"
-                    value={form.email}
+                    style={{ color: 'rgba(255,255,255,0.70)' }}>Email Address</label>
+                  <GlassInput icon={Mail} type="email" value={form.email}
                     onChange={e => setForm({ ...form, email: e.target.value })}
-                    placeholder="your@email.com"
-                    required
-                    autoComplete="email"
-                  />
+                    placeholder="your@email.com" required autoComplete="email" />
                 </div>
 
                 {/* Password */}
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-[0.22em] mb-2"
-                    style={{ color: 'rgba(255,255,255,0.70)' }}>
-                    Password
-                  </label>
-                  <GlassInput
-                    icon={Lock}
-                    type={show ? 'text' : 'password'}
-                    value={form.password}
+                    style={{ color: 'rgba(255,255,255,0.70)' }}>Password</label>
+                  <GlassInput icon={Lock} type={show ? 'text' : 'password'} value={form.password}
                     onChange={e => setForm({ ...form, password: e.target.value })}
-                    placeholder="••••••••"
-                    required
-                    autoComplete="current-password"
+                    placeholder="••••••••" required autoComplete="current-password"
                     rightSlot={
                       <button type="button" onClick={() => setShow(!show)}
                         className="transition-all duration-200 p-1.5 rounded-lg mr-1"
@@ -281,48 +232,29 @@ export default function Login() {
                 </div>
 
                 {/* Sign In button */}
-                  disabled={loading}
+                <button type="submit" disabled={loading}
                   className="group relative w-full py-3.5 sm:py-4 rounded-2xl text-white overflow-hidden mt-2"
                   style={{
-                    background: 'rgba(255,255,255,0.22)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255,255,255,0.38)',
+                    background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.38)',
                     boxShadow: '0 2px 12px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.45)',
                     transition: 'opacity 0.2s, transform 0.1s',
-                    opacity: loading ? 0.85 : 1,
-                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.85 : 1, cursor: loading ? 'not-allowed' : 'pointer',
                   }}>
-
-                  {/* Shimmer sweep on hover */}
                   {!loading && (
                     <span className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none"
-                      style={{
-                        background: 'linear-gradient(110deg,transparent 20%,rgba(255,255,255,0.20) 50%,transparent 80%)',
-                        transition: 'opacity 0.4s',
-                      }} />
+                      style={{ background: 'linear-gradient(110deg,transparent 20%,rgba(255,255,255,0.20) 50%,transparent 80%)', transition: 'opacity 0.4s' }} />
                   )}
-
-                  <style>{`
-                    @keyframes orbitBubble {
-                      from { transform: rotate(0deg) translateX(10px) rotate(0deg); }
-                      to   { transform: rotate(360deg) translateX(10px) rotate(-360deg); }
-                    }
-                  `}</style>
-
+                  <style>{`@keyframes orbitBubble { from { transform: rotate(0deg) translateX(10px) rotate(0deg); } to { transform: rotate(360deg) translateX(10px) rotate(-360deg); } }`}</style>
                   {loading ? (
                     <span className="relative flex items-center justify-center gap-3">
-                      {/* Orbiting bubbles */}
                       <span className="relative w-5 h-5 flex-shrink-0">
                         {[0,1,2,3].map(i => (
                           <span key={i} className="absolute rounded-full"
                             style={{
-                              width: i % 2 === 0 ? 5 : 4,
-                              height: i % 2 === 0 ? 5 : 4,
-                              background: 'rgba(255,255,255,0.90)',
-                              top: '50%', left: '50%',
-                              marginTop: i % 2 === 0 ? -2.5 : -2,
-                              marginLeft: i % 2 === 0 ? -2.5 : -2,
+                              width: i % 2 === 0 ? 5 : 4, height: i % 2 === 0 ? 5 : 4,
+                              background: 'rgba(255,255,255,0.90)', top: '50%', left: '50%',
+                              marginTop: i % 2 === 0 ? -2.5 : -2, marginLeft: i % 2 === 0 ? -2.5 : -2,
                               animation: `orbitBubble ${0.9 + i * 0.15}s linear ${i * 0.22}s infinite`,
                               opacity: 1 - i * 0.15,
                             }} />
@@ -340,40 +272,30 @@ export default function Login() {
                 </button>
 
                 {/* Forgot Password */}
-                <div className="text-center pt-1">
-                  <button
-                    type="button"
-                    onClick={() => navigate('/forgot-password')}
-                    className="text-[11px] font-medium transition-opacity hover:opacity-100"
-                    style={{ color: 'rgba(110,231,183,0.60)', background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
+                <div className="text-center">
+                  <button type="button" onClick={() => navigate('/forgot-password')}
+                    className="text-xs font-semibold tracking-wide transition-all duration-200 hover:opacity-100 underline underline-offset-2"
+                    style={{ color: 'rgba(110,231,183,0.75)', background: 'none', border: 'none', cursor: 'pointer', textDecorationColor: 'rgba(110,231,183,0.35)' }}>
                     Forgot Password?
                   </button>
                 </div>
 
                 {/* Divider */}
-                <div className="flex items-center gap-3 py-1">
+                <div className="flex items-center gap-3">
                   <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.18)' }} />
-                  <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.35)' }}>or</span>
+                  <span className="text-[10px] font-semibold tracking-widest uppercase"
+                    style={{ color: 'rgba(255,255,255,0.35)' }}>or</span>
                   <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.18)' }} />
                 </div>
 
                 {/* Google Sign In */}
-                <button
-                  type="button"
-                  onClick={handleGoogleLogin}
-                  disabled={gLoading}
-                  className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl font-semibold text-sm transition-all duration-200"
+                <button type="button" onClick={handleGoogleLogin} disabled={gLoading}
+                  className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl font-semibold text-sm transition-all duration-200 hover:shadow-lg"
                   style={{
-                    background: 'rgba(255,255,255,0.92)',
-                    border: '1px solid rgba(255,255,255,0.60)',
-                    color: '#1f2937',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                    opacity: gLoading ? 0.75 : 1,
-                    cursor: gLoading ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  {/* Google SVG icon */}
+                    background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(255,255,255,0.60)',
+                    color: '#1f2937', boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                    opacity: gLoading ? 0.75 : 1, cursor: gLoading ? 'not-allowed' : 'pointer',
+                  }}>
                   <svg width="18" height="18" viewBox="0 0 48 48">
                     <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
                     <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
@@ -382,15 +304,14 @@ export default function Login() {
                   </svg>
                   {gLoading ? 'Signing in…' : 'Continue with Google'}
                 </button>
+
               </form>
             </div>
 
-            {/* Bottom glow */}
             <div className="absolute bottom-0 left-1/4 right-1/4 h-[1px]"
               style={{ background: 'linear-gradient(90deg,transparent,rgba(16,185,129,0.35),transparent)' }} />
           </div>
 
-          {/* Copyright */}
           <p className="text-center mt-5 text-[11px] font-medium tracking-wide"
             style={{ color: 'rgba(148,163,184,0.60)' }}>
             © {new Date().getFullYear()} The Messy Kitchen · All rights reserved
