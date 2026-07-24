@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const api = axios.create({ baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api' });
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  timeout: 15000,
+});
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
@@ -8,11 +11,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+const PUBLIC_PATHS = ['/login', '/pending-approval', '/forgot-password', '/reset-password'];
+
 api.interceptors.response.use(
   (res) => res,
   (err) => {
     const path = window.location.pathname;
-    if (err.response?.status === 401 && path !== '/login' && path !== '/pending-approval') {
+    const isPublic = PUBLIC_PATHS.some(p => path.startsWith(p));
+    if (err.response?.status === 401 && !isPublic) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
