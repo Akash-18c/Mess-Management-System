@@ -21,17 +21,18 @@ export default function PendingApproval() {
   const handleLogout = () => { logout(); navigate('/login'); };
 
   useEffect(() => {
-    intervalRef.current = setInterval(async () => {
+    const check = async () => {
       try {
         const { data } = await api.get('/auth/me');
         if (data?.user?.isApproved) {
           clearInterval(intervalRef.current);
-          // Use the fresh token returned by /auth/me so role/isApproved is correct
           login(data.user, data.token);
           navigate(data.user.role === 'admin' ? '/admin' : data.user.role === 'manager' ? '/manager' : '/member');
         }
       } catch {}
-    }, 6000);
+    };
+    check(); // check immediately on mount
+    intervalRef.current = setInterval(check, 2000);
     return () => clearInterval(intervalRef.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
