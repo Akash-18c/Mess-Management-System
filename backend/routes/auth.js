@@ -68,9 +68,6 @@ router.post('/forgot-password', async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.json({ message: GENERIC_MSG });
 
-    if (!process.env.RESEND_API_KEY)
-      return res.status(500).json({ message: 'Email service not configured.' });
-
     const token = crypto.randomBytes(32).toString('hex');
     user.resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
     user.resetPasswordExpiry = new Date(Date.now() + 15 * 60 * 1000);
