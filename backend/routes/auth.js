@@ -9,10 +9,11 @@ const router = express.Router();
 
 function createTransporter() {
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    service: 'gmail',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
   });
 }
 
@@ -86,8 +87,8 @@ router.post('/forgot-password', async (req, res) => {
 
     res.json({ message: GENERIC_MSG });
   } catch (err) {
-    console.error('forgot-password error:', err);
-    res.status(500).json({ message: 'Failed to send reset email. Please try again.' });
+    console.error('forgot-password error:', err.message || err);
+    res.status(500).json({ message: 'Failed to send reset email. Please try again.', debug: process.env.NODE_ENV !== 'production' ? err.message : undefined });
   }
 });
 
