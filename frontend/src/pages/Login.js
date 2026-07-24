@@ -281,74 +281,74 @@ export default function Login() {
                   )}
                 </button>
 
-                {/* Forgot Password — premium pill */}
-                <div className="flex justify-center pt-0.5">
+                {/* Forgot Password */}
+                <div className="flex justify-center pt-1">
                   <button type="button" onClick={() => navigate('/forgot-password')}
-                    className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold tracking-wide transition-all duration-300"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl transition-all duration-300"
                     style={{
-                      color: '#6ee7b7',
-                      background: 'linear-gradient(135deg,rgba(16,185,129,0.12) 0%,rgba(5,150,105,0.06) 100%)',
-                      border: '1px solid rgba(16,185,129,0.28)',
-                      boxShadow: '0 2px 12px rgba(16,185,129,0.08), inset 0 1px 0 rgba(255,255,255,0.08)',
-                      letterSpacing: '0.06em',
+                      color: 'rgba(110,231,183,0.95)',
+                      background: 'rgba(16,185,129,0.10)',
+                      border: '1px solid rgba(52,211,153,0.25)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      boxShadow: '0 2px 16px rgba(16,185,129,0.10), inset 0 1px 0 rgba(255,255,255,0.12)',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      letterSpacing: '0.04em',
                     }}
                     onMouseEnter={e => {
-                      e.currentTarget.style.background = 'linear-gradient(135deg,rgba(16,185,129,0.22) 0%,rgba(5,150,105,0.14) 100%)';
-                      e.currentTarget.style.borderColor = 'rgba(52,211,153,0.55)';
-                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(16,185,129,0.20), inset 0 1px 0 rgba(255,255,255,0.12)';
-                      e.currentTarget.style.color = '#34d399';
+                      e.currentTarget.style.background = 'rgba(16,185,129,0.20)';
+                      e.currentTarget.style.borderColor = 'rgba(52,211,153,0.50)';
+                      e.currentTarget.style.boxShadow = '0 4px 24px rgba(16,185,129,0.22), inset 0 1px 0 rgba(255,255,255,0.18)';
                       e.currentTarget.style.transform = 'translateY(-1px)';
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.background = 'linear-gradient(135deg,rgba(16,185,129,0.12) 0%,rgba(5,150,105,0.06) 100%)';
-                      e.currentTarget.style.borderColor = 'rgba(16,185,129,0.28)';
-                      e.currentTarget.style.boxShadow = '0 2px 12px rgba(16,185,129,0.08), inset 0 1px 0 rgba(255,255,255,0.08)';
-                      e.currentTarget.style.color = '#6ee7b7';
+                      e.currentTarget.style.background = 'rgba(16,185,129,0.10)';
+                      e.currentTarget.style.borderColor = 'rgba(52,211,153,0.25)';
+                      e.currentTarget.style.boxShadow = '0 2px 16px rgba(16,185,129,0.10), inset 0 1px 0 rgba(255,255,255,0.12)';
                       e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: 20, height: 20, borderRadius: '50%',
-                      background: 'rgba(16,185,129,0.18)', border: '1px solid rgba(52,211,153,0.30)',
-                    }}>
-                      <KeyRound size={10} />
-                    </span>
-                    Forgot Password?
+                    <KeyRound size={13} strokeWidth={2.2} />
+                    <span>Forgot Password?</span>
                   </button>
                 </div>
 
                 {/* Divider */}
-                <div className="flex items-center gap-3 py-0.5">
-                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.18))' }} />
-                  <span className="text-[10px] font-bold tracking-widest uppercase px-1"
-                    style={{ color: 'rgba(255,255,255,0.28)' }}>or</span>
-                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg,rgba(255,255,255,0.18),transparent)' }} />
+                <div className="flex items-center gap-3 my-1">
+                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.20))' }} />
+                  <span style={{ color: 'rgba(255,255,255,0.32)', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.18em' }}>OR</span>
+                  <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.20), transparent)' }} />
                 </div>
 
-                {/* Google Sign In — native SDK button + custom overlay for styling */}
-                <div className="relative w-full" style={{ minHeight: 48 }}>
-                  {/* Custom styled backdrop — always visible */}
-                  <div className="absolute inset-0 rounded-2xl pointer-events-none"
-                    style={{
-                      background: 'rgba(255,255,255,0.96)',
-                      border: '1.5px solid rgba(255,255,255,0.70)',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,1)',
-                      borderRadius: 16,
-                    }} />
-                  {/* Google SDK renders here — transparent bg so our backdrop shows */}
-                  <div ref={googleBtnRef} className="relative w-full" style={{ minHeight: 48, borderRadius: 16, overflow: 'hidden' }} />
-                  {/* Fallback label while SDK loads */}
+                {/* Google Sign In */}
+                <div className="relative w-full rounded-2xl overflow-hidden"
+                  style={{
+                    background: 'rgba(255,255,255,0.14)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.32)',
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.40)',
+                    minHeight: 50,
+                  }}
+                >
+                  {/* Top shimmer line */}
+                  <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+                    style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.55),transparent)' }} />
+
+                  {/* Google SDK renders here */}
+                  <div ref={googleBtnRef} className="w-full" style={{ minHeight: 50 }} />
+
+                  {/* Fallback while SDK loads */}
                   {!googleReady && (
-                    <div className="absolute inset-0 flex items-center justify-center gap-3 rounded-2xl"
-                      style={{ pointerEvents: 'none' }}>
-                      <svg width="20" height="20" viewBox="0 0 48 48">
+                    <div className="absolute inset-0 flex items-center justify-center gap-3 pointer-events-none">
+                      <svg width="20" height="20" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
                         <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
                         <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
                         <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                         <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                       </svg>
-                      <span className="text-sm font-semibold" style={{ color: '#374151' }}>Continue with Google</span>
+                      <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.875rem', fontWeight: 600, letterSpacing: '0.02em' }}>Continue with Google</span>
                     </div>
                   )}
                 </div>
