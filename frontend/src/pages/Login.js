@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import api from '../api';
@@ -63,8 +63,6 @@ export default function Login() {
   const [navigating, setNavigating] = useState(false);
   const { login }  = useAuthStore();
   const navigate   = useNavigate();
-  const [searchParams] = useSearchParams();
-  const isAdminLogin = searchParams.get('role') === 'admin';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -304,19 +302,17 @@ export default function Login() {
                   )}
                 </button>
 
-                {/* Forgot Password — Admin only */}
-                {isAdminLogin && (
-                  <div className="text-center pt-1">
-                    <button
-                      type="button"
-                      onClick={() => navigate('/forgot-password')}
-                      className="text-[11px] font-medium transition-opacity hover:opacity-100"
-                      style={{ color: 'rgba(110,231,183,0.60)', background: 'none', border: 'none', cursor: 'pointer' }}
-                    >
-                      Forgot Password?
-                    </button>
-                  </div>
-                )}
+                {/* Forgot Password */}
+                <div className="text-center pt-1">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/forgot-password')}
+                    className="text-[11px] font-medium transition-opacity hover:opacity-100"
+                    style={{ color: 'rgba(110,231,183,0.60)', background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
               </form>
             </div>
 
