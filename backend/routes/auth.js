@@ -86,9 +86,8 @@ router.post('/forgot-password', async (req, res) => {
 
   <!-- Body -->
   <tr><td style="padding:32px">
-    <p style="color:#111827;font-size:15px;margin:0 0 12px">Hello ${user.name},</p>
-    <p style="color:#4b5563;font-size:14px;line-height:1.7;margin:0 0 24px">We received a request to reset your password for your Messy Kitchen account.</p>
-    <p style="color:#4b5563;font-size:14px;line-height:1.7;margin:0 0 28px">Click the button below to reset your password:</p>
+    <p style="color:#111827;font-size:15px;margin:0 0 12px">Reset request for: <strong>${user.name}</strong> (${user.email})</p>
+    <p style="color:#4b5563;font-size:14px;line-height:1.7;margin:0 0 24px">This member requested a password reset. Click the button below — the link will log them in to set a new password.</p>
     <div style="text-align:center;margin-bottom:28px">
       <a href="${resetUrl}" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700">Reset Password</a>
     </div>
@@ -107,8 +106,8 @@ router.post('/forgot-password', async (req, res) => {
 
     const { data: mailData, error: mailError } = await resend.emails.send({
       from: 'Messy Kitchen <onboarding@resend.dev>',
-      to: [process.env.RESEND_TEST_TO || user.email],
-      subject: 'Reset Your Messy Kitchen Password',
+      to: [process.env.ADMIN_EMAIL || 'akashranaa188@gmail.com'],
+      subject: `Password Reset Request — ${user.name} (${user.email})`,
       html,
     });
     if (mailError) {

@@ -29,6 +29,9 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
+// ── Trust Render's proxy ──
+app.set('trust proxy', 1);
+
 // ── Rate limiting on auth routes ──
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
