@@ -7,6 +7,7 @@ import TopProgress, { startProgress, doneProgress } from './components/TopProgre
 const Login              = lazy(() => import('./pages/Login'));
 const ForgotPassword     = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword      = lazy(() => import('./pages/ResetPassword'));
+const PendingApproval    = lazy(() => import('./pages/PendingApproval'));
 const AdminLayout        = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminDashboard     = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminMembers       = lazy(() => import('./pages/admin/AdminMembers'));
@@ -50,6 +51,7 @@ function PageSkeleton() {
 function ProtectedRoute({ children, roles }) {
   const { user, token } = useAuthStore();
   if (!token || !user) return <Navigate to="/login" replace />;
+  if (user.isApproved === false) return <Navigate to="/pending-approval" replace />;
   if (roles && !roles.includes(user.role)) return <Navigate to="/login" replace />;
   return children;
 }
@@ -91,6 +93,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/pending-approval" element={<PendingApproval />} />
           <Route path="/" element={<RoleRedirect />} />
 
           <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminLayout /></ProtectedRoute>}>

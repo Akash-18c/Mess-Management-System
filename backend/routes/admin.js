@@ -45,6 +45,30 @@ router.get('/members', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// Pending approval
+router.get('/members/pending', async (req, res) => {
+  try {
+    const pending = await User.find({ isApproved: false }).select('-password').sort({ createdAt: -1 });
+    res.json(pending);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Approve member
+router.put('/members/:id/approve', async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, { isApproved: true, isActive: true }, { new: true }).select('-password');
+    res.json(user);
+  } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
+// Reject member
+router.delete('/members/:id/reject', async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Member rejected and removed.' });
+  } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
 router.post('/members', async (req, res) => {
   try {
     const { name, email, password, phone, room, joinDate, role } = req.body;

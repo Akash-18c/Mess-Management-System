@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Pencil, UserCheck, UserX, Trash2, X, ShieldCheck, Sparkles, KeyRound, Eye, EyeOff, Lock } from 'lucide-react';
+import { Plus, Pencil, UserCheck, UserX, Trash2, X, ShieldCheck, Sparkles, KeyRound, Eye, EyeOff, Lock, CheckCircle, XCircle, Bell } from 'lucide-react';
 import api from '../../api';
 
 const EMPTY = { name: '', email: '', password: '', phone: '', room: '', joinDate: '', role: 'member' };
@@ -31,6 +31,7 @@ const roleAccent = {
 
 export default function AdminMembers() {
   const [members,       setMembers]       = useState([]);
+  const [pending,        setPending]        = useState([]);
   const [modal,         setModal]         = useState(false);
   const [editing,       setEditing]       = useState(null);
   const [form,          setForm]          = useState(EMPTY);
@@ -42,7 +43,13 @@ export default function AdminMembers() {
   const [credentials,   setCredentials]   = useState(null);
   const [showPassMap,   setShowPassMap]   = useState({});
 
-  const load = async () => { try { const r = await api.get('/admin/members'); setMembers(r.data); } catch {} };
+  const load = async () => {
+    try {
+      const [mRes, pRes] = await Promise.all([api.get('/admin/members'), api.get('/admin/members/pending')]);
+      setMembers(mRes.data.filter(m => m.isApproved !== false));
+      setPending(pRes.data);
+    } catch {}
+  };
 
   const openCredentials = () => { setPinModal(true); setPin(''); setPinError(''); };
   const submitPin = async () => {
@@ -93,6 +100,22 @@ export default function AdminMembers() {
       toast.success('Member deleted');
       setDeleteConfirm(null); load();
     } catch (err) { toast.error(err.response?.data?.message || 'Error deleting'); }
+  };
+
+  const approveMember = async (id) => {
+    try {
+      await api.put(`/admin/members/${id}/approve`);
+      toast.success('Member approved!');
+      load();
+    } catch { toast.error('Failed to approve'); }
+  };
+
+  const rejectMember = async (id, name) => {
+    try {
+      await api.delete(`/admin/members/${id}/reject`);
+      toast.success(`${name} rejected and removed.`);
+      load();
+    } catch { toast.error('Failed to reject'); }
   };
 
   const active   = members.filter(m => m.isActive);
@@ -198,6 +221,7 @@ export default function AdminMembers() {
           </div>
           <p className="text-slate-500 text-[11px] mt-0.5 pl-5">
             {active.length} active · {inactive.length} disabled
+            {pending.length > 0 && <span className="ml-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background:'rgba(245,158,11,0.15)', color:'#fbbf24', border:'1px solid rgba(245,158,11,0.25)' }}>{pending.length} pending</span>}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -211,7 +235,56 @@ export default function AdminMembers() {
         </div>
       </div>
 
-      {members.length === 0 && (
+      {/* ── Pending Approvals ── */}
+      {pending.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-2.5 pl-1">
+            <Bell size={13} style={{ color: '#fbbf24' }} />
+            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#fbbf24' }}>Pending Approval ({pending.length})</p>
+          </div>
+          <div className="rounded-2xl overflow-hidden" style={glass}>
+            {pending.map((m, i) => (
+              <div key={m._id} className="flex items-center gap-3 px-4 py-3.5"
+                style={{ borderBottom: i < pending.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                {/* Avatar */}
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
+                  style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}>
+                  {m.name?.[0]?.toUpperCase()}
+                </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-white font-semibold text-sm truncate">{m.name}</p>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide"
+                      style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}>Pending</span>
+                  </div>
+                  <p className="text-slate-500 text-[11px] truncate">{m.email}</p>
+                  <p className="text-slate-600 text-[10px] mt-0.5">Joined via Google · {new Date(m.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</p>
+                </div>
+                {/* Actions */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button onClick={() => approveMember(m._id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                    style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', color: '#34d399' }}
+                    onMouseEnter={e => { e.currentTarget.style.background='rgba(16,185,129,0.22)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background='rgba(16,185,129,0.12)'; }}>
+                    <CheckCircle size={13} /> <span className="hidden sm:inline">Approve</span>
+                  </button>
+                  <button onClick={() => rejectMember(m._id, m.name)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                    style={{ background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.22)', color: '#f87171' }}
+                    onMouseEnter={e => { e.currentTarget.style.background='rgba(248,113,113,0.20)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background='rgba(248,113,113,0.10)'; }}>
+                    <XCircle size={13} /> <span className="hidden sm:inline">Reject</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {members.length === 0 && pending.length === 0 && (
         <div className="rounded-2xl py-12 text-center text-slate-600 text-sm" style={glass}>No members yet</div>
       )}
 

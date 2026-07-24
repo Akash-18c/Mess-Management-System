@@ -145,7 +145,6 @@ router.post('/google', async (req, res) => {
 
     let user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      // New user — create as member, admin assigns role later
       const randomPw = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10);
       user = await User.create({
         name,
@@ -153,6 +152,7 @@ router.post('/google', async (req, res) => {
         password: randomPw,
         role: 'member',
         isActive: true,
+        isApproved: false,
         googleId,
       });
     } else if (!user.isActive) {
@@ -160,13 +160,13 @@ router.post('/google', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, role: user.role, name: user.name },
+      { id: user._id, role: user.role, name: user.name, isApproved: user.isApproved },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
     res.json({
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role, room: user.room },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, room: user.room, isApproved: user.isApproved },
     });
   } catch (err) {
     console.error('google-auth error:', err.message);
