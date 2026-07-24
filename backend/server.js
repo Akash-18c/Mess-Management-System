@@ -109,12 +109,12 @@ mongoose
 async function seedAdmin() {
   const User = require('./models/User');
   const bcrypt = require('bcryptjs');
-  const hashed = await bcrypt.hash('Akashx@5273', 8);
+  const hashed = await bcrypt.hash('Akash@1805x', 8);
   await User.findOneAndUpdate(
     { role: 'admin' },
     {
       name: 'Admin (Akash Chakraborty)',
-      email: 'Akashadmin@mess1',
+      email: 'akashranaa188@gmail.com',
       password: hashed,
       phone: '9907737323',
       room: 'N/A',
@@ -124,7 +124,7 @@ async function seedAdmin() {
     },
     { upsert: true, new: true }
   );
-  console.log('Admin ready: Akashadmin@mess1 / Akashx@5273');
+  console.log('Admin ready: akashranaa188@gmail.com / Akash@1805x');
 }
 
 async function seedCategories() {
