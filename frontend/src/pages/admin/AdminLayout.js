@@ -41,7 +41,7 @@ export default function AdminLayout() {
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-0.5">
+      <nav className="flex-1 p-4 space-y-0.5 overflow-y-auto">
         {links.map(({ to, icon: Icon, label, end, danger }) => (
           <NavLink key={to} to={to} end={end} onClick={() => setOpen(false)}
             className={({ isActive }) =>
