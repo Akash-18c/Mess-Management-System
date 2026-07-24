@@ -300,7 +300,7 @@ export default function Login() {
                 </div>
 
                 {/* Google Sign In — custom button */}
-                <button type="button" onClick={() => window.google?.accounts?.id?.prompt()}
+                <button type="button" onClick={() => googleBtnRef.current?.querySelector('div[role="button"]')?.click()}
                   className="group relative w-full flex items-center justify-center gap-3 py-3 rounded-2xl transition-all duration-200"
                   style={{
                     background: 'rgba(255,255,255,0.95)',
@@ -318,7 +318,7 @@ export default function Login() {
                   </svg>
                   <span className="text-sm font-semibold" style={{ color: '#1f2937' }}>Continue with Google</span>
                   {/* Hidden SDK target */}
-                  <div ref={googleBtnRef} className="absolute opacity-0 pointer-events-none w-full h-full" />
+                  <div ref={googleBtnRef} className="absolute inset-0 opacity-0 overflow-hidden" style={{ borderRadius: 16 }} />
                 </button>
 
               </form>
