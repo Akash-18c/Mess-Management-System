@@ -34,7 +34,7 @@ router.post('/forgot-password', async (req, res) => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return res.status(400).json({ message: 'Invalid email address.' });
 
-    const user = await User.findOne({ email, role: 'admin' });
+    const user = await User.findOne({ email });
     if (!user) return res.json({ message: GENERIC_MSG });
 
     if (!process.env.RESEND_API_KEY)
@@ -47,35 +47,49 @@ router.post('/forgot-password', async (req, res) => {
 
     const resetUrl = `${process.env.FRONTEND_URL || 'https://themessykitchen.online'}/reset-password?token=${token}`;
 
-    const html = `
-<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a0f1e;font-family:Arial,sans-serif">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 16px">
-<table width="100%" style="max-width:480px;background:#111827;border-radius:16px;overflow:hidden;border:1px solid #1f2937">
-<tr><td style="background:linear-gradient(135deg,#064e3b,#065f46);padding:32px 32px 24px;text-align:center">
-  <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700">🍽️ The Messy Kitchen</h1>
-  <p style="margin:8px 0 0;color:#6ee7b7;font-size:13px;letter-spacing:2px;text-transform:uppercase">Admin Password Reset</p>
-</td></tr>
-<tr><td style="padding:32px">
-  <p style="color:#d1fae5;font-size:15px;margin:0 0 12px">Hello Admin,</p>
-  <p style="color:#9ca3af;font-size:14px;line-height:1.6;margin:0 0 24px">We received a request to reset your password for your Messy Kitchen Admin account.</p>
-  <p style="color:#9ca3af;font-size:14px;line-height:1.6;margin:0 0 28px">Click the button below to reset your password:</p>
-  <div style="text-align:center;margin-bottom:28px">
-    <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#059669,#047857);color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:700">Reset Password</a>
-  </div>
-  <p style="color:#6b7280;font-size:12px;margin:0 0 8px">⏱ This link will expire in <strong style="color:#fbbf24">15 minutes</strong>.</p>
-  <p style="color:#6b7280;font-size:12px;margin:0">If you did not request this password reset, you can safely ignore this email.</p>
-</td></tr>
-<tr><td style="background:#0d1117;padding:20px 32px;text-align:center;border-top:1px solid #1f2937">
-  <p style="color:#4b5563;font-size:12px;margin:0">Thanks, <strong style="color:#6ee7b7">Messy Kitchen Team</strong></p>
-</td></tr>
-</table></td></tr></table>
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
+<tr><td align="center">
+<table width="100%" style="max-width:480px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+
+  <!-- Logo header -->
+  <tr><td align="center" style="padding:36px 32px 24px">
+    <img src="https://themessykitchen.online/messy-logo.png" alt="The Messy Kitchen" width="72" height="72" style="display:block;margin:0 auto 16px;border-radius:50%" />
+    <h1 style="margin:0;color:#111827;font-size:22px;font-weight:700">The Messy Kitchen</h1>
+    <p style="margin:6px 0 0;color:#6b7280;font-size:12px;letter-spacing:2px;text-transform:uppercase">Password Reset</p>
+  </td></tr>
+
+  <!-- Divider -->
+  <tr><td style="padding:0 32px"><div style="height:1px;background:#e5e7eb"></div></td></tr>
+
+  <!-- Body -->
+  <tr><td style="padding:32px">
+    <p style="color:#111827;font-size:15px;margin:0 0 12px">Hello ${user.name},</p>
+    <p style="color:#4b5563;font-size:14px;line-height:1.7;margin:0 0 24px">We received a request to reset your password for your Messy Kitchen account.</p>
+    <p style="color:#4b5563;font-size:14px;line-height:1.7;margin:0 0 28px">Click the button below to reset your password:</p>
+    <div style="text-align:center;margin-bottom:28px">
+      <a href="${resetUrl}" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700">Reset Password</a>
+    </div>
+    <p style="color:#9ca3af;font-size:12px;margin:0 0 8px">⏱ This link will expire in <strong style="color:#111827">15 minutes</strong>.</p>
+    <p style="color:#9ca3af;font-size:12px;margin:0">If you did not request this, you can safely ignore this email.</p>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="background:#f9fafb;padding:20px 32px;text-align:center;border-top:1px solid #e5e7eb">
+    <p style="color:#9ca3af;font-size:12px;margin:0">Thanks, <strong style="color:#059669">Messy Kitchen Team</strong></p>
+  </td></tr>
+
+</table>
+</td></tr></table>
 </body></html>`;
 
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { error } = await resend.emails.send({
       from: 'Messy Kitchen <onboarding@resend.dev>',
       to: user.email,
-      subject: 'Reset Your Messy Kitchen Admin Password',
+      subject: 'Reset Your Messy Kitchen Password',
       html,
     });
 
@@ -97,7 +111,6 @@ router.post('/reset-password', async (req, res) => {
 
     const hashed = crypto.createHash('sha256').update(token).digest('hex');
     const user = await User.findOne({
-      role: 'admin',
       resetPasswordToken: hashed,
       resetPasswordExpiry: { $gt: new Date() },
     });
