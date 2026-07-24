@@ -2,19 +2,11 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 
-const mailer = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT) || 587,
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  connectionTimeout: 8000,
-  greetingTimeout: 8000,
-  socketTimeout: 8000,
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const router = express.Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -113,12 +105,13 @@ router.post('/forgot-password', async (req, res) => {
 </td></tr></table>
 </body></html>`;
 
-    await mailer.sendMail({
-      from: `"Messy Kitchen" <${process.env.SMTP_USER}>`,
+    const { error: mailError } = await resend.emails.send({
+      from: 'Messy Kitchen <onboarding@resend.dev>',
       to: user.email,
       subject: 'Reset Your Messy Kitchen Password',
       html,
     });
+    if (mailError) throw new Error(mailError.message);
 
     res.json({ message: GENERIC_MSG });
   } catch (err) {
