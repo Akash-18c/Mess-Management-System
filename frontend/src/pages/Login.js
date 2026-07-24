@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, KeyRound } from 'lucide-react';
 import api from '../api';
 import useAuthStore from '../store/authStore';
 
@@ -62,8 +62,9 @@ export default function Login() {
   const [form, setForm]             = useState({ email: '', password: '' });
   const [show, setShow]             = useState(false);
   const [loading, setLoading]       = useState(false);
-  const [gLoading, setGLoading]     = useState(false);
   const [navigating, setNavigating] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
+  const googleBtnRef = useRef(null);
   const { login }  = useAuthStore();
   const navigate   = useNavigate();
 
@@ -78,36 +79,52 @@ export default function Login() {
     }, 1200);
   };
 
+  // Load Google script and render button immediately on load
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    document.body.appendChild(script);
-    return () => { if (document.body.contains(script)) document.body.removeChild(script); };
-  }, []);
 
-  const handleGoogleLogin = () => {
-    if (!window.google || !GOOGLE_CLIENT_ID) {
-      toast.error('Google sign-in not configured.');
-      return;
+    const initGoogle = () => {
+      if (!window.google) return;
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async ({ credential }) => {
+          try {
+            const { data } = await api.post('/auth/google', { credential });
+            doLogin(data.user, data.token);
+          } catch (err) {
+            toast.error(err.response?.data?.message || 'Google sign-in failed.');
+          }
+        },
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+
+      if (googleBtnRef.current) {
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          text: 'continue_with',
+          shape: 'rectangular',
+          logo_alignment: 'left',
+          width: googleBtnRef.current.offsetWidth || 340,
+        });
+        setGoogleReady(true);
+      }
+    };
+
+    if (window.google) {
+      initGoogle();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = initGoogle;
+      document.head.appendChild(script);
     }
-    setGLoading(true);
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: async ({ credential }) => {
-        try {
-          const { data } = await api.post('/auth/google', { credential });
-          doLogin(data.user, data.token);
-        } catch (err) {
-          toast.error(err.response?.data?.message || 'Google sign-in failed.');
-          setGLoading(false);
-        }
-      },
-    });
-    window.google.accounts.id.prompt();
-    setGLoading(false);
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,7 +151,6 @@ export default function Login() {
             backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
             filter: 'brightness(0.72) saturate(1.10)',
           }} />
-
         {/* Background — mobile */}
         <div className="fixed inset-0 sm:hidden"
           style={{
@@ -142,11 +158,9 @@ export default function Login() {
             backgroundSize: 'cover', backgroundPosition: 'top center', backgroundRepeat: 'no-repeat',
             filter: 'brightness(0.70) saturate(1.05)',
           }} />
-
         <div className="fixed inset-0 hidden sm:block"
           style={{ background: 'linear-gradient(160deg,rgba(0,0,0,0.22) 0%,rgba(0,0,0,0.08) 50%,rgba(0,0,0,0.22) 100%)' }} />
         <div className="fixed inset-0 sm:hidden" style={{ background: 'rgba(0,0,0,0.30)' }} />
-
         <div className="fixed -top-32 -left-32 w-[500px] h-[500px] rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle,rgba(16,185,129,0.08) 0%,transparent 65%)' }} />
 
@@ -181,21 +195,18 @@ export default function Login() {
               WebkitBackdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.28)',
               boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.35)',
             }}>
-
             <div className="absolute top-0 left-0 right-0 h-px"
               style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
             <div className="absolute top-0 left-0 right-0 h-1/2 pointer-events-none"
               style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.10) 0%,transparent 100%)' }} />
 
             <div className="px-6 sm:px-8 py-7 sm:py-8 relative">
-
               <h2 className="mb-0.5" style={{
                 fontFamily: "'Dancing Script', cursive",
                 fontSize: 'clamp(1.6rem, 5vw, 2rem)', fontWeight: 700, lineHeight: 1.2,
                 background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 50%,#6ee7b7 100%)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>Welcome Back</h2>
-
               <p className="text-xs sm:text-sm mb-6" style={{ color: 'rgba(30,40,50,0.65)' }}>
                 Sign in to your mess account
               </p>
@@ -238,72 +249,81 @@ export default function Login() {
                     background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(20px)',
                     WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.38)',
                     boxShadow: '0 2px 12px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.45)',
-                    transition: 'opacity 0.2s, transform 0.1s',
-                    opacity: loading ? 0.85 : 1, cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'opacity 0.2s', opacity: loading ? 0.85 : 1,
+                    cursor: loading ? 'not-allowed' : 'pointer',
                   }}>
                   {!loading && (
                     <span className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none"
                       style={{ background: 'linear-gradient(110deg,transparent 20%,rgba(255,255,255,0.20) 50%,transparent 80%)', transition: 'opacity 0.4s' }} />
                   )}
-                  <style>{`@keyframes orbitBubble { from { transform: rotate(0deg) translateX(10px) rotate(0deg); } to { transform: rotate(360deg) translateX(10px) rotate(-360deg); } }`}</style>
+                  <style>{`@keyframes orbitBubble{from{transform:rotate(0deg) translateX(10px) rotate(0deg)}to{transform:rotate(360deg) translateX(10px) rotate(-360deg)}}`}</style>
                   {loading ? (
                     <span className="relative flex items-center justify-center gap-3">
                       <span className="relative w-5 h-5 flex-shrink-0">
                         {[0,1,2,3].map(i => (
-                          <span key={i} className="absolute rounded-full"
-                            style={{
-                              width: i % 2 === 0 ? 5 : 4, height: i % 2 === 0 ? 5 : 4,
-                              background: 'rgba(255,255,255,0.90)', top: '50%', left: '50%',
-                              marginTop: i % 2 === 0 ? -2.5 : -2, marginLeft: i % 2 === 0 ? -2.5 : -2,
-                              animation: `orbitBubble ${0.9 + i * 0.15}s linear ${i * 0.22}s infinite`,
-                              opacity: 1 - i * 0.15,
-                            }} />
+                          <span key={i} className="absolute rounded-full" style={{
+                            width: i%2===0?5:4, height: i%2===0?5:4,
+                            background: 'rgba(255,255,255,0.90)', top:'50%', left:'50%',
+                            marginTop: i%2===0?-2.5:-2, marginLeft: i%2===0?-2.5:-2,
+                            animation:`orbitBubble ${0.9+i*0.15}s linear ${i*0.22}s infinite`,
+                            opacity: 1-i*0.15,
+                          }} />
                         ))}
                       </span>
                       <span className="text-sm font-semibold tracking-wide text-white/90">Signing in…</span>
                     </span>
                   ) : (
                     <span className="relative flex items-center justify-center gap-2.5"
-                      style={{ fontFamily: "'Dancing Script', cursive", fontWeight: 700, fontSize: '1.3rem', letterSpacing: '0.04em' }}>
+                      style={{ fontFamily:"'Dancing Script',cursive", fontWeight:700, fontSize:'1.3rem', letterSpacing:'0.04em' }}>
                       Sign In
                       <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
                     </span>
                   )}
                 </button>
 
-                {/* Forgot Password */}
-                <div className="text-center">
+                {/* Forgot Password — proper styled link */}
+                <div className="flex justify-center pt-0.5">
                   <button type="button" onClick={() => navigate('/forgot-password')}
-                    className="text-xs font-semibold tracking-wide transition-all duration-200 hover:opacity-100 underline underline-offset-2"
-                    style={{ color: 'rgba(110,231,183,0.75)', background: 'none', border: 'none', cursor: 'pointer', textDecorationColor: 'rgba(110,231,183,0.35)' }}>
+                    className="group inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200"
+                    style={{
+                      color: 'rgba(110,231,183,0.90)',
+                      background: 'rgba(16,185,129,0.08)',
+                      border: '1px solid rgba(16,185,129,0.20)',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background='rgba(16,185,129,0.16)'; e.currentTarget.style.borderColor='rgba(16,185,129,0.40)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background='rgba(16,185,129,0.08)'; e.currentTarget.style.borderColor='rgba(16,185,129,0.20)'; }}
+                  >
+                    <KeyRound size={12} />
                     Forgot Password?
                   </button>
                 </div>
 
                 {/* Divider */}
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.18)' }} />
-                  <span className="text-[10px] font-semibold tracking-widest uppercase"
-                    style={{ color: 'rgba(255,255,255,0.35)' }}>or</span>
-                  <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.18)' }} />
+                <div className="flex items-center gap-3 py-0.5">
+                  <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.15)' }} />
+                  <span className="text-[10px] font-bold tracking-widest uppercase px-1"
+                    style={{ color: 'rgba(255,255,255,0.30)' }}>or</span>
+                  <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.15)' }} />
                 </div>
 
-                {/* Google Sign In */}
-                <button type="button" onClick={handleGoogleLogin} disabled={gLoading}
-                  className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl font-semibold text-sm transition-all duration-200 hover:shadow-lg"
-                  style={{
-                    background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(255,255,255,0.60)',
-                    color: '#1f2937', boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                    opacity: gLoading ? 0.75 : 1, cursor: gLoading ? 'not-allowed' : 'pointer',
-                  }}>
-                  <svg width="18" height="18" viewBox="0 0 48 48">
-                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                  </svg>
-                  {gLoading ? 'Signing in…' : 'Continue with Google'}
-                </button>
+                {/* Google Sign In — rendered by Google SDK for instant response */}
+                <div className="w-full overflow-hidden rounded-2xl" style={{ minHeight: 44 }}>
+                  {/* Google renders its own button here — fastest possible */}
+                  <div ref={googleBtnRef} className="w-full" style={{ minHeight: 44 }} />
+                  {/* Fallback shown only while script loads */}
+                  {!googleReady && (
+                    <div className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl text-sm font-semibold"
+                      style={{ background: 'rgba(255,255,255,0.88)', color: '#6b7280', border: '1px solid rgba(255,255,255,0.50)' }}>
+                      <svg width="18" height="18" viewBox="0 0 48 48">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                      </svg>
+                      Continue with Google
+                    </div>
+                  )}
+                </div>
 
               </form>
             </div>
