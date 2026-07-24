@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import api from '../api';
 import useAuthStore from '../store/authStore';
+
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 /* ─── Loading overlay ───────────────────────────────────────────────── */
 function LoadingOverlay() {
@@ -57,26 +59,63 @@ function GlassInput({ icon: Icon, rightSlot, ...props }) {
 
 /* ─── Login Page ────────────────────────────────────────────────────── */
 export default function Login() {
-  const [form, setForm]           = useState({ email: '', password: '' });
-  const [show, setShow]           = useState(false);
-  const [loading, setLoading]     = useState(false);
+  const [form, setForm]             = useState({ email: '', password: '' });
+  const [show, setShow]             = useState(false);
+  const [loading, setLoading]       = useState(false);
+  const [gLoading, setGLoading]     = useState(false);
   const [navigating, setNavigating] = useState(false);
   const { login }  = useAuthStore();
   const navigate   = useNavigate();
+
+  const doLogin = (userData, token) => {
+    login(userData, token);
+    toast.success(`Welcome, ${userData.name}!`);
+    setNavigating(true);
+    setTimeout(() => {
+      if (userData.role === 'admin')        navigate('/admin');
+      else if (userData.role === 'manager') navigate('/manager');
+      else                                   navigate('/member');
+    }, 1200);
+  };
+
+  // Load Google script
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => document.body.removeChild(script);
+  }, []);
+
+  const handleGoogleLogin = () => {
+    if (!window.google || !GOOGLE_CLIENT_ID) {
+      toast.error('Google sign-in not configured.');
+      return;
+    }
+    setGLoading(true);
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: async ({ credential }) => {
+        try {
+          const { data } = await api.post('/auth/google', { credential });
+          doLogin(data.user, data.token);
+        } catch (err) {
+          toast.error(err.response?.data?.message || 'Google sign-in failed.');
+          setGLoading(false);
+        }
+      },
+    });
+    window.google.accounts.id.prompt();
+    setGLoading(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', form);
-      login(data.user, data.token);
-      toast.success(`Welcome, ${data.user.name}!`);
-      setNavigating(true);
-      setTimeout(() => {
-        if (data.user.role === 'admin')        navigate('/admin');
-        else if (data.user.role === 'manager') navigate('/manager');
-        else                                    navigate('/member');
-      }, 1200);
+      doLogin(data.user, data.token);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
       setLoading(false);
@@ -242,8 +281,6 @@ export default function Login() {
                 </div>
 
                 {/* Sign In button */}
-                <button
-                  type="submit"
                   disabled={loading}
                   className="group relative w-full py-3.5 sm:py-4 rounded-2xl text-white overflow-hidden mt-2"
                   style={{
@@ -313,6 +350,38 @@ export default function Login() {
                     Forgot Password?
                   </button>
                 </div>
+
+                {/* Divider */}
+                <div className="flex items-center gap-3 py-1">
+                  <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.18)' }} />
+                  <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.35)' }}>or</span>
+                  <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.18)' }} />
+                </div>
+
+                {/* Google Sign In */}
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  disabled={gLoading}
+                  className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl font-semibold text-sm transition-all duration-200"
+                  style={{
+                    background: 'rgba(255,255,255,0.92)',
+                    border: '1px solid rgba(255,255,255,0.60)',
+                    color: '#1f2937',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                    opacity: gLoading ? 0.75 : 1,
+                    cursor: gLoading ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {/* Google SVG icon */}
+                  <svg width="18" height="18" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                  </svg>
+                  {gLoading ? 'Signing in…' : 'Continue with Google'}
+                </button>
               </form>
             </div>
 

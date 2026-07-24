@@ -3,9 +3,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { Resend } = require('resend');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 
 const router = express.Router();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const GENERIC_MSG = 'If an account with this email exists, a password reset link has been sent.';
 
@@ -126,6 +128,49 @@ router.post('/reset-password', async (req, res) => {
   } catch (err) {
     console.error('reset-password error:', err);
     res.status(500).json({ message: 'Something went wrong. Please try again.' });
+  }
+});
+
+// ── Google OAuth Login ──
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) return res.status(400).json({ message: 'Missing Google credential.' });
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const { email, name, sub: googleId } = ticket.getPayload();
+
+    let user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      // New user — create as member, admin assigns role later
+      const randomPw = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10);
+      user = await User.create({
+        name,
+        email: email.toLowerCase(),
+        password: randomPw,
+        role: 'member',
+        isActive: true,
+        googleId,
+      });
+    } else if (!user.isActive) {
+      return res.status(401).json({ message: 'Your account is inactive. Contact admin.' });
+    }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role, name: user.name },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    res.json({
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, room: user.room },
+    });
+  } catch (err) {
+    console.error('google-auth error:', err.message);
+    res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
   }
 });
 
