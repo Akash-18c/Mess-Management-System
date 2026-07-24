@@ -61,9 +61,12 @@ router.put('/members/:id/approve', async (req, res) => {
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
 
-// Reject member
+// Reject member — never admin
 router.delete('/members/:id/reject', async (req, res) => {
   try {
+    const target = await User.findById(req.params.id);
+    if (!target) return res.status(404).json({ message: 'Member not found.' });
+    if (target.role === 'admin') return res.status(403).json({ message: 'Admin account cannot be removed.' });
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: 'Member rejected and removed.' });
   } catch (err) { res.status(400).json({ message: err.message }); }
@@ -81,7 +84,11 @@ router.post('/members', async (req, res) => {
 
 router.put('/members/:id', async (req, res) => {
   try {
+    const target = await User.findById(req.params.id);
+    if (!target) return res.status(404).json({ message: 'Member not found.' });
     const { password, isApproved, ...data } = req.body;
+    // Admin role can never be changed via this route
+    if (target.role === 'admin') delete data.role;
     if (password) { data.password = await bcrypt.hash(password, 10); data.plainPassword = password; }
     if (isApproved !== undefined) data.isApproved = isApproved;
     const user = await User.findByIdAndUpdate(req.params.id, data, { new: true }).select('-password');
@@ -103,6 +110,9 @@ router.get('/credentials', async (req, res) => {
 
 router.delete('/members/:id', async (req, res) => {
   try {
+    const target = await User.findById(req.params.id);
+    if (!target) return res.status(404).json({ message: 'Member not found.' });
+    if (target.role === 'admin') return res.status(403).json({ message: 'Admin account cannot be deleted.' });
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: 'Member deleted' });
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -320,8 +330,7 @@ router.delete('/purge-all-members', async (req, res) => {
     // Re-seed default categories after purge
     const defaults = ['Rice Bag','Gas Cylinder','Fuel','Utensils','Maintenance','Miscellaneous','Internet','Water','Electricity'];
     await Promise.all(defaults.map(name => ExpenseCategory.create({ name, type: 'other', isActive: true })));
-    // Clear plainPassword from admin account too
-    await User.updateMany({ role: 'admin' }, { plainPassword: '' });
+    // Never touch admin plainPassword
     res.json({
       message: 'All data deleted. Admin account and default categories preserved.',
       deleted: { members: members.deletedCount, meals: meals.deletedCount, groceries: grocery.deletedCount, otherExpenses: other.deletedCount, payments: payments.deletedCount, bills: bills.deletedCount, summaries: summaries.deletedCount, assignments: assignments.deletedCount, gasCylinders: gas.deletedCount, riceBags: rice.deletedCount, otherCharges: otherCharges.deletedCount, masiSalary: masi.deletedCount, categories: categories.deletedCount },
@@ -520,6 +529,9 @@ router.delete('/purge-all-meals', async (req, res) => {
 router.delete('/purge-member/:id', async (req, res) => {
   try {
     const memberId = req.params.id;
+    const target = await User.findById(memberId);
+    if (!target) return res.status(404).json({ message: 'Member not found.' });
+    if (target.role === 'admin') return res.status(403).json({ message: 'Admin account cannot be purged.' });
     const Meal     = require('../models/Meal');
     const Payment  = require('../models/Payment');
     const OtherCharge = require('../models/OtherCharge');
@@ -531,7 +543,6 @@ router.delete('/purge-member/:id', async (req, res) => {
       OtherCharge.deleteMany(filter),
       User.findByIdAndDelete(memberId),
     ]);
-    // Also remove any month assignment for this member
     await MonthAssignment.deleteMany({ managerId: memberId });
     res.json({
       message: 'Member and all their data deleted',
