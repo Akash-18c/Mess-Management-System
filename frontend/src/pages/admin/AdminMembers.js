@@ -32,6 +32,9 @@ const roleAccent = {
 export default function AdminMembers() {
   const [members,       setMembers]       = useState([]);
   const [pending,        setPending]        = useState([]);
+  const [approveModal,  setApproveModal]  = useState(null); // { id, name, email }
+  const [approveRole,   setApproveRole]   = useState('member');
+  const [approveLoading,setApproveLoading]= useState(false);
   const [modal,         setModal]         = useState(false);
   const [editing,       setEditing]       = useState(null);
   const [form,          setForm]          = useState(EMPTY);
@@ -102,12 +105,19 @@ export default function AdminMembers() {
     } catch (err) { toast.error(err.response?.data?.message || 'Error deleting'); }
   };
 
-  const approveMember = async (id) => {
+  const openApprove = (m) => { setApproveModal(m); setApproveRole('member'); };
+
+  const confirmApprove = async () => {
+    if (!approveModal) return;
+    setApproveLoading(true);
     try {
-      await api.put(`/admin/members/${id}/approve`);
-      toast.success('Member approved!');
-      load();
+      await api.put(`/admin/members/${approveModal._id}/approve`);
+      if (approveRole !== 'member')
+        await api.put(`/admin/members/${approveModal._id}`, { role: approveRole });
+      toast.success(`${approveModal.name} approved as ${approveRole}!`);
+      setApproveModal(null); load();
     } catch { toast.error('Failed to approve'); }
+    finally { setApproveLoading(false); }
   };
 
   const rejectMember = async (id, name) => {
@@ -307,30 +317,19 @@ export default function AdminMembers() {
 
                 {/* Action buttons */}
                 <div className="grid grid-cols-2 gap-0" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                  <button onClick={() => approveMember(m._id)}
+                  <button onClick={() => openApprove(m)}
                     className="flex items-center justify-center gap-2 py-3 text-xs font-bold tracking-wide transition-all duration-200"
-                    style={{
-                      color: '#34d399',
-                      background: 'rgba(16,185,129,0.08)',
-                      borderRight: '1px solid rgba(255,255,255,0.06)',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
+                    style={{ color:'#34d399', background:'rgba(16,185,129,0.08)', borderRight:'1px solid rgba(255,255,255,0.06)', WebkitTapHighlightColor:'transparent' }}
                     onMouseEnter={e => e.currentTarget.style.background='rgba(16,185,129,0.18)'}
                     onMouseLeave={e => e.currentTarget.style.background='rgba(16,185,129,0.08)'}>
-                    <CheckCircle size={14} strokeWidth={2.5} />
-                    Approve
+                    <CheckCircle size={14} strokeWidth={2.5} />Approve
                   </button>
                   <button onClick={() => rejectMember(m._id, m.name)}
                     className="flex items-center justify-center gap-2 py-3 text-xs font-bold tracking-wide transition-all duration-200"
-                    style={{
-                      color: '#f87171',
-                      background: 'rgba(248,113,113,0.06)',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
+                    style={{ color:'#f87171', background:'rgba(248,113,113,0.06)', WebkitTapHighlightColor:'transparent' }}
                     onMouseEnter={e => e.currentTarget.style.background='rgba(248,113,113,0.16)'}
                     onMouseLeave={e => e.currentTarget.style.background='rgba(248,113,113,0.06)'}>
-                    <XCircle size={14} strokeWidth={2.5} />
-                    Reject
+                    <XCircle size={14} strokeWidth={2.5} />Reject
                   </button>
                 </div>
               </div>
@@ -504,6 +503,87 @@ export default function AdminMembers() {
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Approve + Role Modal ── */}
+      {approveModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ background:'rgba(0,0,0,0.80)', backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)' }}>
+          <div className="w-full sm:max-w-sm overflow-hidden"
+            style={{
+              background:'rgba(255,255,255,0.07)',
+              backdropFilter:'blur(56px)', WebkitBackdropFilter:'blur(56px)',
+              border:'1px solid rgba(255,255,255,0.14)',
+              boxShadow:'0 32px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.12)',
+              borderRadius:'28px 28px 28px 28px',
+            }}>
+            {/* shimmer */}
+            <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.40),transparent)' }} />
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-4">
+              <div className="flex items-center gap-3">
+                {/* Avatar */}
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold flex-shrink-0"
+                  style={{ background:'linear-gradient(135deg,rgba(16,185,129,0.22),rgba(5,150,105,0.12))', border:'1px solid rgba(16,185,129,0.30)', color:'#34d399' }}>
+                  {approveModal.name?.[0]?.toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white font-bold text-sm truncate">{realName(approveModal.name)}</p>
+                  <p className="text-slate-500 text-[11px] truncate">{approveModal.email}</p>
+                </div>
+              </div>
+              <button onClick={() => setApproveModal(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0"
+                style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.10)', WebkitTapHighlightColor:'transparent' }}>
+                <X size={15} className="text-slate-400" />
+              </button>
+            </div>
+
+            <div className="px-5 pb-5 space-y-4">
+              {/* Role picker label */}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5" style={{ color:'rgba(255,255,255,0.40)' }}>Assign Role</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[{val:'member',label:'Member',icon:'👤',color:'#2dd4bf',bg:'rgba(20,184,166,0.12)',border:'rgba(20,184,166,0.30)',activeBg:'rgba(20,184,166,0.20)'},
+                    {val:'manager',label:'Manager',icon:'⭐',color:'#fbbf24',bg:'rgba(245,158,11,0.10)',border:'rgba(245,158,11,0.28)',activeBg:'rgba(245,158,11,0.20)'}]
+                    .map(r => (
+                    <button key={r.val} type="button" onClick={() => setApproveRole(r.val)}
+                      className="flex flex-col items-center gap-1.5 py-3.5 rounded-2xl transition-all duration-200"
+                      style={{
+                        background: approveRole === r.val ? r.activeBg : r.bg,
+                        border: `1.5px solid ${approveRole === r.val ? r.border : 'rgba(255,255,255,0.08)'}`,
+                        boxShadow: approveRole === r.val ? `0 0 20px ${r.bg}, inset 0 1px 0 rgba(255,255,255,0.10)` : 'none',
+                        WebkitTapHighlightColor:'transparent',
+                      }}>
+                      <span className="text-xl">{r.icon}</span>
+                      <span className="text-xs font-bold" style={{ color: approveRole === r.val ? r.color : 'rgba(255,255,255,0.45)' }}>{r.label}</span>
+                      {approveRole === r.val && (
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: r.color }} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Confirm button */}
+              <button onClick={confirmApprove} disabled={approveLoading}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200"
+                style={{
+                  background: approveLoading ? 'rgba(16,185,129,0.12)' : 'linear-gradient(135deg,rgba(16,185,129,0.28) 0%,rgba(5,150,105,0.18) 100%)',
+                  border:'1px solid rgba(16,185,129,0.35)',
+                  color:'#34d399',
+                  boxShadow:'0 4px 20px rgba(16,185,129,0.15), inset 0 1px 0 rgba(255,255,255,0.08)',
+                  WebkitTapHighlightColor:'transparent',
+                }}>
+                <CheckCircle size={15} strokeWidth={2.5} />
+                {approveLoading ? 'Approving…' : `Approve as ${approveRole === 'member' ? 'Member' : 'Manager'}`}
+              </button>
+            </div>
+
+            <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(16,185,129,0.25),transparent)' }} />
           </div>
         </div>
       )}
