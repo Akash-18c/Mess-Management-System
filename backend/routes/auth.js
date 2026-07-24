@@ -11,6 +11,19 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const GENERIC_MSG = 'If an account with this email exists, a password reset link has been sent.';
 
+// ── Me (for approval poll) ──
+router.get('/me', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ message: 'No token' });
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('name email role isApproved isActive room').lean();
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ user });
+  } catch { res.status(401).json({ message: 'Invalid token' }); }
+});
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
