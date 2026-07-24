@@ -2,26 +2,10 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const User = require('../models/User');
 
 const router = express.Router();
-
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    family: 4,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
-}
 
 const GENERIC_MSG = 'If an account with this email exists, a password reset link has been sent.';
 
@@ -53,7 +37,7 @@ router.post('/forgot-password', async (req, res) => {
     const user = await User.findOne({ email, role: 'admin' });
     if (!user) return res.json({ message: GENERIC_MSG });
 
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS)
+    if (!process.env.RESEND_API_KEY)
       return res.status(500).json({ message: 'Email service not configured.' });
 
     const token = crypto.randomBytes(32).toString('hex');
@@ -87,12 +71,15 @@ router.post('/forgot-password', async (req, res) => {
 </table></td></tr></table>
 </body></html>`;
 
-    await createTransporter().sendMail({
-      from: `"Messy Kitchen" <${process.env.SMTP_USER}>`,
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const { error } = await resend.emails.send({
+      from: 'Messy Kitchen <onboarding@resend.dev>',
       to: user.email,
       subject: 'Reset Your Messy Kitchen Admin Password',
       html,
     });
+
+    if (error) throw new Error(error.message);
 
     res.json({ message: GENERIC_MSG });
   } catch (err) {
