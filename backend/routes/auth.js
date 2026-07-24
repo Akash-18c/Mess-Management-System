@@ -14,6 +14,9 @@ function createTransporter() {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   });
 }
 
@@ -46,6 +49,9 @@ router.post('/forgot-password', async (req, res) => {
 
     const user = await User.findOne({ email, role: 'admin' });
     if (!user) return res.json({ message: GENERIC_MSG });
+
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS)
+      return res.status(500).json({ message: 'Email service not configured.' });
 
     const token = crypto.randomBytes(32).toString('hex');
     user.resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
