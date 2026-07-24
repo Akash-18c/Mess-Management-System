@@ -238,44 +238,99 @@ export default function AdminMembers() {
       {/* ── Pending Approvals ── */}
       {pending.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 mb-2.5 pl-1">
-            <Bell size={13} style={{ color: '#fbbf24' }} />
-            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#fbbf24' }}>Pending Approval ({pending.length})</p>
+          {/* Section header */}
+          <div className="flex items-center gap-2.5 mb-3 pl-1">
+            <div className="relative flex-shrink-0">
+              <Bell size={14} style={{ color: '#fbbf24' }} />
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400" />
+            </div>
+            <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#fbbf24' }}>Pending Approval</p>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background:'rgba(245,158,11,0.18)', color:'#fbbf24', border:'1px solid rgba(245,158,11,0.30)' }}>{pending.length}</span>
           </div>
-          <div className="rounded-2xl overflow-hidden" style={glass}>
-            {pending.map((m, i) => (
-              <div key={m._id} className="flex items-center gap-3 px-4 py-3.5"
-                style={{ borderBottom: i < pending.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                {/* Avatar */}
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
-                  style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}>
-                  {m.name?.[0]?.toUpperCase()}
-                </div>
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-white font-semibold text-sm truncate">{m.name}</p>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide"
-                      style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24' }}>Pending</span>
+
+          {/* Cards grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {pending.map((m) => (
+              <div key={m._id} className="relative rounded-2xl overflow-hidden flex flex-col"
+                style={{
+                  background: 'linear-gradient(145deg, rgba(245,158,11,0.07) 0%, rgba(10,15,30,0.95) 60%)',
+                  border: '1px solid rgba(245,158,11,0.22)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(245,158,11,0.08), inset 0 1px 0 rgba(255,255,255,0.06)',
+                  backdropFilter: 'blur(32px)',
+                  WebkitBackdropFilter: 'blur(32px)',
+                }}>
+
+                {/* Top shimmer line */}
+                <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg,transparent,rgba(245,158,11,0.60),transparent)' }} />
+
+                {/* Card body */}
+                <div className="p-4 flex items-start gap-3.5 flex-1">
+                  {/* Avatar with glow */}
+                  <div className="relative flex-shrink-0">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(245,158,11,0.25) 0%, rgba(251,191,36,0.12) 100%)',
+                        border: '1.5px solid rgba(245,158,11,0.40)',
+                        color: '#fbbf24',
+                        boxShadow: '0 0 20px rgba(245,158,11,0.20), inset 0 1px 0 rgba(255,255,255,0.10)',
+                      }}>
+                      {m.name?.[0]?.toUpperCase()}
+                    </div>
+                    {/* Google badge */}
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                      style={{ background: '#fff', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}>
+                      <svg width="11" height="11" viewBox="0 0 48 48">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                      </svg>
+                    </div>
                   </div>
-                  <p className="text-slate-500 text-[11px] truncate">{m.email}</p>
-                  <p className="text-slate-600 text-[10px] mt-0.5">Joined via Google · {new Date(m.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</p>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-white font-semibold text-sm truncate">{realName(m.name)}</p>
+                    </div>
+                    <p className="text-slate-400 text-[11px] truncate mb-1">{m.email}</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide"
+                        style={{ background:'rgba(245,158,11,0.15)', color:'#fbbf24', border:'1px solid rgba(245,158,11,0.28)' }}>Pending</span>
+                      <span className="text-slate-600 text-[10px]">
+                        {new Date(m.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short' })}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                {/* Actions */}
-                <div className="flex items-center gap-2 flex-shrink-0">
+
+                {/* Action buttons */}
+                <div className="grid grid-cols-2 gap-0" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                   <button onClick={() => approveMember(m._id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-                    style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', color: '#34d399' }}
-                    onMouseEnter={e => { e.currentTarget.style.background='rgba(16,185,129,0.22)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background='rgba(16,185,129,0.12)'; }}>
-                    <CheckCircle size={13} /> <span className="hidden sm:inline">Approve</span>
+                    className="flex items-center justify-center gap-2 py-3 text-xs font-bold tracking-wide transition-all duration-200"
+                    style={{
+                      color: '#34d399',
+                      background: 'rgba(16,185,129,0.08)',
+                      borderRight: '1px solid rgba(255,255,255,0.06)',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background='rgba(16,185,129,0.18)'}
+                    onMouseLeave={e => e.currentTarget.style.background='rgba(16,185,129,0.08)'}>
+                    <CheckCircle size={14} strokeWidth={2.5} />
+                    Approve
                   </button>
                   <button onClick={() => rejectMember(m._id, m.name)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-                    style={{ background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.22)', color: '#f87171' }}
-                    onMouseEnter={e => { e.currentTarget.style.background='rgba(248,113,113,0.20)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background='rgba(248,113,113,0.10)'; }}>
-                    <XCircle size={13} /> <span className="hidden sm:inline">Reject</span>
+                    className="flex items-center justify-center gap-2 py-3 text-xs font-bold tracking-wide transition-all duration-200"
+                    style={{
+                      color: '#f87171',
+                      background: 'rgba(248,113,113,0.06)',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background='rgba(248,113,113,0.16)'}
+                    onMouseLeave={e => e.currentTarget.style.background='rgba(248,113,113,0.06)'}>
+                    <XCircle size={14} strokeWidth={2.5} />
+                    Reject
                   </button>
                 </div>
               </div>
