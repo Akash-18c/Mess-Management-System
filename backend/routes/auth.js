@@ -11,16 +11,22 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const GENERIC_MSG = 'If an account with this email exists, a password reset link has been sent.';
 
-// ── Me (for approval poll) ──
+// ── Me (for approval poll) — returns fresh DB data + new token ──
 router.get('/me', async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ message: 'No token' });
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const raw = authHeader.split(' ')[1];
+    const decoded = jwt.verify(raw, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select('name email role isApproved isActive room').lean();
     if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json({ user });
+    // Issue a fresh token so isApproved/role changes are reflected immediately
+    const token = jwt.sign(
+      { id: user._id, role: user.role, name: user.name, isApproved: user.isApproved },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    res.json({ user, token });
   } catch { res.status(401).json({ message: 'Invalid token' }); }
 });
 
@@ -102,18 +108,21 @@ router.post('/forgot-password', async (req, res) => {
 
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { error } = await resend.emails.send({
-      from: 'Messy Kitchen <onboarding@resend.dev>',
+      from: process.env.RESEND_FROM || 'Messy Kitchen <onboarding@resend.dev>',
       to: user.email,
       subject: 'Reset Your Messy Kitchen Password',
       html,
     });
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error('Resend error:', error);
+      return res.status(500).json({ message: 'Failed to send reset email. Please try again.' });
+    }
 
     res.json({ message: GENERIC_MSG });
   } catch (err) {
     console.error('forgot-password error:', err.message || err);
-    res.status(500).json({ message: err.message || 'Failed to send reset email. Please try again.' });
+    res.status(500).json({ message: 'Failed to send reset email. Please try again.' });
   }
 });
 
@@ -150,40 +159,52 @@ router.post('/google', async (req, res) => {
     const { credential } = req.body;
     if (!credential) return res.status(400).json({ message: 'Missing Google credential.' });
 
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const { email, name, sub: googleId } = ticket.getPayload();
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (verifyErr) {
+      console.error('google verifyIdToken failed:', verifyErr.message);
+      return res.status(401).json({ message: 'Google token verification failed. Please try again.' });
+    }
 
+    const { email, name, sub: googleId } = payload;
     let user = await User.findOne({ email: email.toLowerCase() });
+
     if (!user) {
+      // New user — create with pending approval
       const randomPw = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10);
       user = await User.create({
-        name,
-        email: email.toLowerCase(),
-        password: randomPw,
-        role: 'member',
-        isActive: true,
-        isApproved: false,
-        googleId,
+        name, email: email.toLowerCase(), password: randomPw,
+        role: 'member', isActive: true, isApproved: false, googleId,
       });
     } else {
       if (!user.isActive)
-        return res.status(401).json({ message: 'Your account is inactive. Contact admin.' });
-      if (!user.isApproved)
-        return res.status(401).json({ message: 'Your account is pending admin approval.' });
-      // keep googleId in sync
+        return res.status(403).json({ message: 'Your account is inactive. Contact admin.' });
+      // Sync googleId if missing
       if (!user.googleId) {
+        await User.findByIdAndUpdate(user._id, { googleId });
         user.googleId = googleId;
-        await user.save();
+      }
+      // If not yet approved — return pending state (not an error, just pending)
+      if (!user.isApproved) {
+        const pendingToken = jwt.sign(
+          { id: user._id, role: user.role, name: user.name, isApproved: false },
+          process.env.JWT_SECRET, { expiresIn: '7d' }
+        );
+        return res.json({
+          token: pendingToken,
+          user: { id: user._id, name: user.name, email: user.email, role: user.role, room: user.room, isApproved: false },
+        });
       }
     }
 
     const token = jwt.sign(
       { id: user._id, role: user.role, name: user.name, isApproved: user.isApproved },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      process.env.JWT_SECRET, { expiresIn: '7d' }
     );
     res.json({
       token,
@@ -191,7 +212,7 @@ router.post('/google', async (req, res) => {
     });
   } catch (err) {
     console.error('google-auth error:', err.message);
-    res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
+    res.status(500).json({ message: 'Google sign-in failed. Please try again.' });
   }
 });
 

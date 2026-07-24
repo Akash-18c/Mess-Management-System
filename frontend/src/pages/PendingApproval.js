@@ -26,11 +26,12 @@ export default function PendingApproval() {
         const { data } = await api.get('/auth/me');
         if (data?.user?.isApproved) {
           clearInterval(intervalRef.current);
-          login(data.user, useAuthStore.getState().token);
+          // Use the fresh token returned by /auth/me so role/isApproved is correct
+          login(data.user, data.token);
           navigate(data.user.role === 'admin' ? '/admin' : data.user.role === 'manager' ? '/manager' : '/member');
         }
       } catch {}
-    }, 8000);
+    }, 6000);
     return () => clearInterval(intervalRef.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

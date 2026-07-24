@@ -109,22 +109,28 @@ mongoose
 async function seedAdmin() {
   const User = require('./models/User');
   const bcrypt = require('bcryptjs');
-  const hashed = await bcrypt.hash('Akash@1805x', 8);
-  await User.findOneAndUpdate(
-    { role: 'admin' },
-    {
+  // Only create admin if not exists — never overwrite password on restart
+  const existing = await User.findOne({ role: 'admin' });
+  if (!existing) {
+    const hashed = await bcrypt.hash('Akash@1805x', 10);
+    await User.create({
       name: 'Admin (Akash Chakraborty)',
       email: 'akashranaa188@gmail.com',
       password: hashed,
+      plainPassword: 'Akash@1805x',
       phone: '9907737323',
       room: 'N/A',
       role: 'admin',
       isActive: true,
+      isApproved: true,
       joinDate: new Date(),
-    },
-    { upsert: true, new: true }
-  );
-  console.log('Admin ready: akashranaa188@gmail.com / Akash@1805x');
+    });
+    console.log('Admin created: akashranaa188@gmail.com / Akash@1805x');
+  } else {
+    // Ensure admin is always active and approved
+    await User.findByIdAndUpdate(existing._id, { isActive: true, isApproved: true });
+    console.log('Admin ready:', existing.email);
+  }
 }
 
 async function seedCategories() {
