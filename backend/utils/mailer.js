@@ -1,9 +1,16 @@
 const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const SITE_URL = process.env.FRONTEND_URL || 'https://themessykitchen.online';
 const LOGO = `${SITE_URL}/messy-logo.png`;
 const FROM = 'Messy Kitchen <noreply@themessykitchen.online>';
+
+function getResend() {
+  if (!process.env.RESEND_API_KEY) {
+    console.error('RESEND_API_KEY is not set!');
+    return null;
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 function baseTemplate({ preheader = '', headerLabel = '', body = '' }) {
   return `<!DOCTYPE html>
@@ -93,6 +100,8 @@ async function sendWelcomeEmail(user) {
 
   const html = baseTemplate({ preheader: `Welcome ${user.name}! Your account is pending approval.`, headerLabel: 'Welcome', body });
 
+  const resend = getResend();
+  if (!resend) return;
   const { error } = await resend.emails.send({
     from: FROM,
     to: [user.email],
@@ -166,6 +175,8 @@ async function sendApprovalEmail(user, approved) {
     body,
   });
 
+  const resend = getResend();
+  if (!resend) return;
   const { error } = await resend.emails.send({
     from: FROM,
     to: [user.email],
