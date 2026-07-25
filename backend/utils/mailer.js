@@ -1,9 +1,9 @@
 const { Resend } = require('resend');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'akashranaa188@gmail.com';
 const SITE_URL = process.env.FRONTEND_URL || 'https://themessykitchen.online';
 const LOGO = `${SITE_URL}/messy-logo.png`;
+const FROM = 'Messy Kitchen <noreply@themessykitchen.online>';
 
 function baseTemplate({ preheader = '', headerLabel = '', body = '' }) {
   return `<!DOCTYPE html>
@@ -63,6 +63,7 @@ async function sendWelcomeEmail(user) {
       <p style="margin:0 0 20px;font-size:14px;color:#4b5563;line-height:1.75">
         You've successfully registered at <strong>The Messy Kitchen</strong> using your Google account.
         Your account is currently <strong style="color:#d97706">pending approval</strong> by the admin.
+        You'll receive another email once a decision is made.
       </p>
 
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fef3c7;border-radius:12px;margin-bottom:22px">
@@ -93,13 +94,13 @@ async function sendWelcomeEmail(user) {
   const html = baseTemplate({ preheader: `Welcome ${user.name}! Your account is pending approval.`, headerLabel: 'Welcome', body });
 
   const { error } = await resend.emails.send({
-    from: 'Messy Kitchen <onboarding@resend.dev>',
-    to: [ADMIN_EMAIL],
-    subject: `🎉 New Registration — ${user.name} (${user.email})`,
+    from: FROM,
+    to: [user.email],
+    subject: `🎉 Welcome to The Messy Kitchen, ${user.name}!`,
     html,
   });
   if (error) console.error('welcome email error:', JSON.stringify(error));
-  else console.log(`welcome email queued for ${user.email}`);
+  else console.log(`welcome email sent to ${user.email}`);
 }
 
 // ── Approval / Rejection status email ────────────────────────────────
@@ -166,15 +167,15 @@ async function sendApprovalEmail(user, approved) {
   });
 
   const { error } = await resend.emails.send({
-    from: 'Messy Kitchen <onboarding@resend.dev>',
-    to: [ADMIN_EMAIL],
+    from: FROM,
+    to: [user.email],
     subject: approved
-      ? `✅ Approved — ${user.name} (${user.email})`
-      : `❌ Declined — ${user.name} (${user.email})`,
+      ? `✅ Your Messy Kitchen account is approved!`
+      : `❌ Your Messy Kitchen registration was declined`,
     html,
   });
   if (error) console.error('approval email error:', JSON.stringify(error));
-  else console.log(`approval email queued for ${user.email} — approved:${approved}`);
+  else console.log(`approval email sent to ${user.email} — approved:${approved}`);
 }
 
 module.exports = { sendWelcomeEmail, sendApprovalEmail };
