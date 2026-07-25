@@ -10,6 +10,7 @@ const Bill = require('../models/Bill');
 const MasiSalary = require('../models/MasiSalary');
 const MarketDuty = require('../models/MarketDuty');
 const { auth, requireRole } = require('../middleware/auth');
+const { sendApprovalEmail } = require('../utils/mailer');
 
 const router = express.Router();
 router.use(auth, requireRole('admin'));
@@ -57,6 +58,7 @@ router.get('/members/pending', async (req, res) => {
 router.put('/members/:id/approve', async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(req.params.id, { isApproved: true, isActive: true }, { new: true }).select('-password');
+    sendApprovalEmail(user, true).catch(() => {});
     res.json(user);
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
@@ -67,6 +69,7 @@ router.delete('/members/:id/reject', async (req, res) => {
     const target = await User.findById(req.params.id);
     if (!target) return res.status(404).json({ message: 'Member not found.' });
     if (target.role === 'admin') return res.status(403).json({ message: 'Admin account cannot be removed.' });
+    sendApprovalEmail(target, false).catch(() => {});
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: 'Member rejected and removed.' });
   } catch (err) { res.status(400).json({ message: err.message }); }

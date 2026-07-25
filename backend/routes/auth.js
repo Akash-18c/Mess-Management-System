@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const { Resend } = require('resend');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+const { sendWelcomeEmail } = require('../utils/mailer');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -178,6 +179,8 @@ router.post('/google', async (req, res) => {
         name, email: email.toLowerCase(), password: randomPw,
         role: 'member', isActive: true, isApproved: false, googleId,
       });
+      // Fire welcome email — don't await so it never blocks the response
+      sendWelcomeEmail(user).catch(() => {});
     } else {
       if (!user.isActive)
         return res.status(403).json({ message: 'Your account is inactive. Contact admin.' });
