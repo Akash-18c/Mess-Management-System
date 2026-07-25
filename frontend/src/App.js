@@ -77,14 +77,53 @@ export default function App() {
       <TopProgress />
       <Toaster
         position="top-center"
-        containerStyle={{ top: 16 }}
+        containerStyle={{ top: 20 }}
         toastOptions={{
-          style: {
-            background: '#1E293B', color: '#fff', border: '1px solid #334155',
-            whiteSpace: 'nowrap', maxWidth: '90vw', padding: '10px 16px',
-            fontSize: '13px', lineHeight: '1',
-          },
           duration: 3000,
+          style: {
+            background: '#0f172a',
+            color: '#f1f5f9',
+            border: '1px solid rgba(255,255,255,0.10)',
+            borderRadius: '14px',
+            padding: '12px 16px',
+            fontSize: '13px',
+            fontWeight: '500',
+            lineHeight: '1.4',
+            maxWidth: '88vw',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.40), 0 2px 8px rgba(0,0,0,0.20)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+          },
+          success: {
+            style: {
+              background: '#052e16',
+              color: '#bbf7d0',
+              border: '1px solid rgba(34,197,94,0.25)',
+              borderRadius: '14px',
+              padding: '12px 16px',
+              fontSize: '13px',
+              fontWeight: '500',
+              lineHeight: '1.4',
+              maxWidth: '88vw',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.40), 0 0 0 1px rgba(34,197,94,0.10)',
+            },
+            iconTheme: { primary: '#22c55e', secondary: '#052e16' },
+          },
+          error: {
+            style: {
+              background: '#2d0a0a',
+              color: '#fecaca',
+              border: '1px solid rgba(239,68,68,0.25)',
+              borderRadius: '14px',
+              padding: '12px 16px',
+              fontSize: '13px',
+              fontWeight: '500',
+              lineHeight: '1.4',
+              maxWidth: '88vw',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.40), 0 0 0 1px rgba(239,68,68,0.10)',
+            },
+            iconTheme: { primary: '#ef4444', secondary: '#2d0a0a' },
+          },
         }}
       />
       <Suspense fallback={<PageSkeleton />}>
