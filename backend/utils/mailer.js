@@ -101,15 +101,15 @@ async function sendWelcomeEmail(user) {
   const html = baseTemplate({ preheader: `Welcome ${user.name}! Your account is pending approval.`, headerLabel: 'Welcome', body });
 
   const resend = getResend();
-  if (!resend) return;
-  const { error } = await resend.emails.send({
+  if (!resend) { console.error('welcome email: no resend instance'); return; }
+  const { data, error } = await resend.emails.send({
     from: FROM,
     to: [user.email],
     subject: `🎉 Welcome to The Messy Kitchen, ${user.name}!`,
     html,
   });
   if (error) console.error('welcome email error:', JSON.stringify(error));
-  else console.log(`welcome email sent to ${user.email}`);
+  else console.log('welcome email sent:', data?.id, '→', user.email);
 }
 
 // ── Approval / Rejection status email ────────────────────────────────
@@ -176,8 +176,8 @@ async function sendApprovalEmail(user, approved) {
   });
 
   const resend = getResend();
-  if (!resend) return;
-  const { error } = await resend.emails.send({
+  if (!resend) { console.error('approval email: no resend instance'); return; }
+  const { data, error } = await resend.emails.send({
     from: FROM,
     to: [user.email],
     subject: approved
@@ -186,7 +186,7 @@ async function sendApprovalEmail(user, approved) {
     html,
   });
   if (error) console.error('approval email error:', JSON.stringify(error));
-  else console.log(`approval email sent to ${user.email} — approved:${approved}`);
+  else console.log('approval email sent:', data?.id, '→', user.email, 'approved:', approved);
 }
 
 // ── Password Reset email ─────────────────────────────────────────────
