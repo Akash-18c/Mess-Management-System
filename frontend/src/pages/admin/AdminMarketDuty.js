@@ -117,9 +117,40 @@ function MealBlock({ meal, duties, day, onAdd, onEdit, onDelete, onSend }) {
 }
 
 // Bottom-sheet modal
+const selectStyle = {
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.14)',
+  color: '#fff',
+  borderRadius: '12px',
+  padding: '11px 36px 11px 13px',
+  fontSize: '14px',
+  width: '100%',
+  outline: 'none',
+  appearance: 'none',
+  WebkitAppearance: 'none',
+  cursor: 'pointer',
+};
+
+function StyledSelect({ label, value, onChange, children }) {
+  return (
+    <div>
+      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">{label}</label>
+      <div className="relative">
+        <select value={value} onChange={onChange} style={selectStyle}>
+          {children}
+        </select>
+        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#64748b' }}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FormModal({ form, setForm, members, editId, loading, onSave, onClose }) {
   const sheetRef = useRef(null);
-  // Close on backdrop tap
   const onBackdrop = (e) => { if (e.target === e.currentTarget) onClose(); };
 
   return (
@@ -150,32 +181,29 @@ function FormModal({ form, setForm, members, editId, loading, onSave, onClose })
         </div>
         {/* Fields */}
         <div className="p-5 space-y-4">
+
           {/* Member */}
-          <div>
-            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Member</label>
-            <select value={form.memberId} onChange={e => setForm(f => ({ ...f, memberId: e.target.value }))} style={inp}>
-              <option value="">Select member…</option>
-              {members.map(m => (
-                <option key={m._id} value={m._id}>{rn(m.name)}{m.phone ? ` · ${m.phone}` : ' · ⚠️ no phone'}</option>
-              ))}
-            </select>
-          </div>
+          <StyledSelect label="Member" value={form.memberId} onChange={e => setForm(f => ({ ...f, memberId: e.target.value }))}>
+            <option value="" style={{ background: '#0a1020' }}>Select member…</option>
+            {members.map(m => (
+              <option key={m._id} value={m._id} style={{ background: '#0a1020' }}>
+                {rn(m.name)}{m.phone ? ` · ${m.phone}` : ' · no phone'}
+              </option>
+            ))}
+          </StyledSelect>
+
           {/* Day + Meal */}
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Day</label>
-              <select value={form.dayOfWeek} onChange={e => setForm(f => ({ ...f, dayOfWeek: Number(e.target.value) }))} style={inp}>
-                {DAYS_FULL.map((d, i) => <option key={i} value={i}>{d}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Meal</label>
-              <select value={form.meal} onChange={e => setForm(f => ({ ...f, meal: e.target.value }))} style={inp}>
-                <option value="lunch">☀️ Lunch</option>
-                <option value="dinner">🌙 Dinner</option>
-              </select>
-            </div>
+            <StyledSelect label="Day" value={form.dayOfWeek} onChange={e => setForm(f => ({ ...f, dayOfWeek: Number(e.target.value) }))}>
+              {DAYS_FULL.map((d, i) => <option key={i} value={i} style={{ background: '#0a1020' }}>{d}</option>)}
+            </StyledSelect>
+
+            <StyledSelect label="Meal" value={form.meal} onChange={e => setForm(f => ({ ...f, meal: e.target.value }))}>
+              <option value="lunch" style={{ background: '#0a1020' }}>Lunch</option>
+              <option value="dinner" style={{ background: '#0a1020' }}>Dinner</option>
+            </StyledSelect>
           </div>
+
           {/* Time + Note */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -189,6 +217,7 @@ function FormModal({ form, setForm, members, editId, loading, onSave, onClose })
                 placeholder="Optional…" style={inp} />
             </div>
           </div>
+
           {/* Save */}
           <button onClick={onSave} disabled={loading}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold active:scale-95 transition-transform"
