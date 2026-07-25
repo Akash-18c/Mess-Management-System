@@ -2,12 +2,9 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { Resend } = require('resend');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
-const { sendWelcomeEmail } = require('../utils/mailer');
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+const { sendWelcomeEmail, sendResetEmail } = require('../utils/mailer');
 
 const router = express.Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -68,54 +65,7 @@ router.post('/forgot-password', async (req, res) => {
 
     const resetUrl = `${process.env.FRONTEND_URL || 'https://themessykitchen.online'}/reset-password?token=${token}`;
 
-    const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 16px">
-<tr><td align="center">
-<table width="100%" style="max-width:480px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
-
-  <!-- Logo header -->
-  <tr><td align="center" style="padding:36px 32px 24px">
-    <img src="https://themessykitchen.online/messy-logo.png" alt="The Messy Kitchen" width="72" height="72" style="display:block;margin:0 auto 16px;border-radius:50%" />
-    <h1 style="margin:0;color:#111827;font-size:22px;font-weight:700">The Messy Kitchen</h1>
-    <p style="margin:6px 0 0;color:#6b7280;font-size:12px;letter-spacing:2px;text-transform:uppercase">Password Reset</p>
-  </td></tr>
-
-  <!-- Divider -->
-  <tr><td style="padding:0 32px"><div style="height:1px;background:#e5e7eb"></div></td></tr>
-
-  <!-- Body -->
-  <tr><td style="padding:32px">
-    <p style="color:#111827;font-size:15px;margin:0 0 12px">Hi <strong>${user.name}</strong>,</p>
-    <p style="color:#4b5563;font-size:14px;line-height:1.7;margin:0 0 24px">We received a request to reset your password for your Messy Kitchen account. Click the button below to set a new password.</p>
-    <div style="text-align:center;margin-bottom:28px">
-      <a href="${resetUrl}" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700">Reset Password</a>
-    </div>
-    <p style="color:#9ca3af;font-size:12px;margin:0 0 8px">⏱ This link will expire in <strong style="color:#111827">15 minutes</strong>.</p>
-    <p style="color:#9ca3af;font-size:12px;margin:0">If you did not request this, you can safely ignore this email.</p>
-  </td></tr>
-
-  <!-- Footer -->
-  <tr><td style="background:#f9fafb;padding:20px 32px;text-align:center;border-top:1px solid #e5e7eb">
-    <p style="color:#9ca3af;font-size:12px;margin:0">Thanks, <strong style="color:#059669">Messy Kitchen Team</strong></p>
-  </td></tr>
-
-</table>
-</td></tr></table>
-</body></html>`;
-
-    const { data: mailData, error: mailError } = await resend.emails.send({
-      from: 'Messy Kitchen <noreply@themessykitchen.online>',
-      to: [user.email],
-      subject: 'Reset Your Messy Kitchen Password',
-      html,
-    });
-    if (mailError) {
-      console.error('resend error:', JSON.stringify(mailError));
-      throw new Error(mailError.message);
-    }
-    console.log('resend ok:', mailData?.id);
+    await sendResetEmail({ name: user.name, email: user.email, resetUrl });
 
     res.json({ message: GENERIC_MSG });
   } catch (err) {

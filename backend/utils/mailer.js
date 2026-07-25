@@ -189,4 +189,43 @@ async function sendApprovalEmail(user, approved) {
   else console.log(`approval email sent to ${user.email} — approved:${approved}`);
 }
 
-module.exports = { sendWelcomeEmail, sendApprovalEmail };
+// ── Password Reset email ─────────────────────────────────────────────
+async function sendResetEmail({ name, email, resetUrl }) {
+  const body = `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td style="background:linear-gradient(135deg,#059669 0%,#047857 100%);padding:32px;text-align:center">
+      <p style="margin:0;font-size:32px">&#128274;</p>
+      <h1 style="margin:8px 0 0;font-size:22px;font-weight:700;color:#ffffff;line-height:1.3">Password Reset</h1>
+      <p style="margin:6px 0 0;font-size:14px;color:rgba(255,255,255,0.82)">Reset your Messy Kitchen password</p>
+    </td></tr>
+    <tr><td style="padding:28px 32px">
+      <p style="margin:0 0 14px;font-size:15px;color:#111827">Hi <strong>${name}</strong>,</p>
+      <p style="margin:0 0 24px;font-size:14px;color:#4b5563;line-height:1.75">
+        We received a request to reset your password. Click the button below to set a new password.
+      </p>
+      <div style="text-align:center;margin-bottom:24px">
+        <a href="${resetUrl}" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700">Reset Password</a>
+      </div>
+      <p style="font-size:12px;color:#9ca3af;margin:0 0 6px">&#9203; This link expires in <strong style="color:#111827">15 minutes</strong>.</p>
+      <p style="font-size:12px;color:#9ca3af;margin:0">If you didn't request this, you can safely ignore this email.</p>
+    </td></tr>
+    </table>`;
+
+  const html = baseTemplate({ preheader: `Reset your Messy Kitchen password`, headerLabel: 'Password Reset', body });
+
+  const resend = getResend();
+  if (!resend) throw new Error('RESEND_API_KEY not configured');
+  const { data, error } = await resend.emails.send({
+    from: FROM,
+    to: [email],
+    subject: 'Reset Your Messy Kitchen Password',
+    html,
+  });
+  if (error) {
+    console.error('reset email error:', JSON.stringify(error));
+    throw new Error(error.message);
+  }
+  console.log('reset email sent:', data?.id, '→', email);
+}
+
+module.exports = { sendWelcomeEmail, sendApprovalEmail, sendResetEmail };
