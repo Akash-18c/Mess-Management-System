@@ -180,7 +180,7 @@ router.post('/google', async (req, res) => {
         role: 'member', isActive: true, isApproved: false, googleId,
       });
       // Fire welcome email — don't await so it never blocks the response
-      sendWelcomeEmail(user).catch(() => {});
+      sendWelcomeEmail(user).catch(e => console.error('welcome email failed:', e.message));
     } else {
       if (!user.isActive)
         return res.status(403).json({ message: 'Your account is inactive. Contact admin.' });

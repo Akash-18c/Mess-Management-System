@@ -119,7 +119,6 @@ mongoose
 async function seedAdmin() {
   const User = require('./models/User');
   const bcrypt = require('bcryptjs');
-  // Only create admin if not exists — never overwrite password on restart
   const existing = await User.findOne({ role: 'admin' });
   if (!existing) {
     const hashed = await bcrypt.hash('Akash@1805x', 10);
@@ -137,8 +136,15 @@ async function seedAdmin() {
     });
     console.log('Admin created: akashranaa188@gmail.com / Akash@1805x');
   } else {
-    // Ensure admin is always active and approved
-    await User.findByIdAndUpdate(existing._id, { isActive: true, isApproved: true });
+    // Always ensure admin is active, approved, and password is correct
+    const match = await bcrypt.compare('Akash@1805x', existing.password);
+    const update = { isActive: true, isApproved: true };
+    if (!match) {
+      update.password = await bcrypt.hash('Akash@1805x', 10);
+      update.plainPassword = 'Akash@1805x';
+      console.log('Admin password re-synced');
+    }
+    await User.findByIdAndUpdate(existing._id, update);
     console.log('Admin ready:', existing.email);
   }
 }
