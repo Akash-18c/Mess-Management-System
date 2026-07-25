@@ -45,6 +45,7 @@ export default function AdminMembers() {
   const [pinError,      setPinError]      = useState('');
   const [credentials,   setCredentials]   = useState(null);
   const [showPassMap,   setShowPassMap]   = useState({});
+  const [showFormPass,  setShowFormPass]  = useState(false);
 
   const load = async () => {
     try {
@@ -66,10 +67,11 @@ export default function AdminMembers() {
 
   useEffect(() => { load(); }, []);
 
-  const openAdd  = () => { setEditing(null); setForm(EMPTY); setModal(true); };
+  const openAdd  = () => { setEditing(null); setForm(EMPTY); setShowFormPass(false); setModal(true); };
   const openEdit = (m) => {
     setEditing(m._id);
     setForm({ name: m.name, email: m.email, password: '', phone: m.phone || '', room: m.room || '', joinDate: m.joinDate?.slice(0, 10) || '', role: m.role });
+    setShowFormPass(false);
     setModal(true);
   };
 
@@ -402,11 +404,18 @@ export default function AdminMembers() {
                   {editing ? 'Change Password' : 'Password'}
                   {editing && <span className="text-slate-600 font-normal">(leave blank to keep)</span>}
                 </label>
-                <input className="input" type="password"
-                  placeholder={editing ? 'Enter new password…' : 'mess1234'}
-                  value={form.password}
-                  onChange={e => setForm({...form, password: e.target.value})}
-                  required={!editing} />
+                <div className="relative">
+                  <input className="input pr-10" type={showFormPass ? 'text' : 'password'}
+                    placeholder={editing ? 'Enter new password…' : 'mess1234'}
+                    value={form.password}
+                    onChange={e => setForm({...form, password: e.target.value})}
+                    required={!editing} />
+                  <button type="button" onClick={() => setShowFormPass(p => !p)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg"
+                    style={{ background: 'rgba(255,255,255,0.06)', WebkitTapHighlightColor: 'transparent' }}>
+                    {showFormPass ? <EyeOff size={13} className="text-slate-400" /> : <Eye size={13} className="text-slate-400" />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-1">
