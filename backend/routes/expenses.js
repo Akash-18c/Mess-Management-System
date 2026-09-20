@@ -2,6 +2,7 @@ const express = require('express');
 const GroceryExpense = require('../models/GroceryExpense');
 const OtherExpense = require('../models/OtherExpense');
 const OtherCharge = require('../models/OtherCharge');
+const MessNotice = require('../models/MessNotice');
 const { auth, requireRole } = require('../middleware/auth');
 const { recalcSummary } = require('../controllers/summaryController');
 
@@ -128,5 +129,35 @@ router.delete('/charges/:id', requireRole('manager', 'admin'), async (req, res) 
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-module.exports = router;
+// --- Mess Notice (mandatory meal message) ---
+// All roles can read
+router.get('/notice/:month/:year', async (req, res) => {
+  try {
+    const notice = await MessNotice.findOne({ month: req.params.month, year: req.params.year }).lean();
+    res.json(notice || null);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
 
+// Manager/admin can set (upsert)
+router.post('/notice', requireRole('manager', 'admin'), async (req, res) => {
+  try {
+    const { month, year, message } = req.body;
+    if (!message?.trim()) return res.status(400).json({ message: 'Message is required' });
+    const notice = await MessNotice.findOneAndUpdate(
+      { month, year },
+      { message: message.trim(), setBy: req.user._id },
+      { upsert: true, new: true }
+    );
+    res.json(notice);
+  } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
+// Manager/admin can delete
+router.delete('/notice/:month/:year', requireRole('manager', 'admin'), async (req, res) => {
+  try {
+    await MessNotice.deleteOne({ month: req.params.month, year: req.params.year });
+    res.json({ message: 'Notice removed' });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+module.exports = router;
