@@ -390,10 +390,15 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
 
   const [liveSummary, setLiveSummary] = useState(summary);
   const [otherExpenses, setOtherExpenses] = useState([]);
+  const [messNotice, setMessNotice] = useState(null);
+
+  useEffect(() => { setLiveSummary(summary); }, [summary]);
 
   useEffect(() => {
-    setLiveSummary(summary);
-  }, [summary]);
+    api.get(`/expenses/notice/${month}/${year}`)
+      .then(r => setMessNotice(r.data))
+      .catch(() => setMessNotice(null));
+  }, [month, year]);
 
   const summaryReady = summary !== undefined;
 
@@ -526,6 +531,23 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
                   </span>
                 )}
               </div>
+              {/* Mess Notice */}
+              {messNotice?.message && (
+                <div className="mt-2 flex items-start gap-2 rounded-xl px-3 py-2"
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.16)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)',
+                  }}>
+                  <div className="w-1 rounded-full flex-shrink-0 mt-0.5" style={{ minHeight: 28, background: 'linear-gradient(180deg,#fbbf24,#f59e0b)' }} />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#fbbf24' }}>Notice</p>
+                    <p className="text-[12px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.80)' }}>{messNotice.message}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 rounded-xl px-3 py-2"
