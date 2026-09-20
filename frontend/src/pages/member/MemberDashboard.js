@@ -160,41 +160,28 @@ export default function MemberDashboard() {
 
       {/* ── Treat Due Banner ── */}
       {treatDue && (
-        <div className="relative rounded-2xl overflow-hidden"
+        <div className="rounded-2xl overflow-hidden"
           style={{
-            background: 'rgba(255,255,255,0.10)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255,255,255,0.22)',
-            boxShadow: '0 8px 32px rgba(239,68,68,0.15), inset 0 1px 0 rgba(255,255,255,0.25)',
+            background: 'rgba(239,68,68,0.12)',
+            border: '1px solid rgba(239,68,68,0.28)',
           }}>
-          {/* top shimmer */}
-          <div className="absolute top-0 left-0 right-0 h-px"
-            style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
-          {/* red left accent bar */}
-          <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
-            style={{ background: 'linear-gradient(180deg,#f87171,#dc2626)' }} />
-          <div className="flex items-center gap-3 px-4 py-3.5 pl-5">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{
-                background: 'rgba(239,68,68,0.18)',
-                border: '1px solid rgba(239,68,68,0.30)',
-                boxShadow: '0 2px 8px rgba(239,68,68,0.20)',
-              }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(239,68,68,0.20)', border: '1px solid rgba(239,68,68,0.35)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/>
                 <path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
                 <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <p className="text-white font-bold text-sm">Birthday Treat Due</p>
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide"
-                  style={{ background: 'rgba(239,68,68,0.20)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.30)' }}>Pending</span>
+              <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                <p className="font-bold text-sm" style={{ color: '#fca5a5' }}>Birthday Treat Due</p>
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide flex-shrink-0"
+                  style={{ background: 'rgba(239,68,68,0.25)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.40)' }}>Pending</span>
               </div>
-              <p className="text-[12px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
-                The admin has marked your birthday treat as pending. Please arrange a treat for the mess members.
+              <p className="text-[12px] leading-relaxed" style={{ color: 'rgba(252,165,165,0.75)' }}>
+                Admin has marked your birthday treat as pending. Please arrange a treat for the mess members.
               </p>
             </div>
           </div>

@@ -531,23 +531,6 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
                   </span>
                 )}
               </div>
-              {/* Mess Notice */}
-              {messNotice?.message && (
-                <div className="mt-2 flex items-start gap-2 rounded-xl px-3 py-2"
-                  style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255,255,255,0.16)',
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)',
-                  }}>
-                  <div className="w-1 rounded-full flex-shrink-0 mt-0.5" style={{ minHeight: 28, background: 'linear-gradient(180deg,#fbbf24,#f59e0b)' }} />
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#fbbf24' }}>Notice</p>
-                    <p className="text-[12px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.80)' }}>{messNotice.message}</p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
           <div className="flex items-center gap-2 rounded-xl px-3 py-2"
@@ -571,6 +554,21 @@ export default function DashboardShared({ summary, totalCollected, mealRate, tot
             </div>
           </div>
         </div>
+
+        {/* Mess Notice — full width below, only when set */}
+        {messNotice?.message && (
+          <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="flex items-start gap-2.5 rounded-xl px-3 py-2.5"
+              style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.18)' }}>
+              <div className="w-0.5 rounded-full self-stretch flex-shrink-0"
+                style={{ background: 'linear-gradient(180deg,#fbbf24,#f59e0b)', minHeight: 20 }} />
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#fbbf24' }}>Notice</p>
+                <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>{messNotice.message}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Financial + Meal Summary Cards ── */}
