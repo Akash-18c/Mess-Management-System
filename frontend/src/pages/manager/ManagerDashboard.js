@@ -488,7 +488,7 @@ export default function ManagerDashboard() {
         </div>
       )}
 
-      {/* ── Quick Actions ── */}}
+      {/* ── Quick Actions ── */}
       <div className="rounded-2xl p-4" style={glass}>
         <h3 className="font-semibold text-white mb-3 text-sm">Quick Actions</h3>
         <div className="grid grid-cols-2 gap-2">
