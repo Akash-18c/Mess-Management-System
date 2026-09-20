@@ -43,6 +43,7 @@ export default function MemberDashboard() {
   const [allSummaries,  setAllSummaries]  = useState([]);
   const [monthData,     setMonthData]     = useState(null);
   const [myCharges,     setMyCharges]     = useState([]);
+  const [treatDue,      setTreatDue]      = useState(false);
   const [dropdownOpen,  setDropdownOpen]  = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(() => getNow().m);
   const [selectedYear,  setSelectedYear]  = useState(() => getNow().y);
@@ -85,6 +86,7 @@ export default function MemberDashboard() {
     if (cs) { setAllSummaries(cs); } else {
       api.get('/summary/list').then(r => { setAllSummaries(r.data); setCache('summaries', r.data); }).catch(() => {});
     }
+    api.get('/member/my-treat-status').then(r => setTreatDue(r.data.bdayTreatDue)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -155,6 +157,35 @@ export default function MemberDashboard() {
     <div className="space-y-4 pb-8">
       {/* ── Birthday Banner ── */}
       <BirthdayBanner />
+
+      {/* ── Treat Due Banner ── */}
+      {treatDue && (
+        <div className="relative rounded-2xl overflow-hidden p-4"
+          style={{
+            background: 'linear-gradient(135deg,rgba(239,68,68,0.14) 0%,rgba(220,38,38,0.08) 100%)',
+            border: '1px solid rgba(239,68,68,0.30)',
+            boxShadow: '0 4px 20px rgba(239,68,68,0.12)',
+          }}>
+          <div className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: 'linear-gradient(90deg,transparent,rgba(239,68,68,0.60),transparent)' }} />
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+              style={{ background: 'rgba(239,68,68,0.18)', border: '1px solid rgba(239,68,68,0.35)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/>
+                <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+                <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-bold text-sm">Your birthday treat is due!</p>
+              <p className="text-[13px] mt-1 leading-relaxed" style={{ color: 'rgba(252,165,165,0.85)' }}>
+                The admin has marked your birthday treat as pending. Please arrange a treat for the mess members soon.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* ── Header row ── */}
       <div className="flex items-center justify-between gap-3">
         {/* Title */}
