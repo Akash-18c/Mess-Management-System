@@ -63,6 +63,7 @@ export default function AdminDashboard() {
   const [members,       setMembers]       = useState([]);
   const [meals,         setMeals]         = useState([]);
   const [advancePaid,   setAdvancePaid]   = useState(null);
+  const [treatDue,      setTreatDue]      = useState(false);
   const dropRef  = useRef(null);
   const navigate = useNavigate();
   const [deletingAssignment, setDeletingAssignment] = useState(null);
@@ -116,6 +117,7 @@ export default function AdminDashboard() {
       api.get('/admin/dashboard').then(r => { setData(r.data); setCache('adm-dashboard', r.data); });
     }
     api.get('/member/dashboard').then(r => setAdvancePaid(r.data.advance ?? null)).catch(() => {});
+    api.get('/member/my-treat-status').then(r => setTreatDue(r.data.bdayTreatDue)).catch(() => {});
     const cs = getCache('summaries');
     if (cs) { setAllSummaries(cs); } else {
       api.get('/summary/list').then(r => { setAllSummaries(r.data); setCache('summaries', r.data); }).catch(() => {});
@@ -193,6 +195,43 @@ export default function AdminDashboard() {
     <div className="space-y-4 max-w-3xl pb-6">
       {/* ── Birthday Banner ── */}
       <BirthdayBanner />
+
+      {/* ── Treat Due Banner ── */}
+      {treatDue && (
+        <div className="relative rounded-2xl overflow-hidden"
+          style={{
+            background: 'rgba(255,255,255,0.18)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            border: '1px solid rgba(255,255,255,0.28)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.35)',
+          }}>
+          <div className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)' }} />
+          <div className="absolute top-0 left-0 right-0 h-1/2 pointer-events-none"
+            style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.10) 0%,transparent 100%)' }} />
+          <div className="relative flex items-center gap-3 px-4 py-3.5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(239,68,68,0.22)', border: '1px solid rgba(239,68,68,0.38)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/>
+                <path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+                <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                <p className="font-bold text-sm text-white">Birthday Treat Due</p>
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide flex-shrink-0"
+                  style={{ background: 'rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.88)', border: '1px solid rgba(255,255,255,0.28)' }}>Pending</span>
+              </div>
+              <p className="text-[12px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.70)' }}>
+                Admin has marked your birthday treat as pending. Please arrange a treat for the mess members.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Background Orbs ── */}
       <div aria-hidden="true" style={{ pointerEvents: 'none', position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden' }}>
