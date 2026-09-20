@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Cake, Pencil, Check, X, CalendarDays } from 'lucide-react';
+import { Cake, Pencil, Check, X, CalendarDays, Gift, AlertTriangle } from 'lucide-react';
 import api from '../../api';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -21,6 +21,7 @@ export default function AdminBirthdays() {
   const [editingId, setEditingId] = useState(null);
   const [editVal, setEditVal] = useState({ month: '', day: '' });
   const [saving, setSaving] = useState(false);
+  const [treatLoading, setTreatLoading] = useState(null); // memberId being toggled
 
   const load = () => api.get('/admin/members').then(r => setMembers(r.data));
   useEffect(() => { load(); }, []);
@@ -57,6 +58,16 @@ export default function AdminBirthdays() {
       toast.success('Birthday cleared');
       load();
     } catch { toast.error('Failed to clear'); }
+  };
+
+  const toggleTreat = async (id, current) => {
+    setTreatLoading(id);
+    try {
+      await api.put(`/admin/members/${id}/bday-treat`, { due: !current });
+      toast.success(!current ? 'Treat marked as due' : 'Treat cleared');
+      load();
+    } catch { toast.error('Failed to update'); }
+    finally { setTreatLoading(null); }
   };
 
   const active = members.filter(m => m.isActive);
@@ -276,13 +287,91 @@ export default function AdminBirthdays() {
       {withoutBday.length > 0 && (
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest mb-3 pl-1" style={{ color: '#475569' }}>
-            📅 Birthday Not Set — {withoutBday.length} member{withoutBday.length !== 1 ? 's' : ''}
+            Birthday Not Set — {withoutBday.length} member{withoutBday.length !== 1 ? 's' : ''}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {withoutBday.map(m => <MemberCard key={m._id} m={m} />)}
           </div>
         </div>
       )}
+
+      {/* ── Birthday Treat Due Section ── */}
+      <div>
+        {/* Section header */}
+        <div className="relative rounded-2xl overflow-hidden p-4 mb-4" style={{
+          background: 'linear-gradient(135deg,rgba(239,68,68,0.10) 0%,rgba(220,38,38,0.06) 100%)',
+          border: '1px solid rgba(239,68,68,0.22)',
+        }}>
+          <div className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: 'linear-gradient(90deg,transparent,rgba(239,68,68,0.50),transparent)' }} />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.28)' }}>
+              <Gift size={18} style={{ color: '#f87171' }} />
+            </div>
+            <div>
+              <h2 className="font-bold text-white text-sm">Birthday Treat Due</h2>
+              <p className="text-[11px] mt-0.5" style={{ color: 'rgba(248,113,113,0.60)' }}>
+                Mark members who owe a birthday treat. They will see a reminder on their dashboard.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* All active members with treat toggle */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {active.map(m => {
+            const isDue = !!m.bdayTreatDue;
+            const isLoading = treatLoading === m._id;
+            return (
+              <div key={m._id} className="rounded-2xl p-4 flex items-center gap-3"
+                style={{
+                  background: isDue
+                    ? 'linear-gradient(135deg,rgba(239,68,68,0.10) 0%,rgba(220,38,38,0.06) 100%)'
+                    : 'rgba(255,255,255,0.04)',
+                  border: isDue ? '1px solid rgba(239,68,68,0.28)' : '1px solid rgba(255,255,255,0.08)',
+                }}>
+                {/* Avatar */}
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
+                  style={{
+                    background: isDue ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.07)',
+                    border: isDue ? '1px solid rgba(239,68,68,0.30)' : '1px solid rgba(255,255,255,0.10)',
+                    color: isDue ? '#f87171' : '#94a3b8',
+                  }}>
+                  {realName(m.name)?.[0]?.toUpperCase()}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-semibold text-sm truncate">{realName(m.name)}</p>
+                  <p className="text-slate-500 text-[11px] truncate">{m.room || m.email}</p>
+                </div>
+
+                {/* Toggle button */}
+                <button
+                  onClick={() => toggleTreat(m._id, isDue)}
+                  disabled={isLoading}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex-shrink-0"
+                  style={{
+                    background: isDue ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.06)',
+                    border: isDue ? '1px solid rgba(239,68,68,0.35)' : '1px solid rgba(255,255,255,0.12)',
+                    color: isDue ? '#f87171' : '#64748b',
+                    opacity: isLoading ? 0.6 : 1,
+                    WebkitTapHighlightColor: 'transparent',
+                  }}>
+                  {isLoading ? (
+                    <span>...</span>
+                  ) : isDue ? (
+                    <><AlertTriangle size={12} /> Due</>
+                  ) : (
+                    <><Gift size={12} /> Mark Due</>
+                  )}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
