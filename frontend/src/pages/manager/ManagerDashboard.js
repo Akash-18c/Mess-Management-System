@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
-import { Calendar, ChevronDown, Sparkles, UtensilsCrossed } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Calendar, ChevronDown, Sparkles, UtensilsCrossed, MessageSquarePlus, Pencil, Trash2, Check, X } from 'lucide-react';
 import api from '../../api';
 import DashboardShared from '../../components/DashboardShared';
 import BirthdayBanner from '../../components/BirthdayBanner';
@@ -58,6 +58,10 @@ export default function ManagerDashboard() {
   const [totalCollected, setTotalCollected] = useState(0);
   const [individualCosts, setIndividualCosts] = useState([]);
   const [advancePaid, setAdvancePaid] = useState(null);
+  const [notice, setNotice] = useState(null);
+  const [noticeEdit, setNoticeEdit] = useState(false);
+  const [noticeText, setNoticeText] = useState('');
+  const [noticeSaving, setNoticeSaving] = useState(false);
   const dropRef = useRef(null);
   const navigate = useNavigate();
 
@@ -118,6 +122,31 @@ export default function ManagerDashboard() {
         .catch(() => api.get('/members').then(r => { setMembers(r.data); setCache('members', r.data); }).catch(() => {}));
     }
   }, []);
+
+  // Load notice for current month
+  useEffect(() => {
+    api.get(`/expenses/notice/${curMonth}/${curYear}`)
+      .then(r => { setNotice(r.data); setNoticeText(r.data?.message || ''); })
+      .catch(() => {});
+  }, [curMonth, curYear]);
+
+  const saveNotice = async () => {
+    if (!noticeText.trim()) return;
+    setNoticeSaving(true);
+    try {
+      const r = await api.post('/expenses/notice', { month: curMonth, year: curYear, message: noticeText.trim() });
+      setNotice(r.data);
+      setNoticeEdit(false);
+    } catch { }
+    finally { setNoticeSaving(false); }
+  };
+
+  const deleteNotice = async () => {
+    try {
+      await api.delete(`/expenses/notice/${curMonth}/${curYear}`);
+      setNotice(null); setNoticeText(''); setNoticeEdit(false);
+    } catch { }
+  };
 
   const load = useCallback(() => {
     const sk = `summary-${selectedMonth}-${selectedYear}`;
@@ -365,7 +394,101 @@ export default function ManagerDashboard() {
         </div>
       )}
 
-      {/* ── Quick Actions ── */}
+      {/* ── Mess Notice (current month only) ── */}
+      {isCurrentMonth && (
+        <div className="relative rounded-2xl overflow-hidden"
+          style={{
+            background: 'rgba(255,255,255,0.07)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255,255,255,0.16)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.20)',
+          }}>
+          {/* shimmer */}
+          <div className="absolute top-0 left-0 right-0 h-px"
+            style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.50),transparent)' }} />
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3"
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.10)' }}>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.28)' }}>
+                <MessageSquarePlus size={15} style={{ color: '#fbbf24' }} />
+              </div>
+              <div>
+                <p className="text-white font-bold text-sm leading-tight">Mess Notice</p>
+                <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.40)' }}>Visible to all members this month</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {notice && !noticeEdit && (
+                <button onClick={() => { setNoticeEdit(true); setNoticeText(notice.message); }}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center"
+                  style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)', WebkitTapHighlightColor: 'transparent' }}>
+                  <Pencil size={13} style={{ color: '#a5b4fc' }} />
+                </button>
+              )}
+              {notice && !noticeEdit && (
+                <button onClick={deleteNotice}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center"
+                  style={{ background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.22)', WebkitTapHighlightColor: 'transparent' }}>
+                  <Trash2 size={13} style={{ color: '#f87171' }} />
+                </button>
+              )}
+              {!notice && !noticeEdit && (
+                <button onClick={() => { setNoticeEdit(true); setNoticeText(''); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold"
+                  style={{ background: 'rgba(251,191,36,0.14)', border: '1px solid rgba(251,191,36,0.28)', color: '#fbbf24', WebkitTapHighlightColor: 'transparent' }}>
+                  <MessageSquarePlus size={12} /> Add Notice
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="px-4 py-3">
+            {noticeEdit ? (
+              <div className="space-y-2.5">
+                <textarea
+                  value={noticeText}
+                  onChange={e => setNoticeText(e.target.value)}
+                  placeholder="e.g. Mandatory meal for all members this month — minimum 20 meals required."
+                  rows={3}
+                  className="w-full rounded-xl px-3 py-2.5 text-sm resize-none outline-none"
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    color: '#fff',
+                    lineHeight: 1.6,
+                  }}
+                />
+                <div className="flex gap-2">
+                  <button onClick={() => { setNoticeEdit(false); setNoticeText(notice?.message || ''); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold"
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#94a3b8', WebkitTapHighlightColor: 'transparent' }}>
+                    <X size={13} /> Cancel
+                  </button>
+                  <button onClick={saveNotice} disabled={noticeSaving || !noticeText.trim()}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold"
+                    style={{ background: 'rgba(251,191,36,0.18)', border: '1px solid rgba(251,191,36,0.35)', color: '#fbbf24', opacity: noticeSaving || !noticeText.trim() ? 0.6 : 1, WebkitTapHighlightColor: 'transparent' }}>
+                    <Check size={13} /> {noticeSaving ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            ) : notice ? (
+              <div className="flex items-start gap-2.5">
+                <div className="w-1 rounded-full flex-shrink-0" style={{ minHeight: 32, background: 'linear-gradient(180deg,#fbbf24,#f59e0b)' }} />
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>{notice.message}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-center py-2" style={{ color: 'rgba(255,255,255,0.30)' }}>No notice set for this month</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Quick Actions ── */}}
       <div className="rounded-2xl p-4" style={glass}>
         <h3 className="font-semibold text-white mb-3 text-sm">Quick Actions</h3>
         <div className="grid grid-cols-2 gap-2">
