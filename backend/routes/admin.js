@@ -581,6 +581,16 @@ router.get('/birthdays/upcoming', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// --- Birthday Treat Due ---
+router.put('/members/:id/bday-treat', async (req, res) => {
+  try {
+    const { due } = req.body;
+    const user = await User.findByIdAndUpdate(req.params.id, { bdayTreatDue: !!due }, { new: true }).select('-password');
+    if (!user) return res.status(404).json({ message: 'Member not found.' });
+    res.json(user);
+  } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
 // --- Market Duty ---
 router.get('/market-duty', async (req, res) => {
   try {

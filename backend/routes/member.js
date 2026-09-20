@@ -300,6 +300,14 @@ router.get('/market-duty', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// Birthday treat due status — for logged-in user
+router.get('/my-treat-status', async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('bdayTreatDue').lean();
+    res.json({ bdayTreatDue: user?.bdayTreatDue || false });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 router.get('/history', async (req, res) => {
   try {
     const bills = await Bill.find({ memberId: req.user._id }).sort({ year: -1, month: -1 });

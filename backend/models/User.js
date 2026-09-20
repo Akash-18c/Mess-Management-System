@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpiry: { type: Date, default: null },
   googleId: { type: String, default: null },
   isApproved: { type: Boolean, default: true },
+  bdayTreatDue: { type: Boolean, default: false },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
