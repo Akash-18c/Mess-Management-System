@@ -17,18 +17,18 @@ router.get('/', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// Mark one as read
-router.patch('/:id/read', async (req, res) => {
+// Mark all as read — MUST be before /:id/read to avoid 'read-all' matching :id
+router.patch('/read-all', async (req, res) => {
   try {
-    await Notification.findByIdAndUpdate(req.params.id, { $addToSet: { readBy: req.user._id } });
+    await Notification.updateMany({}, { $addToSet: { readBy: req.user._id } });
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// Mark all as read
-router.patch('/read-all', async (req, res) => {
+// Mark one as read
+router.patch('/:id/read', async (req, res) => {
   try {
-    await Notification.updateMany({}, { $addToSet: { readBy: req.user._id } });
+    await Notification.findByIdAndUpdate(req.params.id, { $addToSet: { readBy: req.user._id } });
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
