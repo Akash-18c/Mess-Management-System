@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { Bell, UtensilsCrossed, ShoppingCart, CreditCard, FileText, MessageSquare, Zap, CheckCheck, X } from 'lucide-react';
 import api from '../api';
 
@@ -18,43 +19,67 @@ const ROLE_COLORS = {
 
 function timeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-  if (diff < 60)  return 'just now';
+  if (diff < 60)   return 'just now';
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
+const PANEL_W = 340;
+const PANEL_MAX_H = 480;
+
 export default function NotificationBell({ accentColor = '#fbbf24' }) {
   const [notes,   setNotes]   = useState([]);
   const [open,    setOpen]    = useState(false);
   const [loading, setLoading] = useState(false);
-  const panelRef = useRef(null);
+  const [panelPos, setPanelPos] = useState({ top: 0, left: 0 });
   const btnRef   = useRef(null);
+  const panelRef = useRef(null);
 
   const unread = notes.filter(n => !n.isRead).length;
 
   const load = useCallback(async () => {
-    try {
-      const r = await api.get('/notifications');
-      setNotes(r.data);
-    } catch { }
+    try { const r = await api.get('/notifications'); setNotes(r.data); } catch { }
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { const t = setInterval(load, 30000); return () => clearInterval(t); }, [load]);
 
-  // Poll every 30s
+  // Compute panel position from bell button rect
+  const calcPos = useCallback(() => {
+    if (!btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const panelH = Math.min(PANEL_MAX_H, vh - rect.bottom - 12);
+
+    // Prefer right-aligned to button; clamp so it never goes off-screen
+    let left = rect.right - PANEL_W;
+    if (left < 8) left = 8;
+    if (left + PANEL_W > vw - 8) left = vw - PANEL_W - 8;
+
+    setPanelPos({ top: rect.bottom + 8, left, maxHeight: panelH });
+  }, []);
+
+  const toggle = () => {
+    if (!open) calcPos();
+    setOpen(o => !o);
+  };
+
+  // Reposition on scroll/resize while open
   useEffect(() => {
-    const t = setInterval(load, 30000);
-    return () => clearInterval(t);
-  }, [load]);
+    if (!open) return;
+    const h = () => calcPos();
+    window.addEventListener('scroll', h, true);
+    window.addEventListener('resize', h);
+    return () => { window.removeEventListener('scroll', h, true); window.removeEventListener('resize', h); };
+  }, [open, calcPos]);
 
   // Close on outside click
   useEffect(() => {
     const h = (e) => {
       if (panelRef.current && !panelRef.current.contains(e.target) &&
-          btnRef.current   && !btnRef.current.contains(e.target)) {
-        setOpen(false);
-      }
+          btnRef.current   && !btnRef.current.contains(e.target)) setOpen(false);
     };
     document.addEventListener('mousedown', h);
     document.addEventListener('touchstart', h, { passive: true });
@@ -63,173 +88,164 @@ export default function NotificationBell({ accentColor = '#fbbf24' }) {
 
   const markAllRead = async () => {
     setLoading(true);
-    try {
-      await api.patch('/notifications/read-all');
-      setNotes(prev => prev.map(n => ({ ...n, isRead: true })));
-    } catch { }
-    finally { setLoading(false); }
+    try { await api.patch('/notifications/read-all'); setNotes(prev => prev.map(n => ({ ...n, isRead: true }))); }
+    catch { } finally { setLoading(false); }
   };
 
   const markOne = async (id) => {
-    try {
-      await api.patch(`/notifications/${id}/read`);
-      setNotes(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
-    } catch { }
+    try { await api.patch(`/notifications/${id}/read`); setNotes(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n)); }
+    catch { }
   };
 
+  const accentRgb = accentColor === '#fbbf24' ? '251,191,36' : accentColor === '#34d399' ? '52,211,153' : '45,212,191';
+
+  const panel = open && ReactDOM.createPortal(
+    <div
+      ref={panelRef}
+      style={{
+        position: 'fixed',
+        top: panelPos.top,
+        left: panelPos.left,
+        width: Math.min(PANEL_W, window.innerWidth - 16),
+        maxHeight: panelPos.maxHeight || PANEL_MAX_H,
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'rgba(6,10,22,0.98)',
+        backdropFilter: 'blur(48px)',
+        WebkitBackdropFilter: 'blur(48px)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        borderRadius: 16,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.80), 0 0 0 1px rgba(255,255,255,0.04)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `rgba(${accentRgb},0.15)`, border: `1px solid ${accentColor}44`, flexShrink: 0 }}>
+            <Bell size={13} style={{ color: accentColor }} />
+          </div>
+          <div>
+            <p style={{ color: '#fff', fontWeight: 700, fontSize: 13, lineHeight: 1.2, margin: 0 }}>Activity Feed</p>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, margin: 0 }}>
+              {unread > 0 ? `${unread} unread` : 'All caught up'}
+            </p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {unread > 0 && (
+            <button onClick={markAllRead} disabled={loading}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 600, padding: '5px 10px', borderRadius: 8, background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.22)', color: '#34d399', cursor: 'pointer', opacity: loading ? 0.6 : 1, WebkitTapHighlightColor: 'transparent' }}>
+              <CheckCheck size={11} /> Read all
+            </button>
+          )}
+          <button onClick={() => setOpen(false)}
+            style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
+            <X size={13} style={{ color: '#64748b' }} />
+          </button>
+        </div>
+      </div>
+
+      {/* List */}
+      <div style={{ overflowY: 'auto', flex: 1, scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.08) transparent' }}>
+        {notes.length === 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', gap: 10 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <Bell size={18} style={{ color: '#334155' }} />
+            </div>
+            <p style={{ color: '#475569', fontSize: 13, fontWeight: 500, margin: 0 }}>No activity yet</p>
+            <p style={{ color: '#334155', fontSize: 11, margin: 0, textAlign: 'center' }}>Actions by manager &amp; members appear here</p>
+          </div>
+        ) : (
+          notes.map((n, i) => {
+            const cat  = ICONS[n.category] || ICONS.general;
+            const Icon = cat.icon;
+            const rc   = ROLE_COLORS[n.actorRole] || ROLE_COLORS.member;
+            return (
+              <div
+                key={n._id}
+                onClick={() => !n.isRead && markOne(n._id)}
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                  padding: '10px 14px',
+                  borderBottom: i < notes.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                  background: n.isRead ? 'transparent' : 'rgba(255,255,255,0.025)',
+                  cursor: n.isRead ? 'default' : 'pointer',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                {/* Category icon */}
+                <div style={{ width: 32, height: 32, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, background: cat.bg, border: `1px solid ${cat.border}` }}>
+                  <Icon size={14} style={{ color: cat.color }} />
+                </div>
+
+                {/* Content */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 3 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: rc.bg, color: rc.text, border: `1px solid ${rc.border}` }}>
+                      {n.actorName || n.actorRole}
+                    </span>
+                    {n.month && (
+                      <span style={{ fontSize: 9, color: '#475569', fontWeight: 500 }}>
+                        {new Date(0, n.month - 1).toLocaleString('en', { month: 'short' })} {n.year}
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: 12, lineHeight: 1.45, margin: 0, color: n.isRead ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.85)', wordBreak: 'break-word' }}>
+                    {n.message}
+                  </p>
+                  <p style={{ fontSize: 10, marginTop: 4, marginBottom: 0, color: '#334155' }}>{timeAgo(n.createdAt)}</p>
+                </div>
+
+                {/* Unread dot */}
+                {!n.isRead && (
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, marginTop: 6, background: accentColor, boxShadow: `0 0 6px ${accentColor}` }} />
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Footer */}
+      {notes.length > 0 && (
+        <div style={{ padding: '8px 14px', flexShrink: 0, textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.20)' }}>
+          <p style={{ fontSize: 10, color: '#1e293b', margin: 0 }}>Showing last {notes.length} activities</p>
+        </div>
+      )}
+    </div>,
+    document.body
+  );
+
   return (
-    <div className="relative" style={{ zIndex: 300 }}>
-      {/* Bell button */}
+    <div style={{ position: 'relative', zIndex: 300 }}>
       <button
         ref={btnRef}
-        onClick={() => setOpen(o => !o)}
-        className="relative flex items-center justify-center rounded-xl transition-all active:scale-95"
+        onClick={toggle}
         style={{
-          width: 38, height: 38,
-          background: open ? `rgba(${accentColor === '#fbbf24' ? '251,191,36' : accentColor === '#34d399' ? '52,211,153' : '45,212,191'},0.15)` : 'rgba(255,255,255,0.06)',
+          position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 36, height: 36, borderRadius: 10,
+          background: open ? `rgba(${accentRgb},0.15)` : 'rgba(255,255,255,0.06)',
           border: `1px solid ${open ? accentColor + '55' : 'rgba(255,255,255,0.10)'}`,
+          cursor: 'pointer', transition: 'all 0.15s',
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        <Bell size={17} style={{ color: open ? accentColor : '#94a3b8' }} />
+        <Bell size={16} style={{ color: open ? accentColor : '#94a3b8' }} />
         {unread > 0 && (
-          <span className="absolute flex items-center justify-center font-bold"
-            style={{
-              top: -4, right: -4,
-              minWidth: 17, height: 17,
-              fontSize: 9,
-              background: '#ef4444',
-              color: '#fff',
-              borderRadius: 999,
-              border: '2px solid #070c1a',
-              padding: '0 3px',
-              lineHeight: 1,
-            }}>
+          <span style={{
+            position: 'absolute', top: -4, right: -4,
+            minWidth: 16, height: 16, fontSize: 9, fontWeight: 700,
+            background: '#ef4444', color: '#fff', borderRadius: 999,
+            border: '2px solid #070c1a', padding: '0 3px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
+          }}>
             {unread > 9 ? '9+' : unread}
           </span>
         )}
       </button>
-
-      {/* Panel */}
-      {open && (
-        <div
-          ref={panelRef}
-          className="absolute right-0 top-full mt-2 flex flex-col"
-          style={{
-            width: 'min(360px, calc(100vw - 24px))',
-            maxHeight: '80vh',
-            background: 'rgba(6,10,22,0.98)',
-            backdropFilter: 'blur(48px)',
-            WebkitBackdropFilter: 'blur(48px)',
-            border: '1px solid rgba(255,255,255,0.10)',
-            borderRadius: 20,
-            boxShadow: '0 24px 64px rgba(0,0,0,0.80), 0 0 0 1px rgba(255,255,255,0.04)',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)' }}>
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: `rgba(${accentColor === '#fbbf24' ? '251,191,36' : '52,211,153'},0.15)`, border: `1px solid ${accentColor}44` }}>
-                <Bell size={13} style={{ color: accentColor }} />
-              </div>
-              <div>
-                <p className="text-white font-bold text-sm leading-tight">Activity Feed</p>
-                <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                  {unread > 0 ? `${unread} unread` : 'All caught up'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {unread > 0 && (
-                <button onClick={markAllRead} disabled={loading}
-                  className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg transition-all"
-                  style={{ background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.22)', color: '#34d399', WebkitTapHighlightColor: 'transparent', opacity: loading ? 0.6 : 1 }}>
-                  <CheckCheck size={11} /> Read all
-                </button>
-              )}
-              <button onClick={() => setOpen(false)}
-                className="w-7 h-7 flex items-center justify-center rounded-lg"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', WebkitTapHighlightColor: 'transparent' }}>
-                <X size={13} style={{ color: '#64748b' }} />
-              </button>
-            </div>
-          </div>
-
-          {/* List */}
-          <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.08) transparent' }}>
-            {notes.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 gap-3">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <Bell size={20} style={{ color: '#334155' }} />
-                </div>
-                <p className="text-slate-600 text-sm font-medium">No activity yet</p>
-                <p className="text-slate-700 text-xs">Actions by manager &amp; members appear here</p>
-              </div>
-            ) : (
-              notes.map((n, i) => {
-                const cat  = ICONS[n.category] || ICONS.general;
-                const Icon = cat.icon;
-                const rc   = ROLE_COLORS[n.actorRole] || ROLE_COLORS.member;
-                return (
-                  <div
-                    key={n._id}
-                    onClick={() => !n.isRead && markOne(n._id)}
-                    className="flex items-start gap-3 px-4 py-3 cursor-pointer transition-all"
-                    style={{
-                      borderBottom: i < notes.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                      background: n.isRead ? 'transparent' : 'rgba(255,255,255,0.025)',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    {/* Category icon */}
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ background: cat.bg, border: `1px solid ${cat.border}` }}>
-                      <Icon size={14} style={{ color: cat.color }} />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
-                          style={{ background: rc.bg, color: rc.text, border: `1px solid ${rc.border}` }}>
-                          {n.actorName || n.actorRole}
-                        </span>
-                        {n.month && (
-                          <span className="text-[9px] text-slate-600 font-medium">
-                            {new Date(0, n.month - 1).toLocaleString('en', { month: 'short' })} {n.year}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[12.5px] leading-snug" style={{ color: n.isRead ? 'rgba(255,255,255,0.50)' : 'rgba(255,255,255,0.85)' }}>
-                        {n.message}
-                      </p>
-                      <p className="text-[10px] mt-1" style={{ color: '#334155' }}>{timeAgo(n.createdAt)}</p>
-                    </div>
-
-                    {/* Unread dot */}
-                    {!n.isRead && (
-                      <div className="w-2 h-2 rounded-full flex-shrink-0 mt-2"
-                        style={{ background: accentColor, boxShadow: `0 0 6px ${accentColor}` }} />
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Footer */}
-          {notes.length > 0 && (
-            <div className="px-4 py-2.5 flex-shrink-0 text-center"
-              style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.20)' }}>
-              <p className="text-[10px]" style={{ color: '#1e293b' }}>Showing last {notes.length} activities</p>
-            </div>
-          )}
-        </div>
-      )}
+      {panel}
     </div>
   );
 }
