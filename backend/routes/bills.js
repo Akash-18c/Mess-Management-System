@@ -6,6 +6,7 @@ const MonthlySummary = require('../models/MonthlySummary');
 const OtherCharge = require('../models/OtherCharge');
 const User = require('../models/User');
 const { auth, requireRole } = require('../middleware/auth');
+const { pushNotification } = require('../utils/notify');
 
 const router = express.Router();
 router.use(auth);
@@ -76,10 +77,7 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
       bills.push(bill);
     }
     res.json(bills);
-  } catch (err) { res.status(500).json({ message: err.message }); }
-});
-
-router.get('/member/:memberId/:month/:year', async (req, res) => {
+    await pushNotification({ user: req.user, message: `Generated bills for ${new Date(0, month-1).toLocaleString('en',{month:'long'})} ${year}`, category: 'bill', month: +month, year: +year });, async (req, res) => {
   try {
     const { memberId, month, year } = req.params;
     if (req.user.role === 'member' && req.user._id.toString() !== memberId)

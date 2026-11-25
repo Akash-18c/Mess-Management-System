@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, History, LogOut, Menu, Receipt, UtensilsCrossed } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import NotificationBell from '../../components/NotificationBell';
 
 import BirthdayBanner from '../../components/BirthdayBanner';
 
@@ -65,6 +66,7 @@ export default function MemberLayout() {
             <p className="text-sm font-semibold text-white truncate">{rn(user?.name)}</p>
             <p className="text-xs text-slate-500 truncate">{user?.email}</p>
           </div>
+          <NotificationBell accentColor="#34d399" />
         </div>
         <button onClick={handleLogout} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
           <LogOut size={16} /> Sign Out
@@ -109,7 +111,10 @@ export default function MemberLayout() {
               background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 40%,#6ee7b7 70%,#fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}>The Messy Kitchen</span>
           </div>
-          <span className="badge-member">Member</span>
+          <div className="flex items-center gap-2">
+            <NotificationBell accentColor="#34d399" />
+            <span className="badge-member">Member</span>
+          </div>
         </header>
         <main ref={mainRef} className="flex-1 overflow-y-auto bg-slate-900"><div className="p-4 lg:p-6"><Outlet /></div></main>
       </div>

@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, Calendar, FileText, Trash2, LogOut, Menu, HandCoins, CalendarDays, Receipt, Cake, ShoppingCart, UserCheck } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useMarketDutyNotifier from '../../hooks/useMarketDutyNotifier';
+import NotificationBell from '../../components/NotificationBell';
 
 import BirthdayBanner from '../../components/BirthdayBanner';
 
@@ -75,6 +76,7 @@ export default function AdminLayout() {
             <p className="text-sm font-semibold text-white truncate">{rn(user?.name)}</p>
             <p className="text-xs truncate" style={{ color: '#4a5a7a' }}>{user?.email}</p>
           </div>
+          <NotificationBell accentColor="#2dd4bf" />
         </div>
         <button onClick={handleLogout} className="flex items-center gap-2 w-full px-3 py-2.5 text-sm font-medium rounded-xl transition-all"
           style={{ color: '#f87171', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}
@@ -121,14 +123,17 @@ export default function AdminLayout() {
             <img src="/messy-logo.png" alt="logo" className="w-7 h-7 object-contain" style={{ filter: 'drop-shadow(0 0 6px rgba(16,185,129,0.5))' }} />
             <span style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.1rem', fontWeight: 700, background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 40%,#6ee7b7 70%,#fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>The Messy Kitchen</span>
           </div>
-          <button onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-            style={{ color: '#f87171', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.25)' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.20)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.10)'; }}
-          >
-            <LogOut size={13} /> Sign Out
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell accentColor="#2dd4bf" />
+            <button onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+              style={{ color: '#f87171', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.25)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.20)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.10)'; }}
+            >
+              <LogOut size={13} /> Sign Out
+            </button>
+          </div>
         </header>
         <main className="flex-1 overflow-y-auto bg-[#070c1a]"><div className="p-4 lg:p-6"><Outlet /></div></main>
       </div>

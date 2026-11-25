@@ -3,6 +3,7 @@ const Meal = require('../models/Meal');
 const User = require('../models/User');
 const { auth, requireRole } = require('../middleware/auth');
 const { recalcSummary } = require('../controllers/summaryController');
+const { pushNotification } = require('../utils/notify');
 
 const router = express.Router();
 router.use(auth);
@@ -26,11 +27,12 @@ router.post('/mark', requireRole('admin', 'manager'), async (req, res) => {
       { upsert: true, new: true }
     );
     await recalcSummary(month, year);
-    res.json(meal);
-  } catch (err) { res.status(400).json({ message: err.message }); }
-});
-
-router.post('/guest', requireRole('admin', 'manager'), async (req, res) => {
+    const marks = [];
+    if (lunch) marks.push('Lunch');
+    if (dinner) marks.push('Dinner');
+    if (isOff) marks.push('Off day');
+    if (marks.length) await pushNotification({ user: req.user, message: `Marked meals for a member (${marks.join(' + ')})`, category: 'meal', month, year });
+    res.json(meal);, requireRole('admin', 'manager'), async (req, res) => {
   try {
     const { date, memberId, guestMeals, month, year } = req.body;
     const meal = await Meal.findOneAndUpdate(
@@ -39,11 +41,8 @@ router.post('/guest', requireRole('admin', 'manager'), async (req, res) => {
       { upsert: true, new: true }
     );
     await recalcSummary(month, year);
+    if (guestMeals > 0) await pushNotification({ user: req.user, message: `Added ${guestMeals} guest meal(s)`, category: 'meal', month, year });
     res.json(meal);
-  } catch (err) { res.status(400).json({ message: err.message }); }
-});
-
-// Member marks own off day
 router.post('/leave', requireRole('member', 'manager', 'admin'), async (req, res) => {
   try {
     const { date, month, year } = req.body;

@@ -2,6 +2,7 @@ const express = require('express');
 const Payment = require('../models/Payment');
 const { auth, requireRole } = require('../middleware/auth');
 const { recalcSummary } = require('../controllers/summaryController');
+const { pushNotification } = require('../utils/notify');
 
 const router = express.Router();
 router.use(auth, requireRole('admin', 'manager'));
@@ -19,6 +20,7 @@ router.post('/', async (req, res) => {
   try {
     const payment = await Payment.create({ ...req.body, recordedBy: req.user._id });
     await recalcSummary(payment.month, payment.year);
+    await pushNotification({ user: req.user, message: `Recorded a payment of ₹${payment.amount}`, category: 'payment', month: payment.month, year: payment.year });
     res.status(201).json(payment);
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
@@ -27,6 +29,7 @@ router.put('/:id', async (req, res) => {
   try {
     const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (payment) await recalcSummary(payment.month, payment.year);
+    if (payment) await pushNotification({ user: req.user, message: `Updated a payment record`, category: 'payment', month: payment.month, year: payment.year });
     res.json(payment);
   } catch (err) { res.status(400).json({ message: err.message }); }
 });

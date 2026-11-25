@@ -5,6 +5,7 @@ const OtherCharge = require('../models/OtherCharge');
 const MessNotice = require('../models/MessNotice');
 const { auth, requireRole } = require('../middleware/auth');
 const { recalcSummary } = require('../controllers/summaryController');
+const { pushNotification } = require('../utils/notify');
 
 const router = express.Router();
 router.use(auth);
@@ -34,11 +35,8 @@ router.post('/grocery', requireRole('manager', 'admin'), async (req, res) => {
     const total = !isNaN(qty) ? parseFloat((qty * price).toFixed(2)) : parseFloat(price.toFixed(2));
     const expense = await GroceryExpense.create({ item, ...(qty ? { quantity: qty } : {}), unitPrice: price, unit, meal: meal || '', date, buyerName, total, month, year, addedBy: req.user._id });
     await recalcSummary(month, year);
-    res.status(201).json(expense);
-  } catch (err) { res.status(400).json({ message: err.message }); }
-});
-
-router.put('/grocery/:id', requireRole('manager', 'admin'), async (req, res) => {
+    await pushNotification({ user: req.user, message: `Added grocery expense: ${item} (₹${total})`, category: 'expense', month, year });
+    res.status(201).json(expense);, requireRole('manager', 'admin'), async (req, res) => {
   try {
     const { quantity, unitPrice } = req.body;
     if (quantity && unitPrice) req.body.total = parseFloat((quantity * unitPrice).toFixed(2));
@@ -69,6 +67,7 @@ router.post('/other', requireRole('manager', 'admin'), async (req, res) => {
     const { categoryName, description, amount, date, paidBy, note, status, month, year } = req.body;
     const expense = await OtherExpense.create({ categoryName, description, amount, date, paidBy, note, status, month, year, addedBy: req.user._id });
     await recalcSummary(month, year);
+    await pushNotification({ user: req.user, message: `Added ${categoryName} expense: ₹${amount}`, category: 'expense', month, year });
     res.status(201).json(expense);
   } catch (err) { res.status(400).json({ message: err.message }); }
 });
@@ -148,6 +147,7 @@ router.post('/notice', requireRole('manager', 'admin'), async (req, res) => {
       { message: message.trim(), setBy: req.user._id },
       { upsert: true, new: true }
     );
+    await pushNotification({ user: req.user, message: `Updated mess notice for this month`, category: 'notice', month, year });
     res.json(notice);
   } catch (err) { res.status(400).json({ message: err.message }); }
 });

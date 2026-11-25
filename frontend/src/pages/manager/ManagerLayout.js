@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, UtensilsCrossed, ShoppingCart, CreditCard, FileText, LogOut, Menu, Receipt, Bike, Users } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useMarketDutyNotifier from '../../hooks/useMarketDutyNotifier';
+import NotificationBell from '../../components/NotificationBell';
 
 const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
 
@@ -69,6 +70,7 @@ export default function ManagerLayout() {
             <p className="text-sm font-semibold text-white truncate">{rn(user?.name)}</p>
             <p className="text-xs text-slate-500 truncate">{user?.email}</p>
           </div>
+          <NotificationBell accentColor="#fbbf24" />
         </div>
         <button onClick={handleLogout} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
           <LogOut size={16} /> Sign Out
@@ -105,7 +107,10 @@ export default function ManagerLayout() {
             <img src="/messy-logo.png" alt="logo" className="w-7 h-7 object-contain" />
             <span style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.1rem', fontWeight: 700, background: 'linear-gradient(135deg,#ffffff 0%,#d1fae5 40%,#6ee7b7 70%,#fbbf24 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>The Messy Kitchen</span>
           </div>
-          <span className="badge-manager">Manager</span>
+          <div className="flex items-center gap-2">
+            <NotificationBell accentColor="#fbbf24" />
+            <span className="badge-manager">Manager</span>
+          </div>
         </header>
         <main ref={mainRef} className="flex-1 overflow-y-auto bg-slate-900"><div className="p-4 lg:p-6"><Outlet /></div></main>
       </div>
