@@ -635,6 +635,15 @@ router.get('/market-duty/all', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// --- Notification History ---
+router.delete('/notifications', async (req, res) => {
+  try {
+    const Notification = require('../models/Notification');
+    const result = await Notification.deleteMany({});
+    res.json({ message: 'All notification history cleared.', deleted: { notifications: result.deletedCount } });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 // --- Login History ---
 router.get('/login-logs', async (req, res) => {
   try {

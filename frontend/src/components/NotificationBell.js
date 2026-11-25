@@ -30,34 +30,34 @@ if (!document.getElementById('bell-ring-style')) {
 }
 
 const ICONS = {
-  meal:    { icon: UtensilsCrossed, color: '#34d399', bg: 'rgba(52,211,153,0.15)',  border: 'rgba(52,211,153,0.25)'  },
-  expense: { icon: ShoppingCart,    color: '#fbbf24', bg: 'rgba(251,191,36,0.15)',  border: 'rgba(251,191,36,0.25)'  },
-  payment: { icon: CreditCard,      color: '#60a5fa', bg: 'rgba(96,165,250,0.15)',  border: 'rgba(96,165,250,0.25)'  },
-  bill:    { icon: FileText,        color: '#c084fc', bg: 'rgba(192,132,252,0.15)', border: 'rgba(192,132,252,0.25)' },
-  notice:  { icon: MessageSquare,   color: '#fb923c', bg: 'rgba(251,146,60,0.15)',  border: 'rgba(251,146,60,0.25)'  },
-  general: { icon: Zap,             color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.20)' },
+  meal:    { icon: UtensilsCrossed, color: '#34d399', bg: 'rgba(52,211,153,0.18)',  border: 'rgba(52,211,153,0.28)'  },
+  expense: { icon: ShoppingCart,    color: '#fbbf24', bg: 'rgba(251,191,36,0.18)',  border: 'rgba(251,191,36,0.28)'  },
+  payment: { icon: CreditCard,      color: '#60a5fa', bg: 'rgba(96,165,250,0.18)',  border: 'rgba(96,165,250,0.28)'  },
+  bill:    { icon: FileText,        color: '#c084fc', bg: 'rgba(192,132,252,0.18)', border: 'rgba(192,132,252,0.28)' },
+  notice:  { icon: MessageSquare,   color: '#fb923c', bg: 'rgba(251,146,60,0.18)',  border: 'rgba(251,146,60,0.28)'  },
+  general: { icon: Zap,             color: '#e2e8f0', bg: 'rgba(226,232,240,0.12)', border: 'rgba(226,232,240,0.20)' },
 };
 
 const ROLE_COLORS = {
-  manager: { text: '#fbbf24', bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.25)' },
-  member:  { text: '#34d399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.25)'  },
+  manager: { text: '#fbbf24', bg: 'rgba(251,191,36,0.18)', border: 'rgba(251,191,36,0.30)' },
+  member:  { text: '#34d399', bg: 'rgba(52,211,153,0.18)',  border: 'rgba(52,211,153,0.30)'  },
 };
 
 function timeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-  if (diff < 60)   return 'just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 60)    return 'just now';
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-const PANEL_W = 340;
+const PANEL_W     = 340;
 const PANEL_MAX_H = 480;
 
 export default function NotificationBell({ accentColor = '#fbbf24' }) {
-  const [notes,   setNotes]   = useState([]);
-  const [open,    setOpen]    = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [notes,    setNotes]    = useState([]);
+  const [open,     setOpen]     = useState(false);
+  const [loading,  setLoading]  = useState(false);
   const [panelPos, setPanelPos] = useState({ top: 0, left: 0 });
   const btnRef   = useRef(null);
   const panelRef = useRef(null);
@@ -71,28 +71,20 @@ export default function NotificationBell({ accentColor = '#fbbf24' }) {
   useEffect(() => { load(); }, [load]);
   useEffect(() => { const t = setInterval(load, 30000); return () => clearInterval(t); }, [load]);
 
-  // Compute panel position from bell button rect
   const calcPos = useCallback(() => {
     if (!btnRef.current) return;
     const rect = btnRef.current.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const panelH = Math.min(PANEL_MAX_H, vh - rect.bottom - 12);
-
-    // Prefer right-aligned to button; clamp so it never goes off-screen
     let left = rect.right - PANEL_W;
     if (left < 8) left = 8;
     if (left + PANEL_W > vw - 8) left = vw - PANEL_W - 8;
-
     setPanelPos({ top: rect.bottom + 8, left, maxHeight: panelH });
   }, []);
 
-  const toggle = () => {
-    if (!open) calcPos();
-    setOpen(o => !o);
-  };
+  const toggle = () => { if (!open) calcPos(); setOpen(o => !o); };
 
-  // Reposition on scroll/resize while open
   useEffect(() => {
     if (!open) return;
     const h = () => calcPos();
@@ -101,7 +93,6 @@ export default function NotificationBell({ accentColor = '#fbbf24' }) {
     return () => { window.removeEventListener('scroll', h, true); window.removeEventListener('resize', h); };
   }, [open, calcPos]);
 
-  // Close on outside click
   useEffect(() => {
     const h = (e) => {
       if (panelRef.current && !panelRef.current.contains(e.target) &&
@@ -125,6 +116,7 @@ export default function NotificationBell({ accentColor = '#fbbf24' }) {
 
   const accentRgb = accentColor === '#fbbf24' ? '251,191,36' : accentColor === '#34d399' ? '52,211,153' : '45,212,191';
 
+  // ── iOS Liquid Glass panel ──────────────────────────────────────────────────
   const panel = open && ReactDOM.createPortal(
     <div
       ref={panelRef}
@@ -137,51 +129,76 @@ export default function NotificationBell({ accentColor = '#fbbf24' }) {
         zIndex: 9999,
         display: 'flex',
         flexDirection: 'column',
-        background: 'rgba(6,10,22,0.98)',
-        backdropFilter: 'blur(48px)',
-        WebkitBackdropFilter: 'blur(48px)',
-        border: '1px solid rgba(255,255,255,0.10)',
-        borderRadius: 16,
-        boxShadow: '0 24px 64px rgba(0,0,0,0.80), 0 0 0 1px rgba(255,255,255,0.04)',
+        // True iOS liquid glass — transparent white + heavy blur + saturation boost
+        background: 'rgba(255,255,255,0.12)',
+        backdropFilter: 'blur(64px) saturate(200%) brightness(1.10)',
+        WebkitBackdropFilter: 'blur(64px) saturate(200%) brightness(1.10)',
+        border: '1px solid rgba(255,255,255,0.25)',
+        borderRadius: 22,
+        boxShadow: '0 32px 80px rgba(0,0,0,0.50), 0 0 0 0.5px rgba(255,255,255,0.10), inset 0 1px 0 rgba(255,255,255,0.35)',
         overflow: 'hidden',
       }}
     >
+      {/* Top shine */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.60),transparent)', pointerEvents: 'none', zIndex: 2 }} />
+
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.03)', flexShrink: 0 }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '13px 14px 11px',
+        borderBottom: '1px solid rgba(255,255,255,0.12)',
+        background: 'rgba(255,255,255,0.07)',
+        flexShrink: 0, position: 'relative', zIndex: 1,
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `rgba(${accentRgb},0.15)`, border: `1px solid ${accentColor}44`, flexShrink: 0 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 9,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: `rgba(${accentRgb},0.25)`,
+            border: `1px solid rgba(${accentRgb},0.40)`,
+            flexShrink: 0,
+            boxShadow: `0 0 12px rgba(${accentRgb},0.20)`,
+          }}>
             <Bell size={13} style={{ color: accentColor }} />
           </div>
           <div>
-            <p style={{ color: '#fff', fontWeight: 700, fontSize: 13, lineHeight: 1.2, margin: 0 }}>Activity Feed</p>
-            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, margin: 0 }}>
+            <p style={{ color: 'rgba(255,255,255,0.95)', fontWeight: 700, fontSize: 13, lineHeight: 1.2, margin: 0 }}>Activity Feed</p>
+            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, margin: 0 }}>
               {unread > 0 ? `${unread} unread` : 'All caught up'}
             </p>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {unread > 0 && (
-            <button onClick={markAllRead} disabled={loading}
-              style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 600, padding: '5px 10px', borderRadius: 8, background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.22)', color: '#34d399', cursor: 'pointer', opacity: loading ? 0.6 : 1, WebkitTapHighlightColor: 'transparent' }}>
+            <button onClick={markAllRead} disabled={loading} style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              fontSize: 10, fontWeight: 600, padding: '5px 10px', borderRadius: 8,
+              background: 'rgba(52,211,153,0.18)', border: '1px solid rgba(52,211,153,0.35)',
+              color: '#34d399', cursor: 'pointer', opacity: loading ? 0.6 : 1,
+              WebkitTapHighlightColor: 'transparent',
+            }}>
               <CheckCheck size={11} /> Read all
             </button>
           )}
-          <button onClick={() => setOpen(false)}
-            style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
-            <X size={13} style={{ color: '#64748b' }} />
+          <button onClick={() => setOpen(false)} style={{
+            width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: 8, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)',
+            cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+          }}>
+            <X size={13} style={{ color: 'rgba(255,255,255,0.60)' }} />
           </button>
         </div>
       </div>
 
       {/* List */}
-      <div style={{ overflowY: 'auto', flex: 1, scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.08) transparent' }}>
+      <div style={{ overflowY: 'auto', flex: 1, scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.12) transparent', position: 'relative', zIndex: 1 }}>
         {notes.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', gap: 10 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <Bell size={18} style={{ color: '#334155' }} />
+            <div style={{ width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)' }}>
+              <Bell size={18} style={{ color: 'rgba(255,255,255,0.30)' }} />
             </div>
-            <p style={{ color: '#475569', fontSize: 13, fontWeight: 500, margin: 0 }}>No activity yet</p>
-            <p style={{ color: '#334155', fontSize: 11, margin: 0, textAlign: 'center' }}>Actions by manager &amp; members appear here</p>
+            <p style={{ color: 'rgba(255,255,255,0.50)', fontSize: 13, fontWeight: 500, margin: 0 }}>No activity yet</p>
+            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, margin: 0, textAlign: 'center' }}>Actions by manager &amp; members appear here</p>
           </div>
         ) : (
           notes.map((n, i) => {
@@ -195,38 +212,34 @@ export default function NotificationBell({ accentColor = '#fbbf24' }) {
                 style={{
                   display: 'flex', alignItems: 'flex-start', gap: 10,
                   padding: '10px 14px',
-                  borderBottom: i < notes.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                  background: n.isRead ? 'transparent' : 'rgba(255,255,255,0.025)',
+                  borderBottom: i < notes.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                  background: n.isRead ? 'transparent' : 'rgba(255,255,255,0.07)',
                   cursor: n.isRead ? 'default' : 'pointer',
                   WebkitTapHighlightColor: 'transparent',
+                  transition: 'background 0.15s',
                 }}
               >
-                {/* Category icon */}
                 <div style={{ width: 32, height: 32, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, background: cat.bg, border: `1px solid ${cat.border}` }}>
                   <Icon size={14} style={{ color: cat.color }} />
                 </div>
-
-                {/* Content */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 3 }}>
                     <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6, background: rc.bg, color: rc.text, border: `1px solid ${rc.border}` }}>
                       {n.actorName || n.actorRole}
                     </span>
                     {n.month && (
-                      <span style={{ fontSize: 9, color: '#475569', fontWeight: 500 }}>
+                      <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.38)', fontWeight: 500 }}>
                         {new Date(0, n.month - 1).toLocaleString('en', { month: 'short' })} {n.year}
                       </span>
                     )}
                   </div>
-                  <p style={{ fontSize: 12, lineHeight: 1.45, margin: 0, color: n.isRead ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.85)', wordBreak: 'break-word' }}>
+                  <p style={{ fontSize: 12, lineHeight: 1.45, margin: 0, color: n.isRead ? 'rgba(255,255,255,0.42)' : 'rgba(255,255,255,0.90)', wordBreak: 'break-word' }}>
                     {n.message}
                   </p>
-                  <p style={{ fontSize: 10, marginTop: 4, marginBottom: 0, color: '#334155' }}>{timeAgo(n.createdAt)}</p>
+                  <p style={{ fontSize: 10, marginTop: 4, marginBottom: 0, color: 'rgba(255,255,255,0.28)' }}>{timeAgo(n.createdAt)}</p>
                 </div>
-
-                {/* Unread dot */}
                 {!n.isRead && (
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, marginTop: 6, background: accentColor, boxShadow: `0 0 6px ${accentColor}` }} />
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, marginTop: 6, background: accentColor, boxShadow: `0 0 8px ${accentColor}` }} />
                 )}
               </div>
             );
@@ -236,8 +249,8 @@ export default function NotificationBell({ accentColor = '#fbbf24' }) {
 
       {/* Footer */}
       {notes.length > 0 && (
-        <div style={{ padding: '8px 14px', flexShrink: 0, textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.20)' }}>
-          <p style={{ fontSize: 10, color: '#1e293b', margin: 0 }}>Showing last {notes.length} activities</p>
+        <div style={{ padding: '8px 14px', flexShrink: 0, textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.05)', position: 'relative', zIndex: 1 }}>
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)', margin: 0 }}>Showing last {notes.length} activities</p>
         </div>
       )}
     </div>,
