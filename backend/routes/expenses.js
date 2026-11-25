@@ -36,7 +36,11 @@ router.post('/grocery', requireRole('manager', 'admin'), async (req, res) => {
     const expense = await GroceryExpense.create({ item, ...(qty ? { quantity: qty } : {}), unitPrice: price, unit, meal: meal || '', date, buyerName, total, month, year, addedBy: req.user._id });
     await recalcSummary(month, year);
     await pushNotification({ user: req.user, message: `Added grocery expense: ${item} (₹${total})`, category: 'expense', month, year });
-    res.status(201).json(expense);, requireRole('manager', 'admin'), async (req, res) => {
+    res.status(201).json(expense);
+  } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
+router.put('/grocery/:id', requireRole('manager', 'admin'), async (req, res) => {
   try {
     const { quantity, unitPrice } = req.body;
     if (quantity && unitPrice) req.body.total = parseFloat((quantity * unitPrice).toFixed(2));
