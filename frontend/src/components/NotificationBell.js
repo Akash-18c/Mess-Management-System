@@ -3,6 +3,32 @@ import ReactDOM from 'react-dom';
 import { Bell, UtensilsCrossed, ShoppingCart, CreditCard, FileText, MessageSquare, Zap, CheckCheck, X } from 'lucide-react';
 import api from '../api';
 
+// Bell ring keyframe — injected once
+if (!document.getElementById('bell-ring-style')) {
+  const s = document.createElement('style');
+  s.id = 'bell-ring-style';
+  s.textContent = `
+    @keyframes bellRing {
+      0%,100%{transform:rotate(0deg)}
+      10%{transform:rotate(18deg)}
+      20%{transform:rotate(-16deg)}
+      30%{transform:rotate(14deg)}
+      40%{transform:rotate(-12deg)}
+      50%{transform:rotate(8deg)}
+      60%{transform:rotate(-6deg)}
+      70%{transform:rotate(4deg)}
+      80%{transform:rotate(-2deg)}
+    }
+    @keyframes bellGlow {
+      0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}
+      50%{box-shadow:0 0 0 5px rgba(239,68,68,0.18)}
+    }
+    .bell-ringing { animation: bellRing 0.9s ease-in-out infinite; transform-origin: top center; }
+    .bell-btn-glow { animation: bellGlow 1.8s ease-in-out infinite; }
+  `;
+  document.head.appendChild(s);
+}
+
 const ICONS = {
   meal:    { icon: UtensilsCrossed, color: '#34d399', bg: 'rgba(52,211,153,0.15)',  border: 'rgba(52,211,153,0.25)'  },
   expense: { icon: ShoppingCart,    color: '#fbbf24', bg: 'rgba(251,191,36,0.15)',  border: 'rgba(251,191,36,0.25)'  },
@@ -223,16 +249,21 @@ export default function NotificationBell({ accentColor = '#fbbf24' }) {
       <button
         ref={btnRef}
         onClick={toggle}
+        className={unread > 0 && !open ? 'bell-btn-glow' : ''}
         style={{
           position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
           width: 36, height: 36, borderRadius: 10,
           background: open ? `rgba(${accentRgb},0.15)` : 'rgba(255,255,255,0.06)',
-          border: `1px solid ${open ? accentColor + '55' : 'rgba(255,255,255,0.10)'}`,
+          border: `1px solid ${open ? accentColor + '55' : unread > 0 ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.10)'}`,
           cursor: 'pointer', transition: 'all 0.15s',
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        <Bell size={16} style={{ color: open ? accentColor : '#94a3b8' }} />
+        <Bell
+          size={16}
+          className={unread > 0 && !open ? 'bell-ringing' : ''}
+          style={{ color: open ? accentColor : unread > 0 ? '#f87171' : '#94a3b8' }}
+        />
         {unread > 0 && (
           <span style={{
             position: 'absolute', top: -4, right: -4,

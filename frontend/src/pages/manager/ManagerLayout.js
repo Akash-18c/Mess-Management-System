@@ -24,7 +24,7 @@ export default function ManagerLayout() {
   const mainRef = useRef(null);
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const handleLogout = async () => { await logout(); navigate('/login'); };
   useMarketDutyNotifier();
 
   useEffect(() => {

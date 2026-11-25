@@ -9,6 +9,7 @@ const OtherExpense = require('../models/OtherExpense');
 const Bill = require('../models/Bill');
 const MasiSalary = require('../models/MasiSalary');
 const MarketDuty = require('../models/MarketDuty');
+const LoginLog = require('../models/LoginLog');
 const { auth, requireRole } = require('../middleware/auth');
 const { sendApprovalEmail } = require('../utils/mailer');
 
@@ -631,6 +632,14 @@ router.get('/market-duty/all', async (req, res) => {
       .populate('memberId', 'name phone')
       .sort({ dayOfWeek: 1 });
     res.json(duties);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// --- Login History ---
+router.get('/login-logs', async (req, res) => {
+  try {
+    const logs = await LoginLog.find().sort({ loginAt: -1 }).limit(200).lean();
+    res.json(logs);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 

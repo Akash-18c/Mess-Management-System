@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, FileText, Trash2, LogOut, Menu, HandCoins, CalendarDays, Receipt, Cake, ShoppingCart, UserCheck } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, FileText, Trash2, LogOut, Menu, HandCoins, CalendarDays, Receipt, Cake, ShoppingCart, UserCheck, History } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useMarketDutyNotifier from '../../hooks/useMarketDutyNotifier';
 import NotificationBell from '../../components/NotificationBell';
@@ -20,6 +20,7 @@ const links = [
   { to: '/admin/birthdays',        icon: Cake,            label: 'Birthdays' },
   { to: '/admin/market-duty',      icon: ShoppingCart,    label: 'Market Duty' },
   { to: '/admin/guest-members',    icon: UserCheck,       label: 'Guest Members' },
+  { to: '/admin/login-history',    icon: History,         label: 'Login History' },
   { to: '/admin/purge',            icon: Trash2,          label: 'Purge Data', danger: true },
 ];
 
@@ -27,7 +28,7 @@ export default function AdminLayout() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const handleLogout = () => { logout(); navigate('/login'); };
+  const handleLogout = async () => { await logout(); navigate('/login'); };
   useMarketDutyNotifier();
 
   const SidebarContent = () => (

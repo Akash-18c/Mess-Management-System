@@ -1,17 +1,25 @@
 import { create } from 'zustand';
+import api from '../api';
 
 const useAuthStore = create((set) => ({
-  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  user:  JSON.parse(localStorage.getItem('user')  || 'null'),
   token: localStorage.getItem('token') || null,
-  login: (user, token) => {
-    localStorage.setItem('user', JSON.stringify(user));
+  logId: localStorage.getItem('logId') || null,
+
+  login: (user, token, logId) => {
+    localStorage.setItem('user',  JSON.stringify(user));
     localStorage.setItem('token', token);
-    set({ user, token });
+    if (logId) localStorage.setItem('logId', logId);
+    set({ user, token, logId: logId || null });
   },
-  logout: () => {
+
+  logout: async () => {
+    const logId = localStorage.getItem('logId');
+    try { if (logId) await api.post('/auth/logout', { logId }); } catch { }
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    set({ user: null, token: null });
+    localStorage.removeItem('logId');
+    set({ user: null, token: null, logId: null });
   },
 }));
 

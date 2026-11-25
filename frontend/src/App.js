@@ -21,6 +21,7 @@ const AdminPurge         = lazy(() => import('./pages/admin/AdminPurge'));
 const AdminExpensesHistory = lazy(() => import('./pages/admin/AdminExpensesHistory'));
 const AdminCategories    = lazy(() => import('./pages/admin/AdminCategories'));
 const AdminGuestMembers  = lazy(() => import('./pages/admin/AdminGuestMembers'));
+const AdminLoginHistory  = lazy(() => import('./pages/admin/AdminLoginHistory'));
 const ManagerLayout      = lazy(() => import('./pages/manager/ManagerLayout'));
 const ManagerDashboard   = lazy(() => import('./pages/manager/ManagerDashboard'));
 const ManagerMeals       = lazy(() => import('./pages/manager/ManagerMeals'));
@@ -148,6 +149,7 @@ export default function App() {
             <Route path="categories" element={<AdminCategories />} />
             <Route path="purge" element={<AdminPurge />} />
             <Route path="guest-members" element={<AdminGuestMembers />} />
+            <Route path="login-history" element={<AdminLoginHistory />} />
           </Route>
 
           <Route path="/manager" element={<ProtectedRoute roles={['manager', 'admin']}><ManagerLayout /></ProtectedRoute>}>

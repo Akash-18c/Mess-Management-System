@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+const LoginLog = require('../models/LoginLog');
+const { auth } = require('../middleware/auth');
 const { sendWelcomeEmail, sendResetEmail } = require('../utils/mailer');
 
 const router = express.Router();
@@ -39,13 +41,31 @@ router.post('/login', async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ message: 'Invalid credentials' });
     const token = jwt.sign({ id: user._id, role: user.role, name: user.name }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const log = await LoginLog.create({ userId: user._id, name: user.name, role: user.role });
     res.json({
       token,
       user: { id: user._id, name: user.name, email: user.email, role: user.role, room: user.room },
+      logId: log._id,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+});
+
+// Record logout — updates the log entry with logoutAt + duration
+router.post('/logout', auth, async (req, res) => {
+  try {
+    const { logId } = req.body;
+    if (logId) {
+      const log = await LoginLog.findById(logId);
+      if (log && !log.logoutAt) {
+        log.logoutAt = new Date();
+        log.duration = Math.floor((log.logoutAt - log.loginAt) / 1000);
+        await log.save();
+      }
+    }
+    res.json({ ok: true });
+  } catch { res.json({ ok: true }); }
 });
 
 // ── Forgot Password ──
@@ -156,9 +176,11 @@ router.post('/google', async (req, res) => {
       { id: user._id, role: user.role, name: user.name, isApproved: user.isApproved },
       process.env.JWT_SECRET, { expiresIn: '7d' }
     );
+    const log = await LoginLog.create({ userId: user._id, name: user.name, role: user.role });
     res.json({
       token,
       user: { id: user._id, name: user.name, email: user.email, role: user.role, room: user.room, isApproved: user.isApproved },
+      logId: log._id,
     });
   } catch (err) {
     console.error('google-auth error:', err.message);

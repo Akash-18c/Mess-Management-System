@@ -68,8 +68,8 @@ export default function Login() {
   const { login }  = useAuthStore();
   const navigate   = useNavigate();
 
-  const doLogin = (userData, token) => {
-    login(userData, token);
+  const doLogin = (userData, token, logId) => {
+    login(userData, token, logId);
     toast.success(`Welcome, ${userData.name}!`);
     setNavigating(true);
     setTimeout(() => {
@@ -88,7 +88,7 @@ export default function Login() {
         callback: async ({ credential }) => {
           try {
             const { data } = await api.post('/auth/google', { credential });
-            doLogin(data.user, data.token);
+            doLogin(data.user, data.token, data.logId);
           } catch (err) {
             toast.error(err.response?.data?.message || 'Google sign-in failed.');
           }
@@ -119,7 +119,7 @@ export default function Login() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', form);
-      doLogin(data.user, data.token);
+      doLogin(data.user, data.token, data.logId);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
       setLoading(false);
