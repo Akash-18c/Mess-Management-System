@@ -10,23 +10,23 @@ const Notification = require('../models/Notification');
  * @param {number} [year]
  */
 async function pushNotification({ user, message, category = 'general', month, year }) {
-  if (!user || user.role === 'admin') return; // admin actions are silent
+  if (!user || user.role === 'admin') return; // admin actions are always silent
   try {
     const rn = (name) => { const m = name?.match(/^\w+\s*\((.+)\)$/); return m ? m[1] : (name || ''); };
+    const now = new Date();
+    const m = month || (now.getMonth() + 1);
+    const y = year  || now.getFullYear();
+    // expiresAt = first moment of next month (MongoDB TTL will delete then)
+    const expiresAt = new Date(y, m, 1, 0, 0, 0); // month is 0-indexed in Date constructor, so m = next month
     await Notification.create({
       message,
       category,
       actorName: rn(user.name),
       actorRole: user.role,
-      month,
-      year,
+      month: m,
+      year: y,
+      expiresAt,
     });
-    // Keep only latest 100
-    const count = await Notification.countDocuments();
-    if (count > 100) {
-      const oldest = await Notification.find().sort({ createdAt: 1 }).limit(count - 100).select('_id');
-      await Notification.deleteMany({ _id: { $in: oldest.map(o => o._id) } });
-    }
   } catch { /* non-critical */ }
 }
 

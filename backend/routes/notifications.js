@@ -5,12 +5,15 @@ const { auth } = require('../middleware/auth');
 const router = express.Router();
 router.use(auth);
 
-// GET last 40 notifications, with unread flag for current user
+// GET current month's notifications only, with unread flag for current user
 router.get('/', async (req, res) => {
   try {
-    const notes = await Notification.find()
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year  = now.getFullYear();
+    const notes = await Notification.find({ month, year })
       .sort({ createdAt: -1 })
-      .limit(40)
+      .limit(100)
       .lean();
     const uid = req.user._id.toString();
     res.json(notes.map(n => ({ ...n, isRead: n.readBy.map(String).includes(uid) })));
@@ -20,7 +23,11 @@ router.get('/', async (req, res) => {
 // Mark all as read — MUST be before /:id/read to avoid 'read-all' matching :id
 router.patch('/read-all', async (req, res) => {
   try {
-    await Notification.updateMany({}, { $addToSet: { readBy: req.user._id } });
+    const now = new Date();
+    await Notification.updateMany(
+      { month: now.getMonth() + 1, year: now.getFullYear() },
+      { $addToSet: { readBy: req.user._id } }
+    );
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
