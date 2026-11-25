@@ -32,7 +32,11 @@ router.post('/mark', requireRole('admin', 'manager'), async (req, res) => {
     if (dinner) marks.push('Dinner');
     if (isOff) marks.push('Off day');
     if (marks.length) await pushNotification({ user: req.user, message: `Marked meals for a member (${marks.join(' + ')})`, category: 'meal', month, year });
-    res.json(meal);, requireRole('admin', 'manager'), async (req, res) => {
+    res.json(meal);
+  } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
+router.post('/guest', requireRole('admin', 'manager'), async (req, res) => {
   try {
     const { date, memberId, guestMeals, month, year } = req.body;
     const meal = await Meal.findOneAndUpdate(
@@ -43,6 +47,9 @@ router.post('/mark', requireRole('admin', 'manager'), async (req, res) => {
     await recalcSummary(month, year);
     if (guestMeals > 0) await pushNotification({ user: req.user, message: `Added ${guestMeals} guest meal(s)`, category: 'meal', month, year });
     res.json(meal);
+  } catch (err) { res.status(400).json({ message: err.message }); }
+});
+
 router.post('/leave', requireRole('member', 'manager', 'admin'), async (req, res) => {
   try {
     const { date, month, year } = req.body;
