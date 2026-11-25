@@ -68,8 +68,6 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
     const guestCharge = m.guestCharge || 0;
     const masiSalary = m.masiSalary || 0;
     const otherShared = m.otherSharedCharge || 0;
-    const gas        = m.gasCharge    || 0;
-    const rice       = m.riceCharge   || 0;
     const otherChg   = m.otherCharges || 0;
     return `<tr class="${i % 2 === 0 ? 'even' : ''}">
       <td><span class="avatar">${name[0].toUpperCase()}</span>${name}${roleTag}</td>
@@ -77,11 +75,10 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
       ${guestMeals > 0 ? `<td class="center" style="color:#c084fc;font-weight:600">${guestMeals}</td>` : '<td class="center" style="color:#94a3b8">—</td>'}
       <td class="right">&#8377;${mealRate.toFixed(2)}</td>
       <td class="right">&#8377;${m.mealCost?.toFixed(2) ?? m.totalMealCost.toFixed(2)}</td>
-      <td class="right"${gas > 0 ? ' style="color:#ea580c;font-weight:600"' : ''}>&#8377;${gas.toFixed(2)}</td>
       <td class="right"${otherShared > 0 ? ' style="color:#ea580c;font-weight:600"' : ''}>&#8377;${otherShared.toFixed(2)}</td>
       <td class="right"${otherChg > 0 ? ' style="color:#db2777;font-weight:600"' : ''}>&#8377;${otherChg.toFixed(2)}</td>
       <td class="right">&#8377;${masiSalary.toFixed(2)}</td>
-      <td class="right"><strong>&#8377;${(m.totalMealCost ?? (m.mealCost + masiSalary + (m.gasCharge||0) + (m.otherSharedCharge||0) + otherChg)).toFixed(2)}</strong></td>
+      <td class="right"><strong>&#8377;${(m.totalMealCost ?? (m.mealCost + masiSalary + (m.otherSharedCharge||0) + otherChg)).toFixed(2)}</strong></td>
       <td class="right">&#8377;${m.moneyGiven.toFixed(2)}</td>
       <td class="right ${due >= 0 ? 'pos' : 'neg'}">${due >= 0 ? '+' : ''}&#8377;${Math.abs(due).toFixed(2)}</td>
     </tr>`;
@@ -187,7 +184,6 @@ async function downloadPDF(summary, individualCosts, totalCollected, month, year
         <th class="center">Guest</th>
         <th class="right">Per Meal</th>
         <th class="right">Meal Cost</th>
-        <th class="right">Gas</th>
         <th class="right">Other Exp</th>
         <th class="right">Other Chg</th>
         <th class="right">Masi</th>

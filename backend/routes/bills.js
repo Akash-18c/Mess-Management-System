@@ -36,8 +36,8 @@ router.post('/generate/:month/:year', requireRole('admin', 'manager'), async (re
     const masiRec = await require('../models/MasiSalary').findOne({ month, year });
     const masiPerMember = masiRec?.perMemberAmount || 0;
     const otherSharedCharge = summary?.otherPaidPerMember || 0;
-    const gasCharge  = summary?.gasPerMember  || 0;
-    const riceCharge = summary?.ricePerMember || 0;
+    const gasCharge  = 0;
+    const riceCharge = 0;
 
     const members = await User.find({ isActive: true });
     const allOtherCharges = await OtherCharge.find({ month, year });

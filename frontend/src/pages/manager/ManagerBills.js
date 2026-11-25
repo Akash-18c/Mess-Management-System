@@ -261,7 +261,6 @@ export default function ManagerBills() {
                     { h: 'Guest',        cls: 'text-right' },
                     { h: 'Per Meal',     cls: 'text-right' },
                     { h: 'Meal Cost',    cls: 'text-right' },
-                    { h: 'Gas',          cls: 'text-right' },
                     { h: 'Other Exp',    cls: 'text-right' },
                     { h: 'Other Chg',    cls: 'text-right' },
                     { h: 'Masi',         cls: 'text-right' },
@@ -299,7 +298,6 @@ export default function ManagerBills() {
                       <td className="py-2.5 px-2 text-right whitespace-nowrap" style={{ color: (b.guestMeals||0) > 0 ? '#c084fc' : '#475569' }}>{b.guestMeals||0}</td>
                       <td className="py-2.5 px-2 text-right text-amber-400 whitespace-nowrap">₹{mealRate.toFixed(2)}</td>
                       <td className="py-2.5 px-2 text-right text-slate-200 whitespace-nowrap">₹{(b.mealCost ?? (b.mealCount * mealRate)).toFixed(2)}</td>
-                      <td className="py-2.5 px-2 text-right whitespace-nowrap" style={{ color: (b.gasCharge||0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.gasCharge||0).toFixed(2)}</td>
                       <td className="py-2.5 px-2 text-right whitespace-nowrap" style={{ color: (b.otherSharedCharge||0) > 0 ? '#fb923c' : '#475569' }}>₹{(b.otherSharedCharge||0).toFixed(2)}</td>
                       <td className="py-2.5 px-2 text-right whitespace-nowrap" style={{ color: (b.otherCharges||0) > 0 ? '#f472b6' : '#475569' }}>₹{(b.otherCharges||0).toFixed(2)}</td>
                       <td className="py-2.5 px-2 text-right text-slate-400 whitespace-nowrap">₹{(b.masiSalary||0).toFixed(2)}</td>

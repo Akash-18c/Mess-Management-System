@@ -83,8 +83,8 @@ router.get('/dashboard', async (req, res) => {
     const masiPerMember = masiRec?.perMemberAmount || 0;
     // other shared charge = paid other expenses ÷ active members (from summary)
     const otherSharedCharge = summary?.otherPaidPerMember || 0;
-    const gasCharge  = summary?.gasPerMember  || 0;
-    const riceCharge = summary?.ricePerMember || 0;
+    const gasCharge  = 0;
+    const riceCharge = 0;
 
     const estimatedBill = parseFloat(((lunch + dinner + guestMeals) * mealRate).toFixed(2));
 
@@ -153,8 +153,8 @@ router.get('/month-data/:month/:year', async (req, res) => {
     const mealRate = summary?.mealRate || 0;
     const masiPerMember = masiRec?.perMemberAmount || 0;
     const otherSharedCharge = summary?.otherPaidPerMember || 0;
-    const gasCharge  = summary?.gasPerMember  || 0;
-    const riceCharge = summary?.ricePerMember || 0;
+    const gasCharge  = 0;
+    const riceCharge = 0;
 
     const individualCosts = allMembers.map(m => {
       const mMeals = allMeals.filter(ml => ml.memberId?.toString() === m._id.toString());

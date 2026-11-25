@@ -55,8 +55,9 @@ async function recalcSummary(month, year) {
   // grandTotal = grocery + paid gas + paid rice + paid other — Total Spent display (paid only)
   const grandTotal = parseFloat((groceryTotal + gasPaidTotal + ricePaidTotal + otherOnlyPaid).toFixed(2));
 
-  // mealBaseTotal includes ALL rice + other (paid + due) so due expenses reflected in mealRate
-  const mealBaseTotal = parseFloat((groceryTotal + ricePaidTotal + riceDueTotal + otherOnlyPaid + otherOnlyDue).toFixed(2));
+  // mealBaseTotal includes ALL gas + rice + other (paid + due) so due expenses reflected in mealRate
+  const gasAllDueTotal = parseFloat(dueGas.reduce((s, e) => s + e.amount, 0).toFixed(2));
+  const mealBaseTotal = parseFloat((groceryTotal + gasPaidTotal + gasAllDueTotal + ricePaidTotal + riceDueTotal + otherOnlyPaid + otherOnlyDue).toFixed(2));
 
   // otherAllPerMember includes due so bills reflect full cost
   const otherAllPerMember = activeMembers > 0 ? parseFloat(((otherOnlyPaid + otherOnlyDue) / activeMembers).toFixed(2)) : 0;
@@ -69,7 +70,7 @@ async function recalcSummary(month, year) {
   });
 
   const mealRate = totalMeals > 0 ? parseFloat((mealBaseTotal / totalMeals).toFixed(2)) : 0;
-  const gasPerMember        = activeMembers > 0 ? parseFloat((gasAllTotal / activeMembers).toFixed(2)) : 0;
+  const gasPerMember        = 0;
   const ricePerMember       = 0;
   const otherPaidPerMember  = otherAllPerMember; // includes due expenses so bills are accurate
 

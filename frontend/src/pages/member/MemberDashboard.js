@@ -112,15 +112,14 @@ export default function MemberDashboard() {
   if (!data) return <PageLoader />;
 
   const { lunch, dinner, mealRate, estimatedBill, myOtherCharges, masiPerMember, advance,
-          totalCollected, memberMealCounts, summary, individualCosts, gasCharge, riceCharge } = data;
+          totalCollected, memberMealCounts, summary, individualCosts, riceCharge } = data;
 
   const totalMeals   = lunch + dinner;
   const myRow        = individualCosts?.find(c => c._id?.toString() === user?._id?.toString());
   const masiSalary   = myRow?.masiSalary   ?? masiPerMember ?? 0;
   const myOther      = myRow?.otherCharges ?? myOtherCharges ?? 0;
-  const myGasCharge  = myRow?.gasCharge    ?? gasCharge  ?? 0;
   const myRiceCharge = myRow?.riceCharge   ?? riceCharge ?? 0;
-  const due          = estimatedBill + masiSalary + myOther + myGasCharge + myRiceCharge - advance;
+  const due          = estimatedBill + masiSalary + myOther + myRiceCharge - advance;
 
   const activeSummary         = isCurrentMonth ? summary         : monthData?.summary;
   const activeTotalCollected  = isCurrentMonth ? totalCollected  : (monthData?.totalCollected ?? 0);
@@ -138,7 +137,6 @@ export default function MemberDashboard() {
 
   const billSubs = [
     masiSalary   > 0 ? `Masi ₹${masiSalary.toFixed(0)}`   : '',
-    myGasCharge  > 0 ? `Gas ₹${myGasCharge.toFixed(0)}`   : '',
     myRiceCharge > 0 ? `Rice ₹${myRiceCharge.toFixed(0)}` : '',
     myOther      > 0 ? `Other ₹${myOther.toFixed(0)}`     : '',
   ].filter(Boolean).join(' · ');
@@ -403,7 +401,7 @@ export default function MemberDashboard() {
               {
                 icon: IndianRupee,
                 label: 'My Bill',
-                value: `₹${(estimatedBill + masiSalary + myOther + myGasCharge + myRiceCharge).toFixed(2)}`,
+                value: `₹${(estimatedBill + masiSalary + myOther + myRiceCharge).toFixed(2)}`,
                 sub: billSubs || 'Meal charges only',
                 accent: '#fbbf24',
                 bg: 'rgba(251,191,36,0.08)',
